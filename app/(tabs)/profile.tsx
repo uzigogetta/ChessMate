@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { Screen, Card, Text } from '@/ui/atoms';
 
 export default function ProfileScreen() {
 	return (
-		<View>
-			<Text>Profile</Text>
-		</View>
+		<Screen>
+			<Card>
+				<Text>Profile</Text>
+			</Card>
+		</Screen>
 	);
 }
 

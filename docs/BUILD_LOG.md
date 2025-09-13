@@ -1,5 +1,24 @@
 # Build Log
 
+Delta (2025-09-13T19:58:00Z)
+- Step 1 — Routing skeleton & screens created (tabs, auth, game routes).
+- Added UI atoms at src/ui/atoms.tsx and wired screens to use them.
+- Updated root layout with gesture handler, Sentry import, and StatusBar.
+
+Delta (2025-09-13T19:57:00Z)
+- Step 2 — Skia board (tap-to-move) wired into Local and AI.
+- Added chess helpers: src/features/chess/logic/chess.rules.ts.
+- Added BoardSkia: src/features/chess/components/board/BoardSkia.tsx.
+- Local/AI screens now show turn, board, and Reset.
+
+Delta (2025-09-13T20:05:00Z)
+- Step 2.1 — Skia font + piece letters + start FEN.
+- Added font hook at src/ui/fonts.ts and used Skia Text for pieces.
+- Introduced START_FEN and updated Local/AI to use it.
+
+Delta (2025-09-13T20:12:00Z)
+- Step 2.2 — Touch overlay + Skia Text for pieces; RN overlay removed.
+
 Delta (2025-09-13T19:34:00Z)
 - Renamed app to ChessMate (app.json name/slug).
 - Updated package name to chessmate (package.json).

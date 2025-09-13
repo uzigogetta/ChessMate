@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { Screen, Card, Text } from '@/ui/atoms';
 
 export default function ArchiveScreen() {
 	return (
-		<View>
-			<Text>Archive</Text>
-		</View>
+		<Screen>
+			<Card>
+				<Text>Archive</Text>
+			</Card>
+		</Screen>
 	);
 }
 

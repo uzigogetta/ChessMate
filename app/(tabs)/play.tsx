@@ -1,11 +1,15 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { router } from 'expo-router';
+import { Screen, Card, Text, Button } from '@/ui/atoms';
 
 export default function PlayScreen() {
 	return (
-		<View>
-			<Text>Play</Text>
-		</View>
+		<Screen>
+			<Card>
+				<Text>Play</Text>
+				<Button title="Start Local Game" onPress={() => router.push('/game/local')} />
+			</Card>
+		</Screen>
 	);
 }
 
