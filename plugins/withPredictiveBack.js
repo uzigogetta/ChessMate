@@ -1,6 +1,7 @@
-import { ConfigPlugin, withAndroidManifest } from '@expo/config-plugins';
+const { withAndroidManifest } = require('@expo/config-plugins');
 
-const withPredictiveBack: ConfigPlugin = (config) => {
+/** @type {import('@expo/config-plugins').ConfigPlugin} */
+function withPredictiveBack(config) {
 	return withAndroidManifest(config, (config) => {
 		const manifest = config.modResults;
 		const application = manifest.manifest.application?.[0];
@@ -11,8 +12,8 @@ const withPredictiveBack: ConfigPlugin = (config) => {
 		}
 		return config;
 	});
-};
+}
 
-export default withPredictiveBack;
+module.exports = withPredictiveBack;
 
 

@@ -1,0 +1,7 @@
+dist/
+coverage/
+android/
+ios/
+.expo/
+.expo-shared/
+node_modules/

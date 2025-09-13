@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Chess Haven v2",
-    "slug": "chess-haven-v2",
+    "name": "ChessMate",
+    "slug": "chessmate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "chesshaven",
+    "scheme": "chessmate",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,13 +15,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.us.chesshavenv2",
+      "bundleIdentifier": "com.us.chessmate",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.us.chesshavenv2",
+      "package": "com.us.chessmate",
       "minSdkVersion": 29,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -30,13 +30,24 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": true
     },
+    "updates": {
+      "url": "https://u.expo.dev/b9979c02-b8b3-4056-9f3b-98ad07ab46f8",
+      "fallbackToCacheTimeout": 0
+    },
     "plugins": [
       "expo-router",
-      "react-native-mmkv",
       "./plugins/withPredictiveBack"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b9979c02-b8b3-4056-9f3b-98ad07ab46f8"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
