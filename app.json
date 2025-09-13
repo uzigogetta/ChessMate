@@ -1,28 +1,40 @@
 {
   "expo": {
-    "name": "chess-haven-v2",
+    "name": "Chess Haven v2",
     "slug": "chess-haven-v2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "chesshaven",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.us.chesshavenv2",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.us.chesshavenv2",
+      "minSdkVersion": 29,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": true
     },
+    "plugins": [
+      "expo-router",
+      "react-native-mmkv",
+      "./plugins/withPredictiveBack"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
