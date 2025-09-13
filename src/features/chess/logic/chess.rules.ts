@@ -45,4 +45,12 @@ export function applyMove(
   return { ok: true, fen: chess.fen(), san: res.san };
 }
 
+export const sideToMove = (fen: string): 'w' | 'b' => fen.split(' ')[1] as 'w' | 'b';
+
+export async function applySANs(sans: string[]): Promise<string> {
+  const c = new Chess();
+  for (const s of sans) c.move(s, { sloppy: true } as any);
+  return c.fen();
+}
+
 

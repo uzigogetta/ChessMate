@@ -5,6 +5,7 @@
 - [x] Step 0 — Finisher (Lint/Prettier, Sentry, EAS Updates, Icons)
 - [x] Step 1 — Routing skeleton & screens
 - [x] Step 2 — Skia board (tap-to-move)
+- [x] Step 3 — AI mock reply + swap/undo/reset
 
 ## How to run
 - Install deps: `pnpm install`

@@ -19,6 +19,12 @@ Delta (2025-09-13T20:05:00Z)
 Delta (2025-09-13T20:12:00Z)
 - Step 2.2 — Touch overlay + Skia Text for pieces; RN overlay removed.
 
+Delta (2025-09-13T20:25:00Z)
+- Step 3 — AI mock reply + swap/undo/reset.
+- Engine types + mock at src/features/chess/engine/.
+- AI screen: replies within ~0.4s, Swap Sides, Undo, Reset wired.
+- Local screen: Undo added (SAN stack).
+
 Delta (2025-09-13T19:34:00Z)
 - Renamed app to ChessMate (app.json name/slug).
 - Updated package name to chessmate (package.json).
