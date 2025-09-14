@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, TextInput, FlatList } from 'react-native';
+import { View, TextInput } from 'react-native';
 import { Text, Button } from '@/ui/atoms';
 import { useRoomStore } from '@/features/online/room.store';
 
@@ -27,13 +27,11 @@ export default function RoomChat() {
   if (!room) return null;
   return (
     <View style={{ width: 320, gap: 8 }}>
-      <FlatList
-        data={data}
-        keyExtractor={(m) => m.id}
-        renderItem={({ item }) => <Text muted>{`${new Date(item.ts).toLocaleTimeString()} ${item.from}: ${item.txt}`}</Text>}
-        style={{ maxHeight: 160 }}
-        inverted
-      />
+      <View style={{ maxHeight: 160, width: '100%' }}>
+        {data.map((item) => (
+          <Text key={item.id} muted>{`${new Date(item.ts).toLocaleTimeString()} ${item.from}: ${item.txt}`}</Text>
+        ))}
+      </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TextInput
           placeholder="Message"

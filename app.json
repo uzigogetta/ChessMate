@@ -54,7 +54,8 @@
       },
       "serverUrl": "$(EXPO_PUBLIC_SERVER_URL)",
       "supabaseUrl": "https://kcegzdycpyeaawgzngxw.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjZWd6ZHljcHllYWF3Z3puZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4NjE4NjYsImV4cCI6MjA3MzQzNzg2Nn0.L7YpOL-Rd_1wV9sH5NpNPQRC4L9Tjni1v0alNMUmXwk"
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjZWd6ZHljcHllYWF3Z3puZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4NjE4NjYsImV4cCI6MjA3MzQzNzg2Nn0.L7YpOL-Rd_1wV9sH5NpNPQRC4L9Tjni1v0alNMUmXwk",
+      "sentryDsn": "https://dc8259d8b6b9b1178f6c8751c8ce4914@o4509963672485888.ingest.de.sentry.io/4509963674058832"
     },
     "runtimeVersion": {
       "policy": "appVersion"

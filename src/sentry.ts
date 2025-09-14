@@ -10,10 +10,9 @@ Sentry.init({
 	tracesSampleRate: 0.2,
 	// following keys are future-proof; cast avoids TS complaints if not in types yet
 	...( { replaysSessionSampleRate: 0.1, replaysOnErrorSampleRate: 1.0 } as any ),
-	environment: __DEV__ ? 'development' : (process.env.EXPO_PUBLIC_ENV ?? 'production')
+	environment: __DEV__ ? 'development' : (process.env.EXPO_PUBLIC_ENV ?? 'production'),
+	release: Constants.expoConfig?.version || 'dev'
 });
-
-Sentry.setRelease(Constants.expoConfig?.version || 'dev');
 
 // Capture unhandled errors
 const defaultHandler = (global as any).ErrorUtils?.getGlobalHandler?.();

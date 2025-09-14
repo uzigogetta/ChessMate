@@ -8,7 +8,9 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_ENV": "development"
+        "EXPO_PUBLIC_ENV": "development",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_SKIP_AUTO_UPLOAD": "true"
       },
       "android": {
         "buildType": "apk"
@@ -44,10 +46,6 @@
     "production": {
       "android": {
         "serviceAccountKeyPath": "./.eas/android-service-account.json"
-      },
-      "ios": {
-        "ascAppId": null,
-        "companyName": null
       }
     }
   }

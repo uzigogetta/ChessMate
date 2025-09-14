@@ -45,7 +45,7 @@ export default function OnlineRoomScreen() {
   const is1v1 = room.mode === '1v1';
   return (
     <Screen style={{ justifyContent: 'flex-start' }}>
-      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 48 }} nestedScrollEnabled>
       <Card style={{ marginBottom: 12 }}>
         <Text>{`Connected • Latency: ~?ms • Mode: ${room.mode} • Driver: ${room.driver.toUpperCase()} • Started ${room.started ? 'Yes' : 'No'}`}</Text>
       </Card>
