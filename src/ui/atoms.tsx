@@ -24,9 +24,14 @@ export function Text({ children, style, muted = false }: { children?: React.Reac
   return <RNText style={[styles.text, muted && { color: colors.muted }, style]}>{children}</RNText>;
 }
 
-export function Button({ title, onPress, disabled }: { title: string; onPress?: () => void; disabled?: boolean }) {
+export function Button({ title, onPress, disabled, style, variant = 'primary' }: { title: string; onPress?: () => void; disabled?: boolean; style?: any; variant?: 'primary' | 'success' }) {
+  const bg = variant === 'success' ? '#34C759' : colors.primary; // iOS success green
   return (
-    <Pressable disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.button, disabled && { opacity: 0.4 }, pressed && { opacity: 0.9 }]}>
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.button, { backgroundColor: bg }, disabled && { opacity: 0.8 }, pressed && { opacity: 0.9 }, style]}
+    >
       <RNText style={styles.buttonText}>{title}</RNText>
     </Pressable>
   );

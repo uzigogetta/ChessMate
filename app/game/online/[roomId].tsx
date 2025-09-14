@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, Animated, Easing, useWindowDimensions, Platform } from 'react-native';
+import { colors } from '@/ui/tokens';
+import { useSettings } from '@/features/settings/settings.store';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
+import * as Haptics from 'expo-haptics';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { useRoomStore } from '@/features/online/room.store';
 import { Seat } from '@/net/types';
@@ -41,9 +44,44 @@ export default function OnlineRoomScreen() {
   const minimal = is1v1;
   const isMyTurn = !!room?.started && !!mySide && mySide === getTurn(room.fen);
   const readyToStart = room ? (is1v1 ? !!room.seats['w1'] && !!room.seats['b1'] : (!!room.seats['w1'] || !!room.seats['w2']) && (!!room.seats['b1'] || !!room.seats['b2'])) : false;
+  const { width } = useWindowDimensions();
+  const fullEdge = useSettings((s) => s.fullEdgeBoard);
+  const containerPad = fullEdge ? 0 : 12;
+  const inset = fullEdge ? 0 : containerPad * 2;
+  const boardSize = Math.floor(width - inset);
+  const [copied, setCopied] = React.useState(false);
+  const [flashSq, setFlashSq] = React.useState<string | null>(null);
+  const shake = React.useRef(new Animated.Value(0)).current;
+  const triggerFlash = React.useCallback((sq: string) => {
+    setFlashSq(null);
+    setTimeout(() => setFlashSq(sq), 0);
+  }, []);
+  const triggerShake = React.useCallback(() => {
+    shake.setValue(0);
+    Animated.sequence([
+      Animated.timing(shake, { toValue: -6, duration: 40, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: 6, duration: 60, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: -4, duration: 50, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: 4, duration: 50, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(shake, { toValue: 0, duration: 40, easing: Easing.linear, useNativeDriver: true })
+    ]).start();
+  }, [shake]);
   return (
-    <Screen style={{ justifyContent: 'flex-start' }}>
-      <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 48 }} nestedScrollEnabled>
+    <Screen style={{ justifyContent: 'flex-start', paddingHorizontal: containerPad }}>
+      <ScrollView
+        style={{ flex: 1, alignSelf: 'stretch' }}
+        contentContainerStyle={{ alignItems: 'center', paddingBottom: 48, paddingHorizontal: containerPad }}
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        horizontal={false}
+        bounces={false}
+        alwaysBounceHorizontal={false}
+        directionalLockEnabled
+        overScrollMode="never"
+        persistentScrollbar={false}
+        fadingEdgeLength={0}
+      >
         <ReconnectListener />
         {!room && (
           <>
@@ -61,7 +99,17 @@ export default function OnlineRoomScreen() {
               <PresenceBar members={room.members} seats={room.seats} myId={me.id} activeTeammate={null} mode={room.mode} />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                 <Button title="Invite" onPress={async () => { await Share.share({ message: buildInvite(room.roomId) }); }} />
-                <Button title="Copy ID" onPress={async () => { await Clipboard.setStringAsync(room.roomId); }} />
+                <Button
+                  title={copied ? 'Copied!' : 'Copy ID'}
+                  disabled={copied}
+                  variant={copied ? 'success' : 'primary'}
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(room.roomId);
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1200);
+                  }}
+                />
               </View>
             </Card>
             <Card style={{ marginBottom: 12, gap: 8 }}>
@@ -97,26 +145,49 @@ export default function OnlineRoomScreen() {
               </Card>
             )}
             <RoomChat />
-            <BoardSkia
-              fen={room.fen}
-              orientation={mySide ?? 'w'}
-              selectableColor={mySide ?? 'w'}
-              onMove={(from, to) => {
-                const turn = getTurn(room.fen);
-                if (!room.started || !mySide || mySide !== turn) return;
-                const v = validateMove(room.fen, from, to);
-                if (v.ok && v.san) {
-                  logMove('UI request', { san: v.san, from: mySide, fen: room.fen });
+            <Animated.View style={{ transform: [{ translateX: shake }], alignSelf: 'center' }}>
+              <BoardSkia
+                fen={room.fen}
+                orientation={mySide ?? 'w'}
+                selectableColor={mySide ?? 'w'}
+                flashSquare={flashSq}
+                size={boardSize}
+                onMove={(from, to) => {
+                  const turn = getTurn(room.fen);
+                  if (!room.started || !mySide || mySide !== turn) {
+                    triggerFlash(from);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    triggerShake();
+                    return;
+                  }
+                  const v = validateMove(room.fen, from, to);
+                  if (v.ok && v.san) {
+                    logMove('UI request', { san: v.san, from: mySide, fen: room.fen });
+                    moveSAN(v.san);
+                  } else {
+                    triggerFlash(from);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    triggerShake();
+                  }
+                }}
+                onOptimisticMove={(from, to, rollback) => {
+                  if (!isLegalMoveForDriver(room, me.id, from, to)) {
+                    triggerFlash(from);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    triggerShake();
+                    return;
+                  }
+                  const v = validateMove(room.fen, from, to);
+                  if (!v.ok || !v.san) {
+                    triggerFlash(from);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    triggerShake();
+                    return;
+                  }
                   moveSAN(v.san);
-                }
-              }}
-              onOptimisticMove={(from, to, rollback) => {
-                if (!isLegalMoveForDriver(room, me.id, from, to)) return;
-                const v = validateMove(room.fen, from, to);
-                if (!v.ok || !v.san) return;
-                moveSAN(v.san);
-              }}
-            />
+                }}
+              />
+            </Animated.View>
             <Card style={{ marginTop: 12, gap: 8, flexDirection: 'row' }}>
               {room.started && <Button title="Undo" onPress={() => (useRoomStore.getState().net as any).undo?.()} />}
               <Button title="Resign" onPress={() => resign()} />
@@ -135,6 +206,9 @@ export default function OnlineRoomScreen() {
           </>
         )}
       </ScrollView>
+      {Platform.OS === 'android' && (
+        <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 3, backgroundColor: colors.background }} />
+      )}
       <DevOverlay />
     </Screen>
   );

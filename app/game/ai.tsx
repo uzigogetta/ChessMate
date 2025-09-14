@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
+import { useWindowDimensions } from 'react-native';
+import { useSettings } from '@/features/settings/settings.store';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { START_FEN, applyMove, fenToBoard, sideToMove, applySANs } from '@/features/chess/logic/chess.rules';
 import { MockEngine } from '@/features/chess/engine/engine.mock';
@@ -14,8 +16,12 @@ export default function AIGameScreen() {
     engine.init();
   }, [engine]);
   const turn = useMemo(() => fenToBoard(fen).turn, [fen]);
+  const { width } = useWindowDimensions();
+  const fullEdge = useSettings((s) => s.fullEdgeBoard);
+  const containerPad = fullEdge ? 0 : 12;
+  const boardSize = Math.floor(width - (fullEdge ? 0 : 24));
   return (
-    <Screen>
+    <Screen style={{ paddingHorizontal: containerPad }}>
       <Card style={{ marginBottom: 16 }}>
         <Text>
           {`AI — Turn: ${turn === 'w' ? 'White' : 'Black'} ${thinking ? '(thinking…)' : ''}`}
@@ -23,6 +29,7 @@ export default function AIGameScreen() {
       </Card>
       <BoardSkia
         fen={fen}
+        size={boardSize}
         onMove={(from, to) => {
           if (thinking) return;
           const r = applyMove(fen, { from, to });

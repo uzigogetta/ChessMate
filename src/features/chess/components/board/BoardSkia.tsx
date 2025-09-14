@@ -14,11 +14,13 @@ type Props = {
   orientation?: 'w' | 'b';
   enabled?: boolean;
   selectableColor?: 'w' | 'b';
+  flashSquare?: string | null;
+  size?: number;
 };
 
 const BOARD_SIZE = 320;
 
-export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', enabled = true, selectableColor }: Props) {
+export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', enabled = true, selectableColor, flashSquare, size: sizeProp }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [optimistic, setOptimistic] = useState<{ from: string; to: string } | null>(null);
   const [invalidSq, setInvalidSq] = useState<string | null>(null);
@@ -30,7 +32,8 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
   const dark = boardTheme.dark;
   const highlight = uiColors?.accent ?? '#00E0B8';
 
-  const cell = BOARD_SIZE / 8;
+  const size = sizeProp ?? 320;
+  const cell = size / 8;
   const font = usePieceFont(cell * 0.55);
 
   const legalTargets = useMemo(() => {
@@ -46,6 +49,14 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
     },
     [orientation]
   );
+
+  React.useEffect(() => {
+    if (flashSquare) {
+      setInvalidSq(flashSquare);
+      const t = setTimeout(() => setInvalidSq(null), 220);
+      return () => clearTimeout(t);
+    }
+  }, [flashSquare]);
 
   const squareToRowCol = useCallback(
     (sq: string) => {
@@ -99,8 +110,8 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
   }
 
   return (
-    <View style={{ width: BOARD_SIZE, height: BOARD_SIZE, position: 'relative' }}>
-      <Canvas style={{ width: BOARD_SIZE, height: BOARD_SIZE }}>
+    <View style={{ width: size, height: size, position: 'relative', alignSelf: 'center' }}>
+      <Canvas style={{ width: size, height: size }}>
         {/* squares */}
         <Group>
           {Array.from({ length: 8 }).map((_, r) =>
