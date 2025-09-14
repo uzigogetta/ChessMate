@@ -6,6 +6,9 @@ import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { useRoomStore } from '@/features/online/room.store';
 import { Seat } from '@/net/types';
 import { moveToSAN } from '@/features/chess/logic/chess.rules';
+import { isLegalMoveForDriver, validateMove } from '@/features/chess/logic/moveHelpers';
+import { useReconnect } from '@/features/online/reconnect';
+import RoomChat from '@/features/chat/RoomChat';
 
 function SeatButton({ label, seat, takenBy, onPress, disabled, nameById }: { label: string; seat: Seat; takenBy?: string; onPress: () => void; disabled?: boolean; nameById: (id?: string) => string }) {
   const occupant = takenBy ? ` • ${nameById(takenBy)}` : '';
@@ -13,6 +16,7 @@ function SeatButton({ label, seat, takenBy, onPress, disabled, nameById }: { lab
 }
 
 export default function OnlineRoomScreen() {
+  useReconnect();
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const router = useRouter();
   const room = useRoomStore((s) => s.room);
@@ -43,7 +47,7 @@ export default function OnlineRoomScreen() {
     <Screen style={{ justifyContent: 'flex-start' }}>
       <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 48 }}>
       <Card style={{ marginBottom: 12 }}>
-        <Text>{`Room ${room.roomId} • Mode ${room.mode} • Driver ${room.driver.toUpperCase()} • Started ${room.started ? 'Yes' : 'No'}`}</Text>
+        <Text>{`Connected • Latency: ~?ms • Mode: ${room.mode} • Driver: ${room.driver.toUpperCase()} • Started ${room.started ? 'Yes' : 'No'}`}</Text>
       </Card>
       <Card style={{ marginBottom: 12 }}>
         <Text>{`My seats: ${mySeats.join(', ') || '—'} • Can move: ${canMove() ? 'Yes' : 'No'}`}</Text>
@@ -72,15 +76,24 @@ export default function OnlineRoomScreen() {
           ))}
         </View>
       </Card>
+      <RoomChat />
       <BoardSkia
         fen={room.fen}
         onMove={(from, to) => {
           if (!canMove()) return;
-          const r = moveToSAN(room.fen, from, to);
-          if (r) moveSAN(r.san);
+          const v = validateMove(room.fen, from, to);
+          if (v.ok && v.san) moveSAN(v.san);
+        }}
+        onOptimisticMove={(from, to, rollback) => {
+          if (!isLegalMoveForDriver(room, me.id, from, to)) return;
+          const v = validateMove(room.fen, from, to);
+          if (!v.ok || !v.san) return;
+          // For loopback we assume immediate success; server path would set timeout and rollback on NACK
+          moveSAN(v.san);
         }}
       />
       {!room.started && <Button title="Start" onPress={() => start()} />}
+      {room.started && <Button title="Undo (host-loopback)" onPress={() => (useRoomStore.getState().net as any).undo?.()} />}
       <Button title="Pass Baton" onPress={() => passBaton()} />
       <Button
         title="Leave Room"

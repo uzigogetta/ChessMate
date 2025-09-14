@@ -11,6 +11,7 @@ export type RoomState = {
   fen: string;
   historySAN: string[];
   started: boolean;
+  heartbeats?: Record<string, number>; // playerId -> last ts
 };
 
 export type NetEvents =
@@ -23,9 +24,12 @@ export interface NetAdapter {
   leave(): void;
   seat(seat: Seat | null): void;
   start(): void;
+  undo?(): void;
   toggleReady?(): void;
   passBaton(): void;
   moveSAN(san: string): void;
+  sendChat?(txt: string): void;
+  heartbeat?(): void;
   onEvent(handler: (e: NetEvents) => void): void;
 }
 

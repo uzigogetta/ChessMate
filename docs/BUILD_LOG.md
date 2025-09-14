@@ -1,5 +1,19 @@
 # Build Log
 
+Delta (2025-09-14T00:00:00Z)
+- Step 5 — Robust online UX (validation, reconnection, presence, chat, persistence)
+
+Delta (2025-09-14T00:15:00Z)
+- Step 6 — Supabase Realtime adapter for cross-device rooms
+- Added SupabaseRealtimeAdapter and wired createNet to prefer Supabase when keys exist
+- Added move helpers: src/features/chess/logic/moveHelpers.ts
+- Optimistic move UI: BoardSkia and online room screen
+- Reconnect hook: src/features/online/reconnect.ts
+- Presence heartbeat fields in net adapters
+- Room chat component: src/features/chat/RoomChat.tsx
+- MMKV storage helpers and game archive module
+- Jest tests for move helpers
+
 Delta (2025-09-13T20:30:00Z)
 - Step 1 — Routing skeleton & screens created (tabs, auth, game routes).
 - Added UI atoms at src/ui/atoms.tsx and wired screens to use them.

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/newgen-d0/react-native"
+    }
+  }
+}

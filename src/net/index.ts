@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { SocketClient } from './socketClient';
 import { HostLoopback } from './hostLoopback';
+import { SupabaseRealtimeAdapter } from './supabaseAdapter';
 
 function resolveServerUrl(): string | undefined {
   const fromEnv = (process.env.EXPO_PUBLIC_SERVER_URL as string | undefined)?.trim();
@@ -14,6 +15,8 @@ function resolveServerUrl(): string | undefined {
 
 export const createNet = () => {
   const url = resolveServerUrl();
+  const supa = (Constants.expoConfig?.extra as any)?.supabaseUrl || process.env.EXPO_PUBLIC_SUPABASE_URL;
+  if (supa) return new SupabaseRealtimeAdapter();
   return url ? new SocketClient(url) : new HostLoopback();
 };
 

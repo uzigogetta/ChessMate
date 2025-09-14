@@ -35,7 +35,15 @@
     },
     "plugins": [
       "expo-router",
-      "./plugins/withPredictiveBack"
+      "./plugins/withPredictiveBack",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "newgen-d0"
+        }
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"
@@ -44,7 +52,9 @@
       "eas": {
         "projectId": "b9979c02-b8b3-4056-9f3b-98ad07ab46f8"
       },
-      "serverUrl": "$(EXPO_PUBLIC_SERVER_URL)"
+      "serverUrl": "$(EXPO_PUBLIC_SERVER_URL)",
+      "supabaseUrl": "https://kcegzdycpyeaawgzngxw.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjZWd6ZHljcHllYWF3Z3puZ3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4NjE4NjYsImV4cCI6MjA3MzQzNzg2Nn0.L7YpOL-Rd_1wV9sH5NpNPQRC4L9Tjni1v0alNMUmXwk"
     },
     "runtimeVersion": {
       "policy": "appVersion"

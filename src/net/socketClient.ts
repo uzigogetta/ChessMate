@@ -45,6 +45,15 @@ export class SocketClient implements NetAdapter {
   moveSAN(san: string): void {
     this.socket?.emit('game/moveSAN', san);
   }
+  undo(): void {
+    this.socket?.emit('game/undo');
+  }
+  sendChat(txt: string): void {
+    this.socket?.emit('chat/send', txt);
+  }
+  heartbeat(): void {
+    this.socket?.emit('room/heartbeat');
+  }
   onEvent(handler: (e: NetEvents) => void): void {
     this.handler = handler;
   }

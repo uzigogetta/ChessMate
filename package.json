@@ -14,9 +14,11 @@
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ui": "0.2.0-beta.2",
+    "@react-native-community/netinfo": "11.4.1",
     "@sentry/react-native": "^6.20.0",
     "@shopify/flash-list": "^2.0.2",
     "@shopify/react-native-skia": "^2.2.12",
+    "@supabase/supabase-js": "^2.57.4",
     "chess.js": "^1.4.0",
     "expo": "~54.0.7",
     "expo-blur": "~15.0.7",

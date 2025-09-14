@@ -38,7 +38,8 @@ export class HostLoopback implements NetAdapter {
         fen: c.fen(),
         historySAN: [],
         started: false,
-        hostId: meId
+        hostId: meId,
+        heartbeats: { [meId]: Date.now() }
       };
       rooms.set(roomId, r);
     } else {
@@ -108,6 +109,31 @@ export class HostLoopback implements NetAdapter {
     r.historySAN.push(mv.san);
     r.driver = r.driver === 'w' ? 'b' : 'w';
     this.broadcast({ t: 'game/move', from: this.me?.id || 'host', san: mv.san, fen: r.fen });
+    this.emitState();
+  }
+
+  undo(): void {
+    const r = this.getRoom();
+    if (!r) return;
+    // soft undo: pop last SAN and recompute
+    r.historySAN = r.historySAN.slice(0, -1);
+    const c = new Chess();
+    for (const s of r.historySAN) c.move(s, { sloppy: true } as any);
+    r.fen = c.fen();
+    r.driver = c.turn();
+    this.emitState();
+  }
+
+  sendChat(txt: string): void {
+    if (!this.me) return;
+    this.broadcast({ t: 'chat/msg', from: this.me.id, txt });
+  }
+
+  heartbeat(): void {
+    const r = this.getRoom();
+    if (!r || !this.me) return;
+    if (!r.heartbeats) r.heartbeats = {} as any;
+    r.heartbeats[this.me.id] = Date.now();
     this.emitState();
   }
 

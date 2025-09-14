@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Mode, NetAdapter, NetEvents, Player, RoomState, Seat } from '@/net/types';
 import { createNet } from '@/net';
+import { getJSON, setJSON, KEYS } from '@/features/storage/mmkv';
 
 type State = {
   me: Player;
@@ -22,15 +23,25 @@ function randomId(len = 6) {
 }
 
 export const useRoomStore = create<State>((set, get) => ({
-  me: { id: randomId(6), name: 'Me' },
+  me: (getJSON<Player>(KEYS.lastIdentity) || { id: randomId(6), name: 'Me' }) as Player,
   net: createNet(),
   async join(roomId, mode, name) {
     const me = { ...get().me, name: name || get().me.name };
     // Always resolve a fresh adapter on join (ensures correct HostLoopback vs Socket selection)
     const net = createNet();
     set({ me, net, room: undefined });
+    setJSON(KEYS.lastIdentity, me);
     net.onEvent((e: NetEvents) => {
-      if (e.t === 'room/state') set({ room: e.state });
+      if (e.t === 'room/state') {
+        set({ room: e.state });
+        setJSON(KEYS.lastRoomState, {
+          roomId: e.state.roomId,
+          fen: e.state.fen,
+          historySAN: e.state.historySAN,
+          seats: e.state.seats,
+          lastUpdated: Date.now()
+        });
+      }
     });
     await net.join(roomId, mode, me.name, me.id);
   },

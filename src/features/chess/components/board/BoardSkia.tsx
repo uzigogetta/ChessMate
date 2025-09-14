@@ -5,12 +5,18 @@ import { colors as uiColors } from '@/ui/tokens';
 import { fenToBoard, legalMovesFrom } from '@/features/chess/logic/chess.rules';
 import { usePieceFont } from '@/ui/fonts';
 
-type Props = { fen: string; onMove: (from: string, to: string) => void; coords?: boolean };
+type Props = {
+  fen: string;
+  onMove: (from: string, to: string) => void;
+  onOptimisticMove?: (from: string, to: string, rollback: () => void) => void;
+  coords?: boolean;
+};
 
 const BOARD_SIZE = 320;
 
-export function BoardSkia({ fen, onMove }: Props) {
+export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [optimistic, setOptimistic] = useState<{ from: string; to: string } | null>(null);
   const { chess } = fenToBoard(fen);
   const board = chess.board();
 
@@ -43,7 +49,13 @@ export function BoardSkia({ fen, onMove }: Props) {
           const from = selected;
           const to = sq;
           setSelected(null);
-          onMove(from, to);
+          if (onOptimisticMove) {
+            setOptimistic({ from, to });
+            const rollback = () => setOptimistic(null);
+            onOptimisticMove(from, to, rollback);
+          } else {
+            onMove(from, to);
+          }
           return;
         }
       }
@@ -117,6 +129,13 @@ export function BoardSkia({ fen, onMove }: Props) {
             })
           )}
         </Group>
+
+        {/* optimistic overlay: dim board and show small indicator */}
+        {optimistic && (
+          <Group>
+            <Rect x={0} y={0} width={BOARD_SIZE} height={BOARD_SIZE} color={highlight} opacity={0.06} />
+          </Group>
+        )}
       </Canvas>
 
       {/* touch overlay */}
