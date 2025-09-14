@@ -10,18 +10,23 @@ type Props = {
   onMove: (from: string, to: string) => void;
   onOptimisticMove?: (from: string, to: string, rollback: () => void) => void;
   coords?: boolean;
+  orientation?: 'w' | 'b';
+  enabled?: boolean;
+  selectableColor?: 'w' | 'b';
 };
 
 const BOARD_SIZE = 320;
 
-export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
+export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', enabled = true, selectableColor }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [optimistic, setOptimistic] = useState<{ from: string; to: string } | null>(null);
+  const [invalidSq, setInvalidSq] = useState<string | null>(null);
   const { chess } = fenToBoard(fen);
   const board = chess.board();
 
-  const light = uiColors?.card ?? '#edeff2';
-  const dark = uiColors?.muted ?? '#6b7688';
+  // High-contrast board colors to ensure black pieces are visible on light squares
+  const light = '#EEEED2';
+  const dark = '#769656';
   const highlight = uiColors?.accent ?? '#00E0B8';
 
   const cell = BOARD_SIZE / 8;
@@ -32,11 +37,27 @@ export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
     return new Set(legalMovesFrom(fen, selected).map((m) => m.to));
   }, [fen, selected]);
 
-  const toSquare = useCallback((row: number, col: number) => {
-    const files = 'abcdefgh';
-    const ranks = '87654321';
-    return `${files[col]}${ranks[row]}`;
-  }, []);
+  const toSquare = useCallback(
+    (row: number, col: number) => {
+      const files = orientation === 'w' ? 'abcdefgh' : 'hgfedcba';
+      const ranks = orientation === 'w' ? '87654321' : '12345678';
+      return `${files[col]}${ranks[row]}`;
+    },
+    [orientation]
+  );
+
+  const squareToRowCol = useCallback(
+    (sq: string) => {
+      const file = sq[0];
+      const rank = sq[1];
+      const files = orientation === 'w' ? 'abcdefgh' : 'hgfedcba';
+      const ranks = orientation === 'w' ? '87654321' : '12345678';
+      const col = files.indexOf(file);
+      const row = ranks.indexOf(rank);
+      return { row, col };
+    },
+    [orientation]
+  );
 
   const handleTap = useCallback(
     (sq: string) => {
@@ -60,10 +81,16 @@ export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
         }
       }
       const piece = chess.get(sq as any);
-      if (piece && piece.color === chess.turn()) setSelected(sq);
-      else setSelected(null);
+      if (piece && (!selectableColor || piece.color === selectableColor)) setSelected(sq);
+      else {
+        setSelected(null);
+        if (piece && selectableColor && piece.color !== selectableColor) {
+          setInvalidSq(sq);
+          setTimeout(() => setInvalidSq(null), 220);
+        }
+      }
     },
-    [chess, legalTargets, onMove, selected]
+    [chess, legalTargets, onMove, selected, selectableColor]
   );
 
   if (!font) {
@@ -90,9 +117,14 @@ export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
 
         {/* selected highlight */}
         {selected && (() => {
-          const file = selected.charCodeAt(0) - 'a'.charCodeAt(0);
-          const rank = 8 - Number(selected[1]);
-          return <Rect x={file * cell} y={rank * cell} width={cell} height={cell} color={highlight} opacity={0.25} />;
+          const { row, col } = squareToRowCol(selected);
+          return <Rect x={col * cell} y={row * cell} width={cell} height={cell} color={highlight} opacity={0.25} />;
+        })()}
+
+        {/* invalid tap flash */}
+        {invalidSq && (() => {
+          const { row, col } = squareToRowCol(invalidSq);
+          return <Rect x={col * cell} y={row * cell} width={cell} height={cell} color="#ff3b30" opacity={0.35} />;
         })()}
 
         {/* legal dots */}
@@ -113,8 +145,10 @@ export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
             row.map((p, c) => {
               if (!p) return null;
               const glyph = p.color === 'w' ? p.type.toUpperCase() : p.type.toLowerCase();
-              const cx = c * cell + cell / 2;
-              const cy = r * cell + cell / 2;
+              const dr = orientation === 'w' ? r : 7 - r;
+              const dc = orientation === 'w' ? c : 7 - c;
+              const cx = dc * cell + cell / 2;
+              const cy = dr * cell + cell / 2;
               const metrics = font.measureText(glyph);
               return (
                 <SkiaText
@@ -123,7 +157,7 @@ export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
                   x={cx - metrics.width / 2}
                   y={cy + font.getSize() * 0.35}
                   font={font}
-                  color={p.color === 'w' ? '#ffffff' : '#121212'}
+                  color={p.color === 'w' ? '#ffffff' : '#0A0A0A'}
                 />
               );
             })
@@ -140,17 +174,15 @@ export function BoardSkia({ fen, onMove, onOptimisticMove }: Props) {
 
       {/* touch overlay */}
       <View
-        pointerEvents="box-only"
+        pointerEvents={'box-only'}
         style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}
         onStartShouldSetResponder={() => true}
+        onStartShouldSetResponderCapture={() => true}
         onResponderRelease={(e) => {
           const { locationX, locationY } = e.nativeEvent;
           const col = Math.floor(locationX / cell);
           const row = Math.floor(locationY / cell);
-          const files = 'abcdefgh';
-          const file = files[col];
-          const rank = 8 - row;
-          const sq = `${file}${rank}`;
+          const sq = toSquare(row, col);
           handleTap(sq);
         }}
       />

@@ -14,6 +14,21 @@ Delta (2025-09-14T00:15:00Z)
 - MMKV storage helpers and game archive module
 - Jest tests for move helpers
 
+Delta (2025-09-14T12:45:00Z)
+- Hotfix: host-authoritative online flow + FEN-derived turns
+- Networking
+  - Supabase adapter made host-authoritative; non-hosts send requests (seat/release/start/moveSAN)
+  - Deterministic seating for 1v1 (host=White, next=Black), no stealing
+  - Presence-based seat pruning with 15s grace; no pruning on sync
+  - Immutable room/state broadcasts (deep snapshots) and local snapshot updates on game/move
+- Chess logic/UI
+  - Turn gating derived from FEN via getTurn(fen) (removed reliance on driver)
+  - BoardSkia selectableColor blocks selecting opponent pieces; invalid taps flash red
+  - Orientation tap mapping fixed for Black
+  - DevOverlay shows fen/turn/mySide/isMyTurn
+- Debugging
+  - Added src/debug/netLogger.ts and instrumented adapter/store/UI logs
+
 Delta (2025-09-13T20:30:00Z)
 - Step 1 — Routing skeleton & screens created (tabs, auth, game routes).
 - Added UI atoms at src/ui/atoms.tsx and wired screens to use them.

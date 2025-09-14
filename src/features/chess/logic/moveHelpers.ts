@@ -25,6 +25,11 @@ export function applySANList(sans: string[]): string {
   return c.fen();
 }
 
+export function getTurn(fen: string): 'w' | 'b' {
+  const c = new Chess(fen);
+  return c.turn() as 'w' | 'b';
+}
+
 export function isLegalMoveForDriver(
   room: RoomState,
   playerId: string,
@@ -33,16 +38,15 @@ export function isLegalMoveForDriver(
 ): boolean {
   if (!room.started) return false;
   const c = new Chess(room.fen);
-  // Ensure it's the driver's turn
-  if (c.turn() !== room.driver) return false;
-  // Player must occupy at least one seat on the driver side
+  const turn = c.turn() as 'w' | 'b';
+  // Player must occupy at least one seat on the side to move
   const mySeats = (Object.keys(room.seats) as Seat[]).filter((k) => room.seats[k] === playerId);
   if (mySeats.length === 0) return false;
-  const canDrive = mySeats.some((s) => s.startsWith(room.driver));
+  const canDrive = mySeats.some((s) => s.startsWith(turn));
   if (!canDrive) return false;
-  // Ensure the selected piece color matches the driver side
+  // Ensure the selected piece color matches the side to move
   const piece = c.get(from as any);
-  if (!piece || piece.color !== room.driver) return false;
+  if (!piece || piece.color !== turn) return false;
   // Finally ensure the move itself is legal
   const res = validateMove(room.fen, from, to);
   return !!res.ok;

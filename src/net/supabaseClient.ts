@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 const supabaseUrl = (Constants.expoConfig?.extra as any)?.supabaseUrl || (process.env.EXPO_PUBLIC_SUPABASE_URL as string);
 const supabaseAnonKey = (Constants.expoConfig?.extra as any)?.supabaseAnonKey || (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string);
 
-export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, { realtime: { params: { eventsPerSecond: 20 } } });
 
 // Temporary connectivity check (DEV only)
 if (__DEV__) {

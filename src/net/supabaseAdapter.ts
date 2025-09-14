@@ -1,11 +1,14 @@
 import { Chess } from 'chess.js';
+import { logReq, logRt, logState, logMove } from '@/debug/netLogger';
 import type { Mode, NetAdapter, NetEvents, Player, RoomState, Seat } from './types';
 import { supabase } from './supabaseClient';
 
 type BroadcastEvent =
   | { type: 'room/state'; state: RoomState }
   | { type: 'chat/msg'; from: string; txt: string }
-  | { type: 'game/move'; from: string; san: string; fen: string };
+  | { type: 'game/move'; from: string; san: string; fen: string }
+  | { type: 'room/req'; from: string; req: any }
+  | { type: 'room/ack'; to: string; ok: boolean; reason?: string; snapshot?: RoomState };
 
 export class SupabaseRealtimeAdapter implements NetAdapter {
   private me: Player | null = null;
@@ -13,6 +16,12 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   private handler: ((e: NetEvents) => void) | null = null;
   private channel: ReturnType<typeof supabase.channel> | null = null;
   private state: RoomState | null = null;
+  private lastPresenceCount = 0;
+  private hostId: string | null = null;
+  private isHost = false;
+  private lastSeen: Record<string, number> = {};
+  private pruneTimer: any = null;
+  private currentMembers: Set<string> = new Set();
 
   async join(roomId: string, mode: Mode, name: string, id: string): Promise<void> {
     this.me = { id, name };
@@ -34,17 +43,80 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       config: { presence: { key: id } }
     });
 
-    // Presence sync -> rebuild members list from presence state
+    // Presence sync -> rebuild members; host assigns seats and re-broadcasts authoritative state
     this.channel.on('presence', { event: 'sync' }, () => {
       if (!this.channel || !this.state) return;
       const presenceState = this.channel.presenceState() as Record<string, { name?: string }[]>;
-      const members: Player[] = Object.keys(presenceState).map((pid) => ({ id: pid, name: presenceState[pid][0]?.name || 'Guest' }));
+      const memberIds = Object.keys(presenceState);
+      const now = Date.now();
+      this.currentMembers = new Set(memberIds);
+      memberIds.forEach((id) => (this.lastSeen[id] = now));
+      const members: Player[] = memberIds.map((pid) => ({ id: pid, name: presenceState[pid][0]?.name || 'Guest' }));
       this.state.members = members;
+      // elect host by smallest id on first sync; keep sticky unless host leaves
+      const sorted = memberIds.slice().sort();
+      if (!this.hostId || (this.hostId && !memberIds.includes(this.hostId))) {
+        this.hostId = sorted[0] || null;
+      }
+      this.isHost = !!(this.me && this.hostId && this.me.id === this.hostId);
+      if (this.isHost) {
+        // Assign seats deterministically in 1v1 (no immediate pruning; handled by grace timer)
+        if (this.state.mode === '1v1') {
+          const seats = this.state.seats;
+          // If both empty, set host as White and next joined as Black
+          if (!seats['w1'] && !seats['b1'] && this.hostId) {
+            seats['w1'] = this.hostId;
+            const otherId = memberIds.find((id) => id !== this.hostId) || null;
+            if (otherId) seats['b1'] = otherId;
+          }
+          // If White missing, assign to host
+          if (!seats['w1'] && this.hostId) seats['w1'] = this.hostId;
+          // If Black missing and there is another member, assign without stealing
+          if (!seats['b1']) {
+            const candidate = memberIds.find((id) => id !== seats['w1']);
+            if (candidate) seats['b1'] = candidate;
+          }
+        }
+        logState('host emit room/state', this.state);
+        this.broadcast({ type: 'room/state', state: this.state });
+        this.schedulePrune();
+      }
       this.emitState();
+      this.lastPresenceCount = memberIds.length;
+    });
+    // Request channel
+    this.channel.on('broadcast', { event: 'room/req' }, (payload: any) => {
+      if (!this.isHost || !this.state) return;
+      const { from, req } = payload?.payload || payload || {};
+      if (!from || !req) return;
+      const seats = this.state.seats;
+      if (req.kind === 'seat') {
+        const side: 'w' | 'b' = req.side;
+        const order: Seat[] = side === 'w' ? ['w1'] : ['b1'];
+        const target = order.find((s) => !seats[s] || seats[s] === from);
+        if (!target) {
+          this.broadcast({ type: 'room/ack', to: from, ok: false, reason: 'Side full' });
+          return;
+        }
+        // release from's previous seats
+        (Object.keys(seats) as Seat[]).forEach((s) => { if (seats[s] === from) delete seats[s]; });
+        seats[target] = from;
+        this.syncState();
+        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+      } else if (req.kind === 'release') {
+        (Object.keys(seats) as Seat[]).forEach((s) => { if (seats[s] === from) delete seats[s]; });
+        this.syncState();
+        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+      } else if (req.kind === 'start') {
+        this.start();
+      } else if (req.kind === 'moveSAN') {
+        this.moveSAN(req.san);
+      }
     });
 
     // Broadcast listeners
     this.channel.on('broadcast', { event: 'room/state' }, (payload: any) => {
+      logRt('broadcast room/state', payload);
       const incoming: RoomState = payload?.payload?.state || payload?.state;
       if (!incoming) return;
       // Merge presence-derived members for accuracy
@@ -52,19 +124,32 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         const presenceState = this.channel.presenceState() as Record<string, { name?: string }[]>;
         incoming.members = Object.keys(presenceState).map((pid) => ({ id: pid, name: presenceState[pid][0]?.name || 'Guest' }));
       }
-      this.state = incoming;
+      // Replace local snapshot immutably
+      this.state = {
+        ...incoming,
+        seats: { ...incoming.seats },
+        members: [...incoming.members]
+      };
       this.handler?.({ t: 'room/state', state: this.state });
     });
 
     this.channel.on('broadcast', { event: 'chat/msg' }, (payload: any) => {
+      logRt('broadcast chat/msg', payload);
       const { from, txt } = payload?.payload || payload || {};
       if (!from || typeof txt !== 'string') return;
       this.handler?.({ t: 'chat/msg', from, txt });
     });
 
     this.channel.on('broadcast', { event: 'game/move' }, (payload: any) => {
+      logRt('broadcast game/move', payload);
       const { from, san, fen } = payload?.payload || payload || {};
       if (!san || !fen) return;
+      if (this.state) {
+        this.state.fen = fen;
+        this.state.historySAN = [...this.state.historySAN, san];
+        const c = new Chess(fen);
+        this.state.driver = c.turn() as 'w' | 'b';
+      }
       this.handler?.({ t: 'game/move', from: from || this.me?.id || 'peer', san, fen });
     });
 
@@ -73,8 +158,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       if (status === 'SUBSCRIBED') {
         // track presence with name
         await this.channel?.track({ name });
-        // emit my local state so newcomers can sync
-        this.broadcast({ type: 'room/state', state: this.state! });
+        // Do not broadcast here; wait for presence sync to avoid race with existing peers
         this.emitState();
       }
     });
@@ -90,14 +174,47 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   seat(seat: Seat | null): void {
     if (!this.state || !this.me) return;
+    if (!this.isHost) return; // non-hosts don't mutate authoritative state
+    const meId = this.me.id;
+    // 1v1 restrict
+    if (this.state.mode === '1v1' && seat && (seat === 'w2' || seat === 'b2')) return;
+    // if selecting a seat that is already taken by someone else, ignore
+    if (seat && this.state.seats[seat] && this.state.seats[seat] !== meId) return;
     // release previous seats occupied by me
+    for (const k of Object.keys(this.state.seats) as Seat[]) if (this.state.seats[k] === meId) delete this.state.seats[k];
+    if (seat) this.state.seats[seat] = meId;
+    this.syncState();
+  }
+
+  seatSide(side: 'w' | 'b'): void {
+    if (!this.state || !this.me) return;
+    if (!this.isHost) return;
+    const order: Seat[] = side === 'w' ? ['w1', 'w2'] : ['b1', 'b2'];
+    const candidates = this.state.mode === '1v1' ? [order[0]] : order;
+    const meId = this.me.id;
+    let target: Seat | null = null;
+    for (const s of candidates) {
+      if (!this.state.seats[s] || this.state.seats[s] === meId) {
+        target = s;
+        break;
+      }
+    }
+    // release mine, claim target if available
+    for (const k of Object.keys(this.state.seats) as Seat[]) if (this.state.seats[k] === meId) delete this.state.seats[k];
+    if (target) this.state.seats[target] = meId;
+    this.syncState();
+  }
+
+  releaseSeat(): void {
+    if (!this.state || !this.me) return;
+    if (!this.isHost) return;
     for (const k of Object.keys(this.state.seats) as Seat[]) if (this.state.seats[k] === this.me.id) delete this.state.seats[k];
-    if (seat) this.state.seats[seat] = this.me.id;
     this.syncState();
   }
 
   start(): void {
     if (!this.state) return;
+    if (!this.isHost) return;
     this.state.started = true;
     this.state.driver = 'w';
     this.syncState();
@@ -111,7 +228,12 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   }
 
   moveSAN(san: string): void {
-    if (!this.state) return;
+    if (!this.state || !this.me) return;
+    // Only allow moves for the side to move
+    const seats = this.state.seats;
+    const myId = this.me.id;
+    const mySide: 'w' | 'b' | null = (seats['w1'] === myId || seats['w2'] === myId) ? 'w' : (seats['b1'] === myId || seats['b2'] === myId) ? 'b' : null;
+    if (!mySide || mySide !== this.state.driver) return;
     const c = new Chess(this.state.fen);
     const mv = c.move(san, { sloppy: true } as any);
     if (!mv) return;
@@ -119,7 +241,12 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
     this.state.historySAN.push(mv.san);
     this.state.driver = this.state.driver === 'w' ? 'b' : 'w';
     this.broadcast({ type: 'game/move', from: this.me?.id || 'peer', san: mv.san, fen: this.state.fen });
-    this.syncState();
+    // host will also broadcast room/state; non-hosts emit local state clone for UI responsiveness
+    if (this.isHost) {
+      this.syncState();
+    } else {
+      this.emitState();
+    }
   }
 
   sendChat?(txt: string): void {
@@ -135,7 +262,15 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   }
 
   private emitState() {
-    if (this.state) this.handler?.({ t: 'room/state', state: this.state });
+    if (this.state) {
+      // Send a new object reference so Zustand selectors pick up changes on the sender
+      const stateCopy: RoomState = {
+        ...this.state,
+        seats: { ...this.state.seats },
+        members: [...this.state.members]
+      };
+      this.handler?.({ t: 'room/state', state: stateCopy });
+    }
   }
 
   private broadcast(e: BroadcastEvent) {
@@ -144,8 +279,29 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   private syncState() {
     if (!this.state) return;
-    this.broadcast({ type: 'room/state', state: this.state });
+    // Only host broadcasts authoritative state
+    if (this.isHost) this.broadcast({ type: 'room/state', state: this.state });
     this.emitState();
+  }
+
+  private schedulePrune() {
+    if (!this.isHost) return;
+    if (this.pruneTimer) return;
+    const GRACE_MS = 15000;
+    this.pruneTimer = setInterval(() => {
+      if (!this.state) return;
+      const now = Date.now();
+      let changed = false;
+      (['w1','b1','w2','b2'] as Seat[]).forEach((s) => {
+        const pid = this.state!.seats[s];
+        // Only prune if the occupant is no longer in current presence and grace elapsed
+        if (pid && !this.currentMembers.has(pid) && this.lastSeen[pid] && now - this.lastSeen[pid] > GRACE_MS) {
+          delete this.state!.seats[s];
+          changed = true;
+        }
+      });
+      if (changed) this.syncState();
+    }, 5000);
   }
 }
 

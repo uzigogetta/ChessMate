@@ -22,7 +22,9 @@ export type NetEvents =
 export interface NetAdapter {
   join(roomId: string, mode: Mode, name: string, id: string): Promise<void>;
   leave(): void;
-  seat(seat: Seat | null): void;
+  seat(seat: Seat | null): void; // legacy
+  seatSide?(side: 'w' | 'b'): void;
+  releaseSeat?(): void;
   start(): void;
   undo?(): void;
   toggleReady?(): void;

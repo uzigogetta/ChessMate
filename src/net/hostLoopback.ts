@@ -46,6 +46,20 @@ export class HostLoopback implements NetAdapter {
       if (!r.members.find((m) => m.id === meId)) r.members.push(this.me);
       r.mode = mode;
     }
+    // Auto-seat policy for 1v1: first joiner takes White if free
+    if (r.mode === '1v1') {
+      const alreadySeated = Object.values(r.seats).includes(meId);
+      if (!alreadySeated) {
+        if (!r.seats['w1'] && !r.seats['b1']) {
+          r.seats['w1'] = meId; // first joiner gets White
+        } else if (r.seats['w1'] && !r.seats['b1']) {
+          r.seats['b1'] = meId; // second joiner gets Black
+        } else if (!r.seats['w1'] && r.seats['b1']) {
+          r.seats['w1'] = meId;
+        }
+      }
+    }
+    this.maybeStart(r);
     this.emitState();
   }
 
@@ -71,10 +85,48 @@ export class HostLoopback implements NetAdapter {
     } else {
       // 1v1 restrict to w1/b1
       if (r.mode === '1v1' && (seat === 'w2' || seat === 'b2')) return;
+      // don't steal an occupied seat owned by someone else
+      const occupant = r.seats[seat];
+      if (occupant && occupant !== this.me.id) {
+        return;
+      }
       // release any previous seats for me
       for (const k of Object.keys(r.seats) as Seat[]) if (r.seats[k] === this.me.id) delete r.seats[k];
       r.seats[seat] = this.me.id;
     }
+    this.maybeStart(r);
+    this.emitState();
+  }
+
+  seatSide(side: 'w' | 'b'): void {
+    const r = this.getRoom();
+    if (!r || !this.me) return;
+    const order: Seat[] = side === 'w' ? ['w1', 'w2'] : ['b1', 'b2'];
+    // if I already sit on this side, keep it
+    for (const s of order) {
+      if (r.seats[s] === this.me.id) {
+        this.emitState();
+        return;
+      }
+    }
+    const candidates = r.mode === '1v1' ? [order[0]] : order;
+    const free = candidates.find((s) => !r.seats[s]);
+    if (!free) {
+      // side full; do not release current seat
+      this.emitState();
+      return;
+    }
+    // move: release my seats then claim the free seat on requested side
+    for (const k of Object.keys(r.seats) as Seat[]) if (r.seats[k] === this.me.id) delete r.seats[k];
+    r.seats[free] = this.me.id;
+    this.maybeStart(r);
+    this.emitState();
+  }
+
+  releaseSeat(): void {
+    const r = this.getRoom();
+    if (!r || !this.me) return;
+    for (const k of Object.keys(r.seats) as Seat[]) if (r.seats[k] === this.me.id) delete r.seats[k];
     this.emitState();
   }
 
@@ -157,6 +209,13 @@ export class HostLoopback implements NetAdapter {
 
   private broadcast(e: NetEvents) {
     publish(e);
+  }
+
+  private maybeStart(r: Room) {
+    if (!r.started && r.mode === '1v1' && !!r.seats['w1'] && !!r.seats['b1']) {
+      r.started = true;
+      r.driver = 'w';
+    }
   }
 }
 
