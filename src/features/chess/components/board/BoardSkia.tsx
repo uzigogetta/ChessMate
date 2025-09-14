@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { View } from 'react-native';
 import { Canvas, Rect, Group, Circle, Text as SkiaText } from '@shopify/react-native-skia';
 import { colors as uiColors } from '@/ui/tokens';
+import { useBoardTheme } from '@/ui/useBoardTheme';
 import { fenToBoard, legalMovesFrom } from '@/features/chess/logic/chess.rules';
 import { usePieceFont } from '@/ui/fonts';
 
@@ -24,9 +25,9 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
   const { chess } = fenToBoard(fen);
   const board = chess.board();
 
-  // High-contrast board colors to ensure black pieces are visible on light squares
-  const light = '#EEEED2';
-  const dark = '#769656';
+  const boardTheme = useBoardTheme();
+  const light = boardTheme.light;
+  const dark = boardTheme.dark;
   const highlight = uiColors?.accent ?? '#00E0B8';
 
   const cell = BOARD_SIZE / 8;
@@ -157,7 +158,7 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
                   x={cx - metrics.width / 2}
                   y={cy + font.getSize() * 0.35}
                   font={font}
-                  color={p.color === 'w' ? '#ffffff' : '#0A0A0A'}
+                  color={p.color === 'w' ? boardTheme.pieces.white : boardTheme.pieces.black}
                 />
               );
             })

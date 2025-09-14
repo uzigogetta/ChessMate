@@ -5,6 +5,7 @@ import { logState, logMove } from '@/debug/netLogger';
 import { sideToMove } from '@/features/chess/logic/chess.rules';
 import { getJSON, setJSON, KEYS } from '@/features/storage/mmkv';
 import { getPlayerId } from '@/core/identity';
+import { useChatStore, type ChatMsg } from '@/features/chat/chat.store';
 
 type State = {
   me: Player;
@@ -89,6 +90,11 @@ export const useRoomStore = create<State>((set, get) => ({
           seats: updated.seats,
           lastUpdated: Date.now()
         });
+      } else if (e.t === 'chat/msg') {
+        const r = get().room;
+        if (!r) return;
+        const msg: ChatMsg = { id: `${Date.now()}`, from: e.from, txt: e.txt, ts: Date.now() } as any;
+        useChatStore.getState().append(r.roomId, msg);
       }
     });
     await net.join(roomId, mode, me.name, me.id);

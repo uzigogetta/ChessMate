@@ -16,6 +16,13 @@ Delta (2025-09-14T00:15:00Z)
 
 Delta (2025-09-14T12:45:00Z)
 - Hotfix: host-authoritative online flow + FEN-derived turns
+- Delta (2025-09-14T13:20:00Z)
+- Step 7 — Presence bar, chat bottom sheet, invite/copy, settings scaffold, board theme
+- PresenceBar component showing seats (w1/w2, b1/b2) with initials and you-badge
+- Chat persistence via MMKV (per-room, last 100); RoomChat updated
+- Invite button (Share) + Copy ID chip; helper buildInvite
+- Settings store + screen for boardTheme; useBoardTheme and BoardSkia colors wired
+- Dev logging maintained
 - Networking
   - Supabase adapter made host-authoritative; non-hosts send requests (seat/release/start/moveSAN)
   - Deterministic seating for 1v1 (host=White, next=Black), no stealing

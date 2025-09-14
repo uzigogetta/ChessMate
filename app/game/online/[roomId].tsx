@@ -11,6 +11,10 @@ import { logMove } from '@/debug/netLogger';
 import RoomChat from '@/features/chat/RoomChat';
 import { ReconnectListener } from '@/features/online/reconnect';
 import { DevOverlay } from '@/ui/DevOverlay';
+import * as Clipboard from 'expo-clipboard';
+import { Share } from 'react-native';
+import { buildInvite } from '@/features/online/invite';
+import PresenceBar from '@/features/online/PresenceBar';
 
 function SeatButton({ label, seat, takenBy, onPress, disabled, nameById, meId }: { label: string; seat: Seat; takenBy?: string; onPress: () => void; disabled?: boolean; nameById: (id?: string) => string; meId: string }) {
   const occupant = takenBy ? ` • ${takenBy === meId ? 'you' : nameById(takenBy)}` : '';
@@ -54,6 +58,11 @@ export default function OnlineRoomScreen() {
             <Card style={{ marginBottom: 12 }}>
               <Text>{isMyTurn ? 'Your turn' : `${room.driver === 'w' ? 'White' : 'Black'} to move`}</Text>
               <Text muted>{`Room ${room.roomId} • You: ${mySide ? (mySide === 'w' ? 'White' : 'Black') : 'Spectator'} • ${room.members.length} players`}</Text>
+              <PresenceBar members={room.members} seats={room.seats} myId={me.id} activeTeammate={null} mode={room.mode} />
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <Button title="Invite" onPress={async () => { await Share.share({ message: buildInvite(room.roomId) }); }} />
+                <Button title="Copy ID" onPress={async () => { await Clipboard.setStringAsync(room.roomId); }} />
+              </View>
             </Card>
             <Card style={{ marginBottom: 12, gap: 8 }}>
               <Text>Members</Text>
