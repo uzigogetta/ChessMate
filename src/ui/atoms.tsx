@@ -24,9 +24,9 @@ export function Text({ children, style, muted = false }: { children?: React.Reac
   return <RNText style={[styles.text, muted && { color: colors.muted }, style]}>{children}</RNText>;
 }
 
-export function Button({ title, onPress }: { title: string; onPress?: () => void }) {
+export function Button({ title, onPress, disabled }: { title: string; onPress?: () => void; disabled?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.button, pressed && { opacity: 0.9 }]}>
+    <Pressable disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.button, disabled && { opacity: 0.4 }, pressed && { opacity: 0.9 }]}>
       <RNText style={styles.buttonText}>{title}</RNText>
     </Pressable>
   );

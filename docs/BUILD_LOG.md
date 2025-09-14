@@ -1,6 +1,6 @@
 # Build Log
 
-Delta (2025-09-13T19:58:00Z)
+Delta (2025-09-13T20:30:00Z)
 - Step 1 — Routing skeleton & screens created (tabs, auth, game routes).
 - Added UI atoms at src/ui/atoms.tsx and wired screens to use them.
 - Updated root layout with gesture handler, Sentry import, and StatusBar.

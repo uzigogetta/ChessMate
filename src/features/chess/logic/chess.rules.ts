@@ -53,4 +53,12 @@ export async function applySANs(sans: string[]): Promise<string> {
   return c.fen();
 }
 
+export function moveToSAN(fen: string, from: string, to: string) {
+  const c = new Chess(fen);
+  const mv = c.moves({ verbose: true }).find((m: any) => m.from === from && m.to === to);
+  if (!mv) return null as null | { san: string; fen: string };
+  c.move(mv.san, { sloppy: true } as any);
+  return { san: mv.san, fen: c.fen() };
+}
+
 

@@ -43,7 +43,8 @@
     "extra": {
       "eas": {
         "projectId": "b9979c02-b8b3-4056-9f3b-98ad07ab46f8"
-      }
+      },
+      "serverUrl": "$(EXPO_PUBLIC_SERVER_URL)"
     },
     "runtimeVersion": {
       "policy": "appVersion"
