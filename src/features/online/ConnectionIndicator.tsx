@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import { Animated, Easing } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
 import { useRoomStore } from '@/features/online/room.store';
 
@@ -53,18 +54,9 @@ export default function ConnectionIndicator() {
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
 
-  return (
-    <Animated.View style={{ transform: [{ scale }], opacity }}>
-      <View
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 5,
-          backgroundColor: color
-        }}
-      />
-    </Animated.View>
-  );
+  const iconName = isConnected === false ? 'wifi' : 'people-circle-outline';
+  const iconColor = color;
+  return <Animated.View style={{ transform: [{ scale }], opacity }}><Ionicons name={iconName as any} size={18} color={iconColor} /></Animated.View>;
 }
 
 

@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Easing } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { isUploaded } from '@/archive/cloud';
 import { useRoomStore } from '@/features/online/room.store';
 
 export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: boolean }) {
   const room = useRoomStore((s) => s.room);
   const [isUploading, setIsUploading] = useState(false);
+  const [visible, setVisible] = useState(false);
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -15,9 +17,12 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
       const keyPrefix = `${room.roomId}-${room.finishedAt || ''}`;
       const maybeIds = [keyPrefix, `${room.roomId}-${room.finishedAt || Date.now()}`];
       const uploaded = maybeIds.some((id) => isUploaded(id));
-      setIsUploading(!uploaded);
+      const uploading = !uploaded;
+      setIsUploading(uploading);
+      setVisible(uploading);
     } else {
       setIsUploading(false);
+      if (!flashOnMount) setVisible(false);
     }
   }, [room?.phase, room?.roomId, room?.finishedAt]);
 
@@ -30,9 +35,11 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
         ])
       ).start();
       if (flashOnMount && !isUploading) {
+        setVisible(true);
         const t = setTimeout(() => {
           pulse.stopAnimation();
           pulse.setValue(0);
+          setVisible(false);
         }, 1200);
         return () => clearTimeout(t);
       }
@@ -42,21 +49,14 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
     }
   }, [isUploading, flashOnMount, pulse]);
 
-  if (!room) return null;
+  if (!room || !visible) return null;
 
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] });
-  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.8] });
 
   return (
     <Animated.View style={{ transform: [{ scale }], opacity }}>
-      <View
-        style={{
-          width: 12,
-          height: 12,
-          borderRadius: 2,
-          backgroundColor: '#0A84FF'
-        }}
-      />
+      <Ionicons name="cloud-upload-outline" size={18} color="#0A84FF" />
     </Animated.View>
   );
 }
