@@ -7,59 +7,55 @@ import { useRoomStore } from '@/features/online/room.store';
 export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: boolean }) {
   const room = useRoomStore((s) => s.room);
   const [isUploading, setIsUploading] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [introActive, setIntroActive] = useState(true);
+  const [visible, setVisible] = useState(true);
   const pulse = useRef(new Animated.Value(0)).current;
 
+  // One-shot intro pulse on entry
+  useEffect(() => {
+    const INTRO_MS = 3000;
+    setIntroActive(true);
+    setVisible(true);
+    const t = setTimeout(() => { setIntroActive(false); if (!isUploading) setVisible(false); }, INTRO_MS);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Upload pulse when game finishes until cloud confirms
   useEffect(() => {
     if (!room) return;
-    // Trigger flashing when entering RESULT until archived+uploaded
-    if (room.phase === 'RESULT' || flashOnMount) {
-      const keyPrefix = `${room.roomId}-${room.finishedAt || ''}`;
-      const maybeIds = [keyPrefix, `${room.roomId}-${room.finishedAt || Date.now()}`];
-      const uploaded = maybeIds.some((id) => isUploaded(id));
-      const uploading = !uploaded;
-      setIsUploading(uploading || !!flashOnMount);
-      setVisible(uploading || !!flashOnMount);
-      // Poll for upload completion to auto-hide without requiring a room/state change
-      if (uploading) {
-        const interval = setInterval(() => {
-          const done = maybeIds.some((id) => isUploaded(id));
-          if (done) {
-            setIsUploading(false);
-            setVisible(false);
-            clearInterval(interval);
-          }
-        }, 1000);
-        return () => clearInterval(interval);
+    if (room.phase !== 'RESULT') { setIsUploading(false); if (!introActive) setVisible(false); return; }
+    const keyPrefix = `${room.roomId}-${room.finishedAt || ''}`;
+    const maybeIds = [keyPrefix, `${room.roomId}-${room.finishedAt || Date.now()}`];
+    const uploaded = maybeIds.some((id) => isUploaded(id));
+    const uploading = !uploaded;
+    setIsUploading(uploading);
+    setVisible(uploading || introActive);
+    if (!uploading) return;
+    const interval = setInterval(() => {
+      const done = maybeIds.some((id) => isUploaded(id));
+      if (done) {
+        setIsUploading(false);
+        if (!introActive) setVisible(false);
+        clearInterval(interval);
       }
-    } else {
-      setIsUploading(false);
-      if (!flashOnMount) setVisible(false);
-    }
-  }, [room?.phase, room?.roomId, room?.finishedAt, flashOnMount]);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [room?.phase, room?.roomId, room?.finishedAt, introActive]);
 
   useEffect(() => {
-    if (isUploading || flashOnMount) {
+    if (visible) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulse, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
           Animated.timing(pulse, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
         ])
       ).start();
-      if (flashOnMount && !isUploading) {
-        setVisible(true);
-        const t = setTimeout(() => {
-          pulse.stopAnimation();
-          pulse.setValue(0);
-          setVisible(false);
-        }, 3000);
-        return () => clearTimeout(t);
-      }
     } else {
       pulse.stopAnimation();
       pulse.setValue(0);
     }
-  }, [isUploading, flashOnMount, pulse]);
+  }, [visible, pulse]);
 
   if (!room || !visible) return null;
 
