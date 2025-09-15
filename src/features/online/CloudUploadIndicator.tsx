@@ -13,7 +13,7 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
 
   // One-shot intro pulse on entry
   useEffect(() => {
-    const INTRO_MS = Platform.OS === 'ios' ? 5000 : 3000;
+    const INTRO_MS = 3000; // unified timing across platforms
     setIntroActive(true);
     setVisible(true);
     const t = setTimeout(() => { setIntroActive(false); if (!isUploading) setVisible(false); }, INTRO_MS);

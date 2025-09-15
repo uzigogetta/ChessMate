@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import ConnectionIndicator from '@/features/online/ConnectionIndicator';
 import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 import { useRoomStore } from '@/features/online/room.store';
@@ -9,7 +9,7 @@ export default function HeaderIndicators() {
   const room = useRoomStore((s) => s.room);
   const [introFlash, setIntroFlash] = useState(true);
   useEffect(() => {
-    const INTRO_MS = Platform.OS === 'ios' ? 5000 : 3000;
+    const INTRO_MS = 3000; // unified timing across platforms
     const t = setTimeout(() => setIntroFlash(false), INTRO_MS);
     return () => clearTimeout(t);
   }, []);
