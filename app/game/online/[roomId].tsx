@@ -5,6 +5,7 @@ import { useSettings } from '@/features/settings/settings.store';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
 import ConnectionIndicator from '@/features/online/ConnectionIndicator';
+import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 import * as Haptics from 'expo-haptics';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { useRoomStore } from '@/features/online/room.store';
@@ -97,7 +98,8 @@ export default function OnlineRoomScreen() {
         fadingEdgeLength={0}
       >
         <ReconnectListener />
-        <View style={{ position: 'absolute', top: 8, right: containerPad + 4 }}>
+        <View style={{ position: 'absolute', top: 8, right: containerPad + 4, flexDirection: 'row', gap: 8 }}>
+          <CloudUploadIndicator />
           <ConnectionIndicator />
         </View>
         {!room && (
