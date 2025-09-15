@@ -4,8 +4,8 @@ import { colors } from '@/ui/tokens';
 import { useSettings } from '@/features/settings/settings.store';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
-import ConnectionIndicator from '@/features/online/ConnectionIndicator';
-import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
+import HeaderIndicators from '@/features/online/HeaderIndicators';
+import { Stack, useNavigation } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { useRoomStore } from '@/features/online/room.store';
@@ -83,6 +83,7 @@ export default function OnlineRoomScreen() {
   }, [shake]);
   return (
     <Screen style={{ justifyContent: 'flex-start', paddingHorizontal: containerPad }}>
+      <Stack.Screen options={{ headerShown: true, headerRight: () => <HeaderIndicators /> }} />
       <ScrollView
         style={{ flex: 1, alignSelf: 'stretch' }}
         contentContainerStyle={{ alignItems: 'center', paddingBottom: 48, paddingHorizontal: containerPad }}

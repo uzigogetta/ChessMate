@@ -3,7 +3,7 @@ import { Animated, Easing, View } from 'react-native';
 import { isUploaded } from '@/archive/cloud';
 import { useRoomStore } from '@/features/online/room.store';
 
-export default function CloudUploadIndicator() {
+export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: boolean }) {
   const room = useRoomStore((s) => s.room);
   const [isUploading, setIsUploading] = useState(false);
   const pulse = useRef(new Animated.Value(0)).current;
@@ -22,18 +22,25 @@ export default function CloudUploadIndicator() {
   }, [room?.phase, room?.roomId, room?.finishedAt]);
 
   useEffect(() => {
-    if (isUploading) {
+    if (isUploading || flashOnMount) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulse, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
           Animated.timing(pulse, { toValue: 0, duration: 500, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
         ])
       ).start();
+      if (flashOnMount && !isUploading) {
+        const t = setTimeout(() => {
+          pulse.stopAnimation();
+          pulse.setValue(0);
+        }, 1200);
+        return () => clearTimeout(t);
+      }
     } else {
       pulse.stopAnimation();
       pulse.setValue(0);
     }
-  }, [isUploading, pulse]);
+  }, [isUploading, flashOnMount, pulse]);
 
   if (!room) return null;
 
