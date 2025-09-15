@@ -42,8 +42,8 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
     if (isUploading || flashOnMount) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
+          Animated.timing(pulse, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
         ])
       ).start();
       if (flashOnMount && !isUploading) {
@@ -52,7 +52,7 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
           pulse.stopAnimation();
           pulse.setValue(0);
           setVisible(false);
-        }, 2000);
+        }, 3000);
         return () => clearTimeout(t);
       }
     } else {

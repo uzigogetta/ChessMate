@@ -26,10 +26,10 @@ export default function ConnectionIndicator() {
     return () => sub && sub();
   }, []);
 
-  // Pulse only when state indeterminate (amber)
+  // Pulse only when amber
   useEffect(() => {
     const colorIndeterminate = '#FFCC00';
-    const currentColor = (room && isOpponentPresent === true && isConnected === true) ? '#34C759' : (isConnected === false ? '#FF3B30' : '#FFCC00');
+    const currentColor = (isConnected === false) ? '#FF3B30' : (!room ? (isConnected ? '#34C759' : '#FFCC00') : (isConnected && isOpponentPresent === true ? '#34C759' : '#FFCC00'));
     const needsPulse = currentColor === colorIndeterminate;
     if (!needsPulse) {
       pulse.stopAnimation();
@@ -38,26 +38,22 @@ export default function ConnectionIndicator() {
     }
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
+        Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
       ])
     ).start();
     return () => { pulse.stopAnimation(); };
   }, [room, isOpponentPresent, isConnected, pulse]);
 
   const color = useMemo(() => {
-    // Prioritize opponent presence if in a room
-    if (room) {
-      if (isOpponentPresent === true) return '#34C759';
-      if (isOpponentPresent === false) return '#FFCC00'; // opponent missing from presence
-    }
-    if (isConnected === true) return '#34C759';
     if (isConnected === false) return '#FF3B30';
+    if (!room) return isConnected ? '#34C759' : '#FFCC00';
+    if (isConnected && isOpponentPresent === true) return '#34C759';
     return '#FFCC00';
   }, [room, isOpponentPresent, isConnected]);
 
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] });
-  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] });
 
   const iconName = isConnected === false ? 'wifi' : 'people';
   const iconColor = color;
