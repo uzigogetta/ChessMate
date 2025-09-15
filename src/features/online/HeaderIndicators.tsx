@@ -34,20 +34,18 @@ export default function HeaderIndicators() {
     );
   }
 
-  // iOS: no background; start as 26 circle centered on connection; expand left to show cloud so connection doesn't move
-  const WELL = 22; const BASE = 26; const GAP = 6;
+  // iOS: no background; start as 26 circle with connection fixed at right; expand left to show cloud so connection doesn't move
+  const WELL = 22; const BASE = 26; const GAP = 6; const RIGHT_PAD = 2;
   const cloudVisible = introFlash || cloudUploading;
   const width = cloudVisible ? BASE + GAP + WELL : BASE;
-  const connectionLeft = width - BASE / 2 - WELL / 2;
-  const cloudLeft = connectionLeft - GAP - WELL;
   return (
     <View style={{ height: BASE, width, borderRadius: BASE / 2 }}>
-      {/* Connection fixed in the right circle position */}
-      <View style={{ position: 'absolute', top: (BASE - WELL) / 2, left: connectionLeft, width: WELL, height: WELL, borderRadius: WELL / 2, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Connection fixed on the right side (does not move when expanding) */}
+      <View style={{ position: 'absolute', top: (BASE - WELL) / 2, right: RIGHT_PAD, width: WELL, height: WELL, borderRadius: WELL / 2, alignItems: 'center', justifyContent: 'center' }}>
         <ConnectionIndicator />
       </View>
       {cloudVisible && (
-        <View style={{ position: 'absolute', top: (BASE - WELL) / 2, left: cloudLeft, width: WELL, height: WELL, borderRadius: WELL / 2, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ position: 'absolute', top: (BASE - WELL) / 2, right: RIGHT_PAD + WELL + GAP, width: WELL, height: WELL, borderRadius: WELL / 2, alignItems: 'center', justifyContent: 'center' }}>
           <CloudUploadIndicator flashOnMount />
         </View>
       )}
