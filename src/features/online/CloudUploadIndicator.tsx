@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { isUploaded } from '@/archive/cloud';
 import { useRoomStore } from '@/features/online/room.store';
@@ -13,7 +13,7 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
 
   // One-shot intro pulse on entry
   useEffect(() => {
-    const INTRO_MS = 3000;
+    const INTRO_MS = Platform.OS === 'ios' ? 5000 : 3000;
     setIntroActive(true);
     setVisible(true);
     const t = setTimeout(() => { setIntroActive(false); if (!isUploading) setVisible(false); }, INTRO_MS);
