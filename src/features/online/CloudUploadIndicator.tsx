@@ -20,6 +20,18 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
       const uploading = !uploaded;
       setIsUploading(uploading);
       setVisible(uploading);
+      // Poll for upload completion to auto-hide without requiring a room/state change
+      if (uploading) {
+        const interval = setInterval(() => {
+          const done = maybeIds.some((id) => isUploaded(id));
+          if (done) {
+            setIsUploading(false);
+            setVisible(false);
+            clearInterval(interval);
+          }
+        }, 1000);
+        return () => clearInterval(interval);
+      }
     } else {
       setIsUploading(false);
       if (!flashOnMount) setVisible(false);
@@ -30,8 +42,8 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
     if (isUploading || flashOnMount) {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulse, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 0, duration: 500, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
+          Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 0, duration: 800, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
         ])
       ).start();
       if (flashOnMount && !isUploading) {
@@ -40,7 +52,7 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
           pulse.stopAnimation();
           pulse.setValue(0);
           setVisible(false);
-        }, 1200);
+        }, 2000);
         return () => clearTimeout(t);
       }
     } else {

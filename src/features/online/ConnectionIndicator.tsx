@@ -26,19 +26,24 @@ export default function ConnectionIndicator() {
     return () => sub && sub();
   }, []);
 
+  // Pulse only when state indeterminate (amber)
   useEffect(() => {
-    if (isConnected) {
+    const colorIndeterminate = '#FFCC00';
+    const currentColor = (room && isOpponentPresent === true && isConnected === true) ? '#34C759' : (isConnected === false ? '#FF3B30' : '#FFCC00');
+    const needsPulse = currentColor === colorIndeterminate;
+    if (!needsPulse) {
       pulse.stopAnimation();
       pulse.setValue(0);
-    } else {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulse, { toValue: 1, duration: 600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 0, duration: 600, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
-        ])
-      ).start();
+      return;
     }
-  }, [isConnected, pulse]);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.quad), useNativeDriver: true })
+      ])
+    ).start();
+    return () => { pulse.stopAnimation(); };
+  }, [room, isOpponentPresent, isConnected, pulse]);
 
   const color = useMemo(() => {
     // Prioritize opponent presence if in a room
