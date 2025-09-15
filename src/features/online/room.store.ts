@@ -57,9 +57,11 @@ export const useRoomStore = create<State>((set, get) => ({
   },
   async join(roomId, mode, name) {
     const me = { ...get().me, name: name || get().me.name };
+    // Cleanly leave previous adapter/channel to avoid ghost events
+    try { get().net.leave(); } catch {}
     // Always resolve a fresh adapter on join (ensures correct HostLoopback vs Socket selection)
     const net = createNet();
-    set({ me, net, room: undefined });
+    set({ me, net, room: undefined, startedAt: undefined });
     setJSON(KEYS.lastIdentity, me);
     let archivedVersion = -1;
     net.onEvent((e: NetEvents) => {
@@ -78,6 +80,7 @@ export const useRoomStore = create<State>((set, get) => ({
         set({ room: next });
         // archive exactly once when entering RESULT at a new version
         if (next.phase === 'RESULT' && typeof next.version === 'number' && next.version !== archivedVersion) {
+          archivedVersion = next.version!; // mark early to avoid duplicates
           (async () => {
             try {
               const { insertGame, init } = await import('@/archive/db');
@@ -110,7 +113,6 @@ export const useRoomStore = create<State>((set, get) => ({
                 const ok = await upsertGameCloud(row as any, me.id);
                 if (!ok) enqueueGame(row as any, me.id);
               }
-              archivedVersion = next.version!;
             } catch {}
           })();
         }
