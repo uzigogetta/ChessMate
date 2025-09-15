@@ -13,13 +13,13 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
   useEffect(() => {
     if (!room) return;
     // Trigger flashing when entering RESULT until archived+uploaded
-    if (room.phase === 'RESULT') {
+    if (room.phase === 'RESULT' || flashOnMount) {
       const keyPrefix = `${room.roomId}-${room.finishedAt || ''}`;
       const maybeIds = [keyPrefix, `${room.roomId}-${room.finishedAt || Date.now()}`];
       const uploaded = maybeIds.some((id) => isUploaded(id));
       const uploading = !uploaded;
-      setIsUploading(uploading);
-      setVisible(uploading);
+      setIsUploading(uploading || !!flashOnMount);
+      setVisible(uploading || !!flashOnMount);
       // Poll for upload completion to auto-hide without requiring a room/state change
       if (uploading) {
         const interval = setInterval(() => {
@@ -36,7 +36,7 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
       setIsUploading(false);
       if (!flashOnMount) setVisible(false);
     }
-  }, [room?.phase, room?.roomId, room?.finishedAt]);
+  }, [room?.phase, room?.roomId, room?.finishedAt, flashOnMount]);
 
   useEffect(() => {
     if (isUploading || flashOnMount) {

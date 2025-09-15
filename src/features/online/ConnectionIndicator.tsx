@@ -18,6 +18,8 @@ export default function ConnectionIndicator() {
   }, [room, opponentId]);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const pulse = useRef(new Animated.Value(0)).current;
+  const opTimer = useRef<any>(null);
+  const [opGraceRed, setOpGraceRed] = useState(false);
 
   useEffect(() => {
     const sub = NetInfo.addEventListener((state) => {
@@ -25,6 +27,26 @@ export default function ConnectionIndicator() {
     });
     return () => sub && sub();
   }, []);
+
+  // Opponent disconnect grace: show amber first, then red after 5s if still missing
+  useEffect(() => {
+    if (!room) {
+      if (opTimer.current) { clearTimeout(opTimer.current); opTimer.current = null; }
+      setOpGraceRed(false);
+      return;
+    }
+    if (isOpponentPresent === true) {
+      if (opTimer.current) { clearTimeout(opTimer.current); opTimer.current = null; }
+      setOpGraceRed(false);
+      return;
+    }
+    if (isOpponentPresent === false) {
+      if (opTimer.current) { clearTimeout(opTimer.current); }
+      setOpGraceRed(false);
+      opTimer.current = setTimeout(() => setOpGraceRed(true), 5000);
+      return;
+    }
+  }, [room, isOpponentPresent]);
 
   // Pulse only when amber
   useEffect(() => {
@@ -47,10 +69,10 @@ export default function ConnectionIndicator() {
 
   const color = useMemo(() => {
     if (isConnected === false) return '#FF3B30';
-    if (!room) return isConnected ? '#34C759' : '#FFCC00';
+    if (!room) return '#FFCC00';
     if (isConnected && isOpponentPresent === true) return '#34C759';
-    return '#FFCC00';
-  }, [room, isOpponentPresent, isConnected]);
+    return opGraceRed ? '#FF3B30' : '#FFCC00';
+  }, [room, isOpponentPresent, isConnected, opGraceRed]);
 
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.85] });
