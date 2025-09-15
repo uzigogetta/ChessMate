@@ -56,7 +56,7 @@ export default function ConnectionIndicator() {
 
   const iconName = isConnected === false ? 'wifi' : 'people';
   const iconColor = color;
-  return <Animated.View style={{ transform: [{ scale }], opacity }}><Ionicons name={iconName as any} size={14} color={iconColor} /></Animated.View>;
+  return <Animated.View style={{ transform: [{ scale }], opacity }}><Ionicons name={iconName as any} size={18} color={iconColor} /></Animated.View>;
 }
 
 
