@@ -9,7 +9,8 @@ export default function HeaderIndicators() {
   const room = useRoomStore((s) => s.room);
   const [introFlash, setIntroFlash] = useState(true);
   useEffect(() => {
-    const t = setTimeout(() => setIntroFlash(false), 1200);
+    const INTRO_MS = Platform.OS === 'ios' ? 5000 : 3000;
+    const t = setTimeout(() => setIntroFlash(false), INTRO_MS);
     return () => clearTimeout(t);
   }, []);
   const cloudUploading = useMemo(() => {
