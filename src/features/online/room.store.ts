@@ -175,22 +175,9 @@ export const useRoomStore = create<State>((set, get) => ({
   },
   offerDraw() {
     (get().net as any).offerDraw?.();
-    // Optimistic: mark pending locally to reflect UI immediately
-    const r = get().room;
-    const me = get().me;
-    if (r && me && !r.result) {
-      set({ room: { ...r, pending: { drawFrom: me.id } } as any });
-    }
   },
   answerDraw(accept) {
     (get().net as any).answerDraw?.(accept);
-    // Optimistic: clear pending and set result if accepted; host will overwrite with authoritative state
-    const r = get().room;
-    if (r && r.pending) {
-      const next: RoomState = { ...r, pending: undefined } as any;
-      if (accept) (next as any).result = '1/2-1/2';
-      set({ room: next });
-    }
   },
   requestUndo() {
     // Supabase: request approval; Loopback: will just undo last ply

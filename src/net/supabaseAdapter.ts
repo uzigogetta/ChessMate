@@ -42,9 +42,9 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       pending: undefined
     };
 
-    // Create channel with presence keyed by player id
+    // Create channel with presence keyed by player id and enable self-broadcasts
     this.channel = supabase.channel(`room:${roomId}`, {
-      config: { presence: { key: id } }
+      config: { presence: { key: id }, broadcast: { self: true } as any }
     });
 
     // Presence sync -> rebuild members; host assigns seats and re-broadcasts authoritative state
@@ -172,7 +172,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         const prev = this.state.pending || {};
         this.state.pending = { ...prev, drawFrom: from } as any;
         bump(); this.syncState();
-        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+        // no-op ack; authoritative room/state just emitted
       } else if (req.kind === 'drawAnswer') {
         if (this.state.phase !== 'ACTIVE' || !this.state.pending?.drawFrom) return;
         if (req.accept) {
@@ -182,7 +182,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         }
         clearPending();
         bump(); this.syncState();
-        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+        // no-op ack; authoritative room/state just emitted
       } else if (req.kind === 'restart') {
         if (this.state.phase !== 'RESULT' && this.state.phase !== 'LOBBY') return;
         const prev = this.state.pending || {};
@@ -212,6 +212,10 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       logRt('broadcast room/state', payload);
       const incoming: RoomState = payload?.payload?.state || payload?.state;
       if (!incoming) return;
+      // Version guard: ignore stale snapshots (important during reconnection)
+      if (this.state && typeof incoming.version === 'number' && typeof this.state.version === 'number' && incoming.version < this.state.version) {
+        return;
+      }
       // Merge presence-derived members for accuracy
       if (this.channel) {
         const presenceState = this.channel.presenceState() as Record<string, { name?: string }[]>;
