@@ -54,9 +54,9 @@ export default function ConnectionIndicator() {
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.7] });
 
-  const iconName = isConnected === false ? 'wifi' : 'people-circle-outline';
+  const iconName = isConnected === false ? 'wifi' : 'people';
   const iconColor = color;
-  return <Animated.View style={{ transform: [{ scale }], opacity }}><Ionicons name={iconName as any} size={18} color={iconColor} /></Animated.View>;
+  return <Animated.View style={{ transform: [{ scale }], opacity }}><Ionicons name={iconName as any} size={16} color={iconColor} /></Animated.View>;
 }
 
 

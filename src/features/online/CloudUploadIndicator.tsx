@@ -54,11 +54,7 @@ export default function CloudUploadIndicator({ flashOnMount }: { flashOnMount?: 
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.8] });
 
-  return (
-    <Animated.View style={{ transform: [{ scale }], opacity }}>
-      <Ionicons name="cloud-upload-outline" size={18} color="#0A84FF" />
-    </Animated.View>
-  );
+  return <Animated.View style={{ transform: [{ scale }], opacity }}><Ionicons name="cloud-upload-outline" size={16} color="#0A84FF" /></Animated.View>;
 }
 
 
