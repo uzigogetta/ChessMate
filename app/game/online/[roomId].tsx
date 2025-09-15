@@ -99,10 +99,7 @@ export default function OnlineRoomScreen() {
         fadingEdgeLength={0}
       >
         <ReconnectListener />
-        <View style={{ position: 'absolute', top: 8, right: containerPad + 4, flexDirection: 'row', gap: 8 }}>
-          <CloudUploadIndicator />
-          <ConnectionIndicator />
-        </View>
+        
         {!room && (
           <>
             <Card style={{ marginBottom: 12 }}>
