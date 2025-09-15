@@ -5,12 +5,12 @@ import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 
 export default function HeaderIndicators() {
   const content = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, height: Platform.OS === 'ios' ? 26 : 26 }}>
       <View
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
+          width: 22,
+          height: 22,
+          borderRadius: 11,
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden'
@@ -21,9 +21,9 @@ export default function HeaderIndicators() {
       </View>
       <View
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
+          width: 22,
+          height: 22,
+          borderRadius: 11,
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden'
@@ -33,13 +33,7 @@ export default function HeaderIndicators() {
       </View>
     </View>
   );
-  if (Platform.OS === 'ios') {
-    return (
-      <View style={{ backgroundColor: 'rgba(60,60,67,0.2)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }}>
-        {content}
-      </View>
-    );
-  }
+  // No background; keep iOS header height footprint (26) but transparent
   return content;
 }
 
