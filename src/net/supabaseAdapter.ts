@@ -274,7 +274,6 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
             this.broadcast({ type: 'room/state', state: this.state });
           }
         }
-        this.emitState();
       }
     });
   }
@@ -282,6 +281,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   leave(): void {
     this.channel?.unsubscribe();
     this.channel = null;
+    if (this.pruneTimer) { clearInterval(this.pruneTimer); this.pruneTimer = null; }
     this.state = null;
     this.me = null;
     this.roomId = null;
@@ -361,16 +361,15 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   moveSAN(san: string): void {
     if (!this.state || !this.me) return;
     if (this.state.result) return;
-    // Only allow moves for the side to move
     const seats = this.state.seats;
     const myId = this.me.id;
     const mySide: 'w' | 'b' | null = (seats['w1'] === myId || seats['w2'] === myId) ? 'w' : (seats['b1'] === myId || seats['b2'] === myId) ? 'b' : null;
     if (!mySide || mySide !== this.state.driver) return;
-    const c = new Chess(this.state.fen);
-    const mv = c.move(san, { sloppy: true } as any);
-    if (!mv) return;
 
     if (this.isHost) {
+      const c = new Chess(this.state.fen);
+      const mv = c.move(san, { sloppy: true } as any);
+      if (!mv) return;
       // Host applies move, broadcasts move, bumps version, and syncs state
       this.state.fen = c.fen();
       this.state.historySAN.push(mv.san);
@@ -379,9 +378,8 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       this.state.version = (this.state.version || 0) + 1;
       this.syncState();
     } else {
-      // Non-host: request host to apply. Do not broadcast game/move directly to avoid echo issues.
-      // For responsiveness, we can rely on host's game/move broadcast shortly after.
-      this.broadcast({ type: 'room/req', from: this.me.id, req: { kind: 'moveSAN', san: mv.san } });
+      // Non-host: request host to apply. Do not validate locally to avoid false negatives after reconnect.
+      this.broadcast({ type: 'room/req', from: this.me.id, req: { kind: 'moveSAN', san } });
     }
   }
 
@@ -422,7 +420,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   onEvent(handler: (e: NetEvents) => void): void {
     this.handler = handler;
-    this.emitState();
+    // Do not emit local placeholder; wait for authoritative broadcasts
   }
 
   private emitState() {
@@ -466,6 +464,14 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       });
       if (changed) this.syncState();
     }, 5000);
+  }
+
+  private seatOf(playerId: string): 'w' | 'b' | null {
+    if (!this.state) return null;
+    const seats = this.state.seats;
+    if (seats['w1'] === playerId || seats['w2'] === playerId) return 'w';
+    if (seats['b1'] === playerId || seats['b2'] === playerId) return 'b';
+    return null;
   }
 }
 
