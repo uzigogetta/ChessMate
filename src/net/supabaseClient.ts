@@ -13,7 +13,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 	global: {
 		headers: { 'x-player-id': getPlayerId() }
 	},
-	realtime: { params: { eventsPerSecond: 20 } }
+	realtime: { params: { eventsPerSecond: 20 }, selfBroadcast: true }
 });
 
 // Temporary connectivity check (DEV only)

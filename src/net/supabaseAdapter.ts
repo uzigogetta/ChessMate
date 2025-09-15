@@ -365,15 +365,19 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
     const c = new Chess(this.state.fen);
     const mv = c.move(san, { sloppy: true } as any);
     if (!mv) return;
-    this.state.fen = c.fen();
-    this.state.historySAN.push(mv.san);
-    this.state.driver = this.state.driver === 'w' ? 'b' : 'w';
-    this.broadcast({ type: 'game/move', from: this.me?.id || 'peer', san: mv.san, fen: this.state.fen });
-    // host will also broadcast room/state; non-hosts emit local state clone for UI responsiveness
+
     if (this.isHost) {
+      // Host applies move, broadcasts move, bumps version, and syncs state
+      this.state.fen = c.fen();
+      this.state.historySAN.push(mv.san);
+      this.state.driver = this.state.driver === 'w' ? 'b' : 'w';
+      this.broadcast({ type: 'game/move', from: this.me?.id || 'peer', san: mv.san, fen: this.state.fen });
+      this.state.version = (this.state.version || 0) + 1;
       this.syncState();
     } else {
-      this.emitState();
+      // Non-host: request host to apply. Do not broadcast game/move directly to avoid echo issues.
+      // For responsiveness, we can rely on host's game/move broadcast shortly after.
+      this.broadcast({ type: 'room/req', from: this.me.id, req: { kind: 'moveSAN', san: mv.san } });
     }
   }
 
