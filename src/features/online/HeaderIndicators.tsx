@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import ConnectionIndicator from '@/features/online/ConnectionIndicator';
 import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 import { useRoomStore } from '@/features/online/room.store';
