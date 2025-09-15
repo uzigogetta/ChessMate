@@ -42,7 +42,7 @@ export default function HeaderIndicators() {
     <View style={{ height: BASE, width: BASE + extra }}>
       {/* Inner fixed box ensures the connection stays perfectly centered */}
       <View style={{ position: 'absolute', right: 0, top: 0, height: BASE, width: BASE }}>
-        <View style={{ position: 'absolute', left: (BASE - WELL) / 2 + (cloudVisible ? 0 : 2), top: (BASE - WELL) / 2, width: WELL, height: WELL, borderRadius: WELL / 2, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ position: 'absolute', left: (BASE - WELL) / 2 + (cloudVisible ? 0 : 3), top: (BASE - WELL) / 2, width: WELL, height: WELL, borderRadius: WELL / 2, alignItems: 'center', justifyContent: 'center' }}>
           <ConnectionIndicator />
         </View>
       </View>
