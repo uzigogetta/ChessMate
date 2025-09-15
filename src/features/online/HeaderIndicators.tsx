@@ -5,15 +5,15 @@ import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 
 export default function HeaderIndicators() {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', height: 28, minWidth: 72 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
       <View
         style={{
-          width: 22,
-          height: 22,
-          borderRadius: 11,
+          width: 20,
+          height: 20,
+          borderRadius: 10,
           alignItems: 'center',
           justifyContent: 'center',
-          marginRight: 6
+          overflow: 'hidden'
         }}
       >
         {/* Cloud occupies space even when not visible (child may render null) */}
@@ -21,12 +21,12 @@ export default function HeaderIndicators() {
       </View>
       <View
         style={{
-          width: 22,
-          height: 22,
-          borderRadius: 11,
+          width: 20,
+          height: 20,
+          borderRadius: 10,
           alignItems: 'center',
           justifyContent: 'center',
-          
+          overflow: 'hidden'
         }}
       >
         <ConnectionIndicator />
