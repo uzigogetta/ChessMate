@@ -331,9 +331,19 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   start(): void {
     if (!this.state) return;
-    if (!this.isHost) return;
-    this.state.started = true;
-    this.state.driver = 'w';
+    // If I'm not the host, request the host to start the game
+    if (!this.isHost) {
+      this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'start' } });
+      return;
+    }
+    // Host: transition to ACTIVE and bump version so clients don't drop the update
+    if (this.state.phase !== 'ACTIVE') {
+      this.state.started = true;
+      this.state.phase = 'ACTIVE';
+      this.state.startedAt = Date.now();
+      this.state.driver = 'w';
+      this.state.version = (this.state.version || 0) + 1;
+    }
     this.syncState();
   }
 

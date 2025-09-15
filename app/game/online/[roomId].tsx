@@ -44,6 +44,7 @@ export default function OnlineRoomScreen() {
   const minimal = is1v1;
   const isMyTurn = !!room?.started && !!mySide && mySide === getTurn(room.fen);
   const readyToStart = room ? (is1v1 ? !!room.seats['w1'] && !!room.seats['b1'] : (!!room.seats['w1'] || !!room.seats['w2']) && (!!room.seats['b1'] || !!room.seats['b2'])) : false;
+  const isHost = room && me && room.members.length > 0 ? me.id === [...room.members].sort((a,b)=>a.id.localeCompare(b.id))[0]?.id : false;
   const { width } = useWindowDimensions();
   const fullEdge = useSettings((s) => s.fullEdgeBoard);
   const containerPad = fullEdge ? 0 : 12;
@@ -338,7 +339,13 @@ export default function OnlineRoomScreen() {
               )}
               {room.mode === '2v2' && mySide === room.driver && <Button title="Pass Baton" onPress={() => passBaton()} />}
             </Card>
-            {!room.started && !room.result && <Button title="Start Game" onPress={() => start()} disabled={!readyToStart} />}
+            {!room.started && !room.result && (
+              <Button
+                title={isHost ? 'Start Game' : 'Waiting for host…'}
+                onPress={() => start()}
+                disabled={!readyToStart || !isHost || room.phase === 'ACTIVE'}
+              />
+            )}
             <Button
               title="Leave Room"
               onPress={() => {
