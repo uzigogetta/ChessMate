@@ -1,12 +1,11 @@
 import React from 'react';
-import { Screen, Card, Text } from '@/ui/atoms';
+import { Screen } from '@/ui/atoms';
+import ArchiveListScreen from '../archive';
 
 export default function ArchiveScreen() {
 	return (
-		<Screen>
-			<Card>
-				<Text>Archive</Text>
-			</Card>
+		<Screen style={{ paddingHorizontal: 12 }}>
+			<ArchiveListScreen />
 		</Screen>
 	);
 }

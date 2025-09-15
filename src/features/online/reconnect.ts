@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { useRoomStore } from '@/features/online/room.store';
+import { flushOutbox } from '@/archive/cloud';
 
 export function ReconnectListener() {
   const roomId = useRoomStore((s) => s.room?.roomId);
@@ -11,6 +12,10 @@ export function ReconnectListener() {
   useEffect(() => {
     const sub = NetInfo.addEventListener((state) => {
       const online = !!state.isConnected;
+      if (!wasOnline.current && online) {
+        // Drain any queued cloud uploads
+        flushOutbox().catch(() => {});
+      }
       if (!wasOnline.current && online && roomId && mode) {
         join(roomId, mode, name);
       }

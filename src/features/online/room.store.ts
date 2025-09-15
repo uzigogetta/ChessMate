@@ -12,6 +12,7 @@ type State = {
   room?: RoomState;
   net: NetAdapter;
   autoSeatedFor?: string;
+  startedAt?: number;
   isMyTurn: () => boolean;
   readyToStart: () => boolean;
   join: (roomId: string, mode: Mode, name?: string) => Promise<void>;
@@ -22,6 +23,8 @@ type State = {
   moveSAN: (san: string) => void;
   resign: () => void;
   offerDraw: () => void;
+  answerDraw: (accept: boolean) => void;
+  requestUndo: () => void;
 };
 
 function randomId(len = 6) {
@@ -35,6 +38,7 @@ export const useRoomStore = create<State>((set, get) => ({
   me: (getJSON<Player>(KEYS.lastIdentity) || { id: getPlayerId(), name: `Player_${randomId(4)}` }) as Player,
   net: createNet(),
   autoSeatedFor: undefined,
+  startedAt: undefined,
   isMyTurn() {
     const r = get().room;
     if (!r) return false;
@@ -57,12 +61,59 @@ export const useRoomStore = create<State>((set, get) => ({
     const net = createNet();
     set({ me, net, room: undefined });
     setJSON(KEYS.lastIdentity, me);
+    let archivedVersion = -1;
     net.onEvent((e: NetEvents) => {
       if (e.t === 'room/state') {
         logState('store <- room/state', e.state);
-        // Replace state directly; trust host. Avoid client-side re-seating to prevent flaps.
+        // Version guard: ignore stale updates
+        const current = get().room;
+        if (current && typeof e.state.version === 'number' && typeof current.version === 'number' && e.state.version <= current.version) {
+          return;
+        }
+        // Replace state directly; trust host. Avoid client auto-mutations.
         const next = e.state;
+        const prev = get().room;
+        // set start timestamp when game starts
+        if (next.phase === 'ACTIVE' && prev?.phase !== 'ACTIVE') set({ startedAt: Date.now() });
         set({ room: next });
+        // archive exactly once when entering RESULT at a new version
+        if (next.phase === 'RESULT' && typeof next.version === 'number' && next.version !== archivedVersion) {
+          (async () => {
+            try {
+              const { insertGame, init } = await import('@/archive/db');
+              const { buildPGN } = await import('@/archive/pgn');
+              const { upsertGameCloud, enqueueGame } = await import('@/archive/cloud');
+              await init();
+              const me = get().me;
+              const whiteId = next.seats['w1'];
+              const blackId = next.seats['b1'];
+              const whiteName = next.members.find((m) => m.id === whiteId)?.name || 'White';
+              const blackName = next.members.find((m) => m.id === blackId)?.name || 'Black';
+              const pgn = buildPGN({ whiteName, blackName, result: next.result!, movesSAN: next.historySAN });
+              const startedAt = get().startedAt || Date.now();
+              const row = {
+                id: `${next.roomId}-${next.finishedAt || Date.now()}`,
+                createdAt: next.finishedAt || Date.now(),
+                mode: next.mode,
+                result: next.result!,
+                pgn,
+                moves: next.historySAN.length,
+                durationMs: Math.max(0, (next.finishedAt || Date.now()) - (startedAt || Date.now())),
+                whiteName,
+                blackName
+              };
+              await insertGame(row);
+              // optional cloud sync
+              const cloud = (await import('@/features/settings/settings.store')).useSettings.getState().cloudArchive;
+              const supaUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL || (await import('expo-constants')).default.expoConfig?.extra?.supabaseUrl) as string | undefined;
+              if (cloud && supaUrl) {
+                const ok = await upsertGameCloud(row as any, me.id);
+                if (!ok) enqueueGame(row as any, me.id);
+              }
+              archivedVersion = next.version!;
+            } catch {}
+          })();
+        }
         setJSON(KEYS.lastRoomState, {
           roomId: next.roomId,
           fen: next.fen,
@@ -95,6 +146,10 @@ export const useRoomStore = create<State>((set, get) => ({
         if (!r) return;
         const msg: ChatMsg = { id: `${Date.now()}`, from: e.from, txt: e.txt, ts: Date.now() } as any;
         useChatStore.getState().append(r.roomId, msg);
+      } else if (e.t === 'game/undoAck') {
+        // handled via room/state
+      } else if (e.t === 'game/drawOffer' || e.t === 'game/drawAnswer' || e.t === 'game/resign') {
+        // handled via room/state; nothing else to do
       }
     });
     await net.join(roomId, mode, me.name, me.id);
@@ -116,12 +171,30 @@ export const useRoomStore = create<State>((set, get) => ({
     get().net.moveSAN(san);
   },
   resign() {
-    const me = get().me;
-    (get().net as any).sendChat?.(`[resign] ${me.name} resigned`);
+    (get().net as any).resign?.();
   },
   offerDraw() {
+    (get().net as any).offerDraw?.();
+    // Optimistic: mark pending locally to reflect UI immediately
+    const r = get().room;
     const me = get().me;
-    (get().net as any).sendChat?.(`[draw] ${me.name} offers a draw`);
+    if (r && me && !r.result) {
+      set({ room: { ...r, pending: { drawFrom: me.id } } as any });
+    }
+  },
+  answerDraw(accept) {
+    (get().net as any).answerDraw?.(accept);
+    // Optimistic: clear pending and set result if accepted; host will overwrite with authoritative state
+    const r = get().room;
+    if (r && r.pending) {
+      const next: RoomState = { ...r, pending: undefined } as any;
+      if (accept) (next as any).result = '1/2-1/2';
+      set({ room: next });
+    }
+  },
+  requestUndo() {
+    // Supabase: request approval; Loopback: will just undo last ply
+    (get().net as any).requestUndo?.() ?? (get().net as any).undo?.();
   }
 }));
 

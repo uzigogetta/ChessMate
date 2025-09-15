@@ -18,6 +18,13 @@ Delta (2025-09-14T12:45:00Z)
 - Hotfix: host-authoritative online flow + FEN-derived turns
 - Delta (2025-09-14T13:20:00Z)
 - Step 7 — Presence bar, chat bottom sheet, invite/copy, settings scaffold, board theme
+Delta (2025-09-14T14:15:00Z)
+- Step 8 — Archive (SQLite + optional Supabase), undo/resign/draw protocol, short-code matchmaking
+- DB: sqlite tables for games; insert/list/get wired; PGN builder
+- Store saves finished games locally, optional cloud sync (toggle)
+- Adapters: host-authoritative undo/resign/draw; result banner and actions in UI
+- Lobby: short codes (base32) for create/join
+- Archive screens: list and detail PGN view
 - PresenceBar component showing seats (w1/w2, b1/b2) with initials and you-badge
 - Chat persistence via MMKV (per-room, last 100); RoomChat updated
 - Invite button (Share) + Copy ID chip; helper buildInvite

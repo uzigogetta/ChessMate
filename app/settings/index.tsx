@@ -19,6 +19,8 @@ export default function SettingsScreen() {
   const setTheme = useSettings((s) => s.setBoardTheme);
   const fullEdge = useSettings((s) => s.fullEdgeBoard);
   const setFullEdge = useSettings((s) => s.setFullEdgeBoard);
+  const cloudArchive = useSettings((s) => s.cloudArchive);
+  const setCloudArchive = useSettings((s) => s.setCloudArchive);
   return (
     <Screen>
       <Card style={{ gap: 12 }}>
@@ -33,6 +35,15 @@ export default function SettingsScreen() {
             {fullEdge && <View style={{ width: 10, height: 10, borderRadius: 1, backgroundColor: '#7b61ff' }} />}
           </View>
           <Text>Board edge-to-edge</Text>
+        </Pressable>
+      </Card>
+      <Card style={{ gap: 12, marginTop: 12 }}>
+        <Text>Archive</Text>
+        <Pressable onPress={() => setCloudArchive(!cloudArchive)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 }}>
+          <View style={{ width: 18, height: 18, borderRadius: 3, borderWidth: 2, borderColor: cloudArchive ? '#7b61ff' : '#555', alignItems: 'center', justifyContent: 'center' }}>
+            {cloudArchive && <View style={{ width: 10, height: 10, borderRadius: 1, backgroundColor: '#7b61ff' }} />}
+          </View>
+          <Text>Sync finished games to cloud (beta)</Text>
         </Pressable>
       </Card>
     </Screen>

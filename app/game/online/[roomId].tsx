@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, Animated, Easing, useWindowDimensions, Platform } from 'react-native';
+import { View, ScrollView, Animated, Easing, useWindowDimensions, Platform, Alert } from 'react-native';
 import { colors } from '@/ui/tokens';
 import { useSettings } from '@/features/settings/settings.store';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -50,6 +50,18 @@ export default function OnlineRoomScreen() {
   const inset = fullEdge ? 0 : containerPad * 2;
   const boardSize = Math.floor(width - inset);
   const [copied, setCopied] = React.useState(false);
+  const [archiveToast, setArchiveToast] = React.useState<string | null>(null);
+
+  // Show a one-shot toast when result is set (saved to archive)
+  const prevResultRef = React.useRef<string | undefined>(undefined as any);
+  React.useEffect(() => {
+    const r = room?.result;
+    if (r && prevResultRef.current !== r) {
+      setArchiveToast('Saved to Archive');
+      setTimeout(() => setArchiveToast(null), 1400);
+    }
+    prevResultRef.current = r as any;
+  }, [room?.result]);
   const [flashSq, setFlashSq] = React.useState<string | null>(null);
   const shake = React.useRef(new Animated.Value(0)).current;
   const triggerFlash = React.useCallback((sq: string) => {
@@ -124,9 +136,9 @@ export default function OnlineRoomScreen() {
               <Card style={{ marginBottom: 12, gap: 8 }}>
                 <Text>Seats</Text>
                 <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                  <Button title="Join White" disabled={!!room.seats['w1'] && room.seats['w1'] !== me.id} onPress={() => ((useRoomStore.getState().net as any).seatSide?.('w') ?? takeSeat('w1'))} />
-                  <Button title="Join Black" disabled={!!room.seats['b1'] && room.seats['b1'] !== me.id} onPress={() => ((useRoomStore.getState().net as any).seatSide?.('b') ?? takeSeat('b1'))} />
-                  {mySeats.length > 0 && <Button title="Release Seat" onPress={() => ((useRoomStore.getState().net as any).releaseSeat?.() ?? takeSeat(null))} />}
+                  <Button title="Join White" disabled={!!room.seats['w1'] && room.seats['w1'] !== me.id} onPress={() => (useRoomStore.getState().net as any).seatSide?.('w')} />
+                  <Button title="Join Black" disabled={!!room.seats['b1'] && room.seats['b1'] !== me.id} onPress={() => (useRoomStore.getState().net as any).seatSide?.('b')} />
+                  {mySeats.length > 0 && <Button title="Release Seat" onPress={() => (useRoomStore.getState().net as any).releaseSeat?.()} />}
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                   {((room.mode === '1v1' ? ['w1', 'b1'] : ['w1', 'w2', 'b1', 'b2']) as Seat[]).map((s) => (
@@ -188,14 +200,145 @@ export default function OnlineRoomScreen() {
                 }}
               />
             </Animated.View>
-            <Card style={{ marginTop: 12, gap: 8, flexDirection: 'row' }}>
-              {room.started && <Button title="Undo" onPress={() => (useRoomStore.getState().net as any).undo?.()} />}
-              <Button title="Resign" onPress={() => resign()} />
-              <Button title="Offer Draw" onPress={() => offerDraw()} />
-              {__DEV__ && <Button title="Reset" onPress={() => { /* dev-only placeholder */ }} />}
+            {room.result && (
+              <Card style={{ marginTop: 12, gap: 8, alignItems: 'center' }}>
+                <Text style={{ fontSize: 18 }}>
+                  {room.result === '1-0' ? 'White wins' : room.result === '0-1' ? 'Black wins' : 'Draw'}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <Button
+                    title="Rematch"
+                    onPress={() =>
+                      Alert.alert('Rematch?', 'Ask your opponent to start a new game.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Request', onPress: () => (useRoomStore.getState().net as any).restart?.() }
+                      ])
+                    }
+                  />
+                  <Button
+                    title="Leave Game"
+                    onPress={() => {
+                      leave();
+                      router.replace('/game/online');
+                    }}
+                  />
+                </View>
+              </Card>
+            )}
+            <Card style={{ marginTop: 12, gap: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {room.started && !room.result && (
+                <Button
+                  title="Undo"
+                  onPress={() =>
+                    Alert.alert('Request undo?', 'Ask your opponent to revert the last move.', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Request', onPress: () => useRoomStore.getState().requestUndo() }
+                    ])
+                  }
+                />
+              )}
+              {!room.result && (
+                <Button
+                  title="Resign"
+                  onPress={() =>
+                    Alert.alert('Resign game?', 'Your opponent will be declared the winner.', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Resign', style: 'destructive', onPress: () => resign() }
+                    ])
+                  }
+                />
+              )}
+              {!room.result && !room.pending && (
+                <Button
+                  title="Offer Draw"
+                  onPress={() =>
+                    Alert.alert('Offer a draw?', 'Your opponent can accept or decline.', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Offer Draw', onPress: () => offerDraw() }
+                    ])
+                  }
+                />
+              )}
+              {room.pending && room.pending.drawFrom && room.pending.drawFrom !== me.id && (
+                <>
+                  <Button
+                    title="Accept Draw"
+                    onPress={() =>
+                      Alert.alert('Accept draw?', 'This will end the game as a draw.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Accept', onPress: () => { useRoomStore.getState().answerDraw(true); } }
+                      ])
+                    }
+                  />
+                  <Button
+                    title="Decline"
+                    onPress={() =>
+                      Alert.alert('Decline draw?', 'The draw offer will be dismissed.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Decline', style: 'destructive', onPress: () => { useRoomStore.getState().answerDraw(false); } }
+                      ])
+                    }
+                  />
+                </>
+              )}
+              {room.pending && room.pending.undoFrom && room.pending.undoFrom !== me.id && (
+                <>
+                  <Button
+                    title="Accept Undo"
+                    onPress={() =>
+                      Alert.alert('Accept undo?', 'This will revert the last move.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Accept', onPress: () => (useRoomStore.getState().net as any).answerUndo?.(true) }
+                      ])
+                    }
+                  />
+                  <Button
+                    title="Decline Undo"
+                    onPress={() =>
+                      Alert.alert('Decline undo?', 'Undo request will be dismissed.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Decline', style: 'destructive', onPress: () => (useRoomStore.getState().net as any).answerUndo?.(false) }
+                      ])
+                    }
+                  />
+                </>
+              )}
+              {room.pending && room.pending.restartFrom && room.pending.restartFrom !== me.id && (
+                <>
+                  <Button
+                    title="Accept New Game"
+                    onPress={() =>
+                      Alert.alert('Start new game?', 'Board will reset and a new game will start.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Start', onPress: () => (useRoomStore.getState().net as any).answerRestart?.(true) }
+                      ])
+                    }
+                  />
+                  <Button
+                    title="Decline New Game"
+                    onPress={() =>
+                      Alert.alert('Decline new game?', 'Request will be dismissed.', [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Decline', style: 'destructive', onPress: () => (useRoomStore.getState().net as any).answerRestart?.(false) }
+                      ])
+                    }
+                  />
+                </>
+              )}
+              {__DEV__ && (
+                <Button
+                  title="Reset"
+                  onPress={() =>
+                    Alert.alert('Start a new game?', 'This will reset the board and start a new game.', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Reset', style: 'destructive', onPress: () => (useRoomStore.getState().net as any).restart?.() }
+                    ])
+                  }
+                />
+              )}
               {room.mode === '2v2' && mySide === room.driver && <Button title="Pass Baton" onPress={() => passBaton()} />}
             </Card>
-            {!room.started && <Button title="Start Game" onPress={() => start()} disabled={!readyToStart} />}
+            {!room.started && !room.result && <Button title="Start Game" onPress={() => start()} disabled={!readyToStart} />}
             <Button
               title="Leave Room"
               onPress={() => {
@@ -208,6 +351,13 @@ export default function OnlineRoomScreen() {
       </ScrollView>
       {Platform.OS === 'android' && (
         <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 3, backgroundColor: colors.background }} />
+      )}
+      {archiveToast && (
+        <View style={{ position: 'absolute', bottom: 24, left: 0, right: 0, alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'rgba(0,0,0,0.85)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}>
+            <Text style={{ color: 'white' }}>{archiveToast}</Text>
+          </View>
+        </View>
       )}
       <DevOverlay />
     </Screen>

@@ -38,6 +38,10 @@ export class HostLoopback implements NetAdapter {
         fen: c.fen(),
         historySAN: [],
         started: false,
+        phase: 'LOBBY',
+        version: 0,
+        result: undefined,
+        pending: undefined,
         hostId: meId,
         heartbeats: { [meId]: Date.now() }
       };
@@ -137,8 +141,28 @@ export class HostLoopback implements NetAdapter {
     // only host can start
     if (r.hostId !== this.me.id) return;
     r.started = true;
+    r.phase = 'ACTIVE';
+    r.startedAt = Date.now();
     // ensure driver is white at start
     r.driver = 'w';
+    r.version = (r.version || 0) + 1;
+    this.emitState();
+  }
+
+  restart?(): void {
+    const r = this.getRoom();
+    if (!r || !this.me) return;
+    if (r.hostId !== this.me.id) return;
+    const c = new Chess();
+    r.started = true;
+    r.phase = 'ACTIVE';
+    r.startedAt = Date.now();
+    r.result = undefined;
+    r.pending = undefined;
+    r.fen = c.fen();
+    r.historySAN = [];
+    r.driver = 'w';
+    r.version = (r.version || 0) + 1;
     this.emitState();
   }
 
@@ -154,12 +178,14 @@ export class HostLoopback implements NetAdapter {
   moveSAN(san: string): void {
     const r = this.getRoom();
     if (!r) return;
+    if (r.result) return; // game over
     const c = new Chess(r.fen);
     const mv = c.move(san, { sloppy: true } as any);
     if (!mv) return;
     r.fen = c.fen();
     r.historySAN.push(mv.san);
     r.driver = r.driver === 'w' ? 'b' : 'w';
+    r.version = (r.version || 0) + 1;
     this.broadcast({ t: 'game/move', from: this.me?.id || 'host', san: mv.san, fen: r.fen });
     this.emitState();
   }
@@ -173,6 +199,7 @@ export class HostLoopback implements NetAdapter {
     for (const s of r.historySAN) c.move(s, { sloppy: true } as any);
     r.fen = c.fen();
     r.driver = c.turn();
+    r.version = (r.version || 0) + 1;
     this.emitState();
   }
 
@@ -192,6 +219,50 @@ export class HostLoopback implements NetAdapter {
   onEvent(handler: (e: NetEvents) => void): void {
     this.handler = handler;
     subscribe(handler);
+    this.emitState();
+  }
+
+  // Step 8: action protocol (loopback applies immediately)
+  requestUndo(): void {
+    const r = this.getRoom();
+    if (!r || r.historySAN.length === 0 || r.result) return;
+    this.undo();
+  }
+
+  resign(): void {
+    const r = this.getRoom();
+    if (!r || !this.me || r.result) return;
+    const myId = this.me.id;
+    const mySide: 'w' | 'b' | null = r.seats['w1'] === myId || r.seats['w2'] === myId ? 'w' : (r.seats['b1'] === myId || r.seats['b2'] === myId ? 'b' : null);
+    if (!mySide) return;
+    r.result = mySide === 'w' ? '0-1' : '1-0';
+    r.phase = 'RESULT';
+    r.finishedAt = Date.now();
+    r.version = (r.version || 0) + 1;
+    this.emitState();
+  }
+
+  offerDraw(): void {
+    const r = this.getRoom();
+    if (!r || !this.me || r.result) return;
+    r.pending = { ...(r.pending || {}), drawFrom: this.me.id } as any;
+    r.version = (r.version || 0) + 1;
+    this.emitState();
+  }
+
+  answerDraw(accept: boolean): void {
+    const r = this.getRoom();
+    if (!r || !this.me || !r.pending) return;
+    if (!accept) {
+      r.pending = undefined;
+      this.emitState();
+      return;
+    }
+    r.result = '1/2-1/2';
+    r.phase = 'RESULT';
+    r.finishedAt = Date.now();
+    r.pending = undefined;
+    r.version = (r.version || 0) + 1;
     this.emitState();
   }
 

@@ -35,7 +35,11 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       driver: 'w',
       fen: c.fen(),
       historySAN: [],
-      started: false
+      started: false,
+      phase: 'LOBBY',
+      version: 0,
+      result: undefined,
+      pending: undefined
     };
 
     // Create channel with presence keyed by player id
@@ -77,6 +81,8 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
             if (candidate) seats['b1'] = candidate;
           }
         }
+        // Bump version so clients don't ignore this update as stale
+        this.state.version = (this.state.version || 0) + 1;
         logState('host emit room/state', this.state);
         this.broadcast({ type: 'room/state', state: this.state });
         this.schedulePrune();
@@ -90,6 +96,9 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       const { from, req } = payload?.payload || payload || {};
       if (!from || !req) return;
       const seats = this.state.seats;
+      const bump = () => { this.state!.version = (this.state!.version || 0) + 1; };
+      const clearPending = () => { this.state!.pending = undefined; };
+
       if (req.kind === 'seat') {
         const side: 'w' | 'b' = req.side;
         const order: Seat[] = side === 'w' ? ['w1'] : ['b1'];
@@ -101,16 +110,100 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         // release from's previous seats
         (Object.keys(seats) as Seat[]).forEach((s) => { if (seats[s] === from) delete seats[s]; });
         seats[target] = from;
-        this.syncState();
+        bump(); this.syncState();
         this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
       } else if (req.kind === 'release') {
         (Object.keys(seats) as Seat[]).forEach((s) => { if (seats[s] === from) delete seats[s]; });
-        this.syncState();
+        bump(); this.syncState();
         this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
       } else if (req.kind === 'start') {
-        this.start();
+        if (this.state.phase === 'LOBBY') {
+          this.state.started = true;
+          this.state.phase = 'ACTIVE';
+          this.state.startedAt = Date.now();
+          this.state.driver = 'w';
+          bump(); this.syncState();
+        }
       } else if (req.kind === 'moveSAN') {
-        this.moveSAN(req.san);
+        if (this.state.phase !== 'ACTIVE') return;
+        const c = new Chess(this.state.fen);
+        const mv = c.move(req.san, { sloppy: true } as any);
+        if (!mv) return;
+        this.state.fen = c.fen();
+        this.state.historySAN = [...this.state.historySAN, mv.san];
+        clearPending();
+        bump();
+        this.broadcast({ type: 'game/move', from: from, san: mv.san, fen: this.state.fen });
+        this.state.driver = c.turn() as 'w' | 'b';
+        // Terminal detection could be added here later
+        this.syncState();
+      } else if (req.kind === 'undoReq') {
+        if (this.state.phase !== 'ACTIVE') return;
+        const prev = this.state.pending || {};
+        this.state.pending = { ...prev, undoFrom: from } as any;
+        bump(); this.syncState();
+      } else if (req.kind === 'undoAnswer') {
+        if (this.state.phase !== 'ACTIVE' || !this.state.pending?.undoFrom) return;
+        if (req.accept) {
+          if (this.state.historySAN.length > 0) {
+            this.state.historySAN = this.state.historySAN.slice(0, -1);
+            const c = new Chess();
+            for (const s of this.state.historySAN) c.move(s, { sloppy: true } as any);
+            this.state.fen = c.fen();
+            this.state.driver = c.turn() as 'w' | 'b';
+          }
+        }
+        const p = this.state.pending || {};
+        delete (p as any).undoFrom;
+        this.state.pending = Object.keys(p).length ? (p as any) : undefined;
+        bump(); this.syncState();
+      } else if (req.kind === 'resign') {
+        if (this.state.phase !== 'ACTIVE') return;
+        const side = this.seatOf(from);
+        if (!side) return;
+        this.state.result = side === 'w' ? '0-1' : '1-0';
+        this.state.phase = 'RESULT';
+        this.state.finishedAt = Date.now();
+        clearPending();
+        bump(); this.syncState();
+        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+      } else if (req.kind === 'drawOffer') {
+        if (this.state.phase !== 'ACTIVE') return;
+        const prev = this.state.pending || {};
+        this.state.pending = { ...prev, drawFrom: from } as any;
+        bump(); this.syncState();
+        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+      } else if (req.kind === 'drawAnswer') {
+        if (this.state.phase !== 'ACTIVE' || !this.state.pending?.drawFrom) return;
+        if (req.accept) {
+          this.state.result = '1/2-1/2';
+          this.state.phase = 'RESULT';
+          this.state.finishedAt = Date.now();
+        }
+        clearPending();
+        bump(); this.syncState();
+        this.broadcast({ type: 'room/ack', to: from, ok: true, snapshot: this.state });
+      } else if (req.kind === 'restart') {
+        if (this.state.phase !== 'RESULT' && this.state.phase !== 'LOBBY') return;
+        const prev = this.state.pending || {};
+        this.state.pending = { ...prev, restartFrom: from } as any;
+        bump(); this.syncState();
+      } else if (req.kind === 'restartAnswer') {
+        if (!this.state.pending?.restartFrom) return;
+        if (req.accept) {
+          const c = new Chess();
+          this.state.result = undefined;
+          this.state.fen = c.fen();
+          this.state.historySAN = [];
+          this.state.driver = 'w';
+          this.state.started = true;
+          this.state.phase = 'ACTIVE';
+          this.state.startedAt = Date.now();
+        }
+        const p = this.state.pending || {};
+        delete (p as any).restartFrom;
+        this.state.pending = Object.keys(p).length ? (p as any) : undefined;
+        bump(); this.syncState();
       }
     });
 
@@ -153,12 +246,30 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
       this.handler?.({ t: 'game/move', from: from || this.me?.id || 'peer', san, fen });
     });
 
+    this.channel.on('broadcast', { event: 'room/ack' }, (payload: any) => {
+      const { to, ok, snapshot } = payload?.payload || payload || {};
+      if (!to || !ok) return;
+      if (this.me && to === this.me.id && snapshot) {
+        // Apply snapshot locally for immediate UI feedback
+        this.state = { ...snapshot, seats: { ...snapshot.seats }, members: [...snapshot.members] };
+        this.emitState();
+      }
+    });
+
     // Subscribe & announce presence, share local state to seed peers
     await this.channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        // track presence with name
+        // announce presence with name
         await this.channel?.track({ name });
-        // Do not broadcast here; wait for presence sync to avoid race with existing peers
+        // If I'm host and seats are empty, auto-seat me as White immediately to avoid initial spectator state
+        if (this.isHost && this.state) {
+          const seats = this.state.seats;
+          if (!seats['w1']) {
+            seats['w1'] = this.me!.id;
+            this.state.version = (this.state.version || 0) + 1;
+            this.broadcast({ type: 'room/state', state: this.state });
+          }
+        }
         this.emitState();
       }
     });
@@ -188,7 +299,11 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   seatSide(side: 'w' | 'b'): void {
     if (!this.state || !this.me) return;
-    if (!this.isHost) return;
+    if (!this.isHost) {
+      // Request host to seat me on this side
+      this.broadcast({ type: 'room/req', from: this.me.id, req: { kind: 'seat', side } });
+      return;
+    }
     const order: Seat[] = side === 'w' ? ['w1', 'w2'] : ['b1', 'b2'];
     const candidates = this.state.mode === '1v1' ? [order[0]] : order;
     const meId = this.me.id;
@@ -199,7 +314,6 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         break;
       }
     }
-    // release mine, claim target if available
     for (const k of Object.keys(this.state.seats) as Seat[]) if (this.state.seats[k] === meId) delete this.state.seats[k];
     if (target) this.state.seats[target] = meId;
     this.syncState();
@@ -207,7 +321,10 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   releaseSeat(): void {
     if (!this.state || !this.me) return;
-    if (!this.isHost) return;
+    if (!this.isHost) {
+      this.broadcast({ type: 'room/req', from: this.me.id, req: { kind: 'release' } });
+      return;
+    }
     for (const k of Object.keys(this.state.seats) as Seat[]) if (this.state.seats[k] === this.me.id) delete this.state.seats[k];
     this.syncState();
   }
@@ -229,6 +346,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
 
   moveSAN(san: string): void {
     if (!this.state || !this.me) return;
+    if (this.state.result) return;
     // Only allow moves for the side to move
     const seats = this.state.seats;
     const myId = this.me.id;
@@ -254,7 +372,35 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
     this.broadcast({ type: 'chat/msg', from: this.me?.id || 'me', txt });
   }
 
+  requestUndo(): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'undoReq' } });
+  }
+
+  answerUndo(accept: boolean): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'undoAnswer', accept } });
+  }
+
+  resign(): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'resign' } });
+  }
+
+  offerDraw(): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'drawOffer' } });
+  }
+
+  answerDraw(accept: boolean): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'drawAnswer', accept } });
+  }
+
   heartbeat?(): void {}
+
+  restart?(): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'restart' } });
+  }
+
+  answerRestart(accept: boolean): void {
+    this.broadcast({ type: 'room/req', from: this.me?.id || 'me', req: { kind: 'restartAnswer', accept } });
+  }
 
   onEvent(handler: (e: NetEvents) => void): void {
     this.handler = handler;

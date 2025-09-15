@@ -14,8 +14,13 @@ export default function ProfileScreen() {
 					</Pressable>
 				</Link>
 			</View>
-			<Card>
+			<Card style={{ gap: 12 }}>
 				<Text>Profile</Text>
+				<Link href="/archive" asChild>
+					<Pressable>
+						<Text>Open Archive →</Text>
+					</Pressable>
+				</Link>
 			</Card>
 		</Screen>
 	);

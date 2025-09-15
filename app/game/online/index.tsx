@@ -3,6 +3,7 @@ import { View, TextInput } from 'react-native';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
 import { useRouter } from 'expo-router';
 import { useRoomStore } from '@/features/online/room.store';
+import { shortId, normalizeCode, isValidCode } from '@/match/matchCode';
 
 function randomId(len = 6) {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -22,7 +23,7 @@ export default function OnlineLobby() {
     <Screen>
       <Card style={{ gap: 12, width: 320 }}>
         <Text>Online Lobby</Text>
-        <TextInput placeholder="Room ID" value={roomId} onChangeText={setRoomId} style={{ backgroundColor: '#222', color: 'white', padding: 8, borderRadius: 8 }} />
+        <TextInput placeholder="Room Code" value={roomId} onChangeText={(v) => setRoomId(normalizeCode(v))} style={{ backgroundColor: '#222', color: 'white', padding: 8, borderRadius: 8 }} />
         <TextInput placeholder="Display Name" value={name} onChangeText={setName} style={{ backgroundColor: '#222', color: 'white', padding: 8, borderRadius: 8 }} />
         <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center' }}>
           <Button title={`Mode: ${mode}`} onPress={() => setMode((m) => (m === '1v1' ? '2v2' : '1v1'))} />
@@ -33,7 +34,7 @@ export default function OnlineLobby() {
         <Button
           title="Create / Join"
           onPress={async () => {
-            const id = roomId || randomId();
+            const id = roomId && isValidCode(roomId) ? roomId : shortId();
             await join(id, mode, name || 'Me');
             const net = (useRoomStore.getState().net as any);
             const ensureSeat = async () => {
@@ -65,9 +66,9 @@ export default function OnlineLobby() {
           }}
         />
         <Button
-          title="Quick Join"
+          title="Quick Create"
           onPress={async () => {
-            const id = randomId();
+            const id = shortId();
             await join(id, mode, name || 'Me');
             const net = (useRoomStore.getState().net as any);
             const ensureSeat = async () => {
