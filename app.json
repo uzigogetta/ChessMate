@@ -45,8 +45,7 @@
           "project": "react-native",
           "organization": "newgen-d0"
         }
-      ],
-      "expo-insights"
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"
