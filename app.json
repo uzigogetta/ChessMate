@@ -1,11 +1,13 @@
 {
   "expo": {
+    "owner": "genzx-labs",
+    "userInterfaceStyle": "automatic",
     "name": "ChessMate",
     "slug": "chessmate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    
     "newArchEnabled": true,
     "scheme": "chessmate",
     "splash": {
@@ -31,7 +33,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/b9979c02-b8b3-4056-9f3b-98ad07ab46f8",
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 30000
     },
     "plugins": [
       "expo-router",
@@ -43,7 +45,8 @@
           "project": "react-native",
           "organization": "newgen-d0"
         }
-      ]
+      ],
+      "expo-insights"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
