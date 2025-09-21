@@ -19,8 +19,10 @@ export function getJSON<T = any>(key: string): T | undefined {
 }
 
 export const KEYS = {
-  lastRoomState: 'lastRoomState',
-  lastIdentity: 'lastIdentity'
+  lastIdentity: 'cm.identity.last',
+  settings: 'cm.settings',
+  cloudOutbox: 'cm.cloud.outbox',
+  cloudUploaded: 'cm.cloud.uploaded',
 };
 
 

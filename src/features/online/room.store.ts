@@ -6,6 +6,7 @@ import { sideToMove } from '@/features/chess/logic/chess.rules';
 import { getJSON, setJSON, KEYS } from '@/features/storage/mmkv';
 import { getPlayerId } from '@/core/identity';
 import { useChatStore, type ChatMsg } from '@/features/chat/chat.store';
+import { logSupabaseEnv } from '@/shared/supabaseClient';
 
 type State = {
   me: Player;
@@ -64,6 +65,8 @@ export const useRoomStore = create<State>((set, get) => ({
     set({ me, net, room: undefined, startedAt: undefined });
     setJSON(KEYS.lastIdentity, me);
     let archivedVersion = -1;
+    // Log Supabase env once per app boot before any first cloud write
+    try { logSupabaseEnv(); } catch {}
     net.onEvent((e: NetEvents) => {
       if (e.t === 'room/state') {
         logState('store <- room/state', e.state);
@@ -79,24 +82,25 @@ export const useRoomStore = create<State>((set, get) => ({
         if (next.phase === 'ACTIVE' && prev?.phase !== 'ACTIVE') set({ startedAt: Date.now() });
         set({ room: next });
         // archive exactly once when entering RESULT at a new version
-        if (next.phase === 'RESULT' && typeof next.version === 'number' && next.version !== archivedVersion) {
+        if (next.phase === 'RESULT' && typeof next.version === 'number' && next.version !== archivedVersion && next.result) {
           archivedVersion = next.version!; // mark early to avoid duplicates
           (async () => {
             try {
+              // Debug: begin archive save
+              if (__DEV__) console.log('[archive] saving', { id: `${next.roomId}-${next.finishedAt ?? Date.now()}`, version: next.version, result: next.result });
               const { insertGame, init } = await import('@/archive/db');
               const { buildPGN } = await import('@/archive/pgn');
-              const { upsertGameCloud, enqueueGame } = await import('@/archive/cloud');
+              const { upsertGameCloud, enqueueGame } = await import('@/shared/cloud');
               await init();
               const me = get().me;
-              const whiteId = next.seats['w1'];
-              const blackId = next.seats['b1'];
-              const whiteName = next.members.find((m) => m.id === whiteId)?.name || 'White';
-              const blackName = next.members.find((m) => m.id === blackId)?.name || 'Black';
-              const pgn = buildPGN({ whiteName, blackName, result: next.result!, movesSAN: next.historySAN });
+              const { derivePlayers, escapePGN } = await import('@/shared/players');
+              const { whiteName, blackName } = derivePlayers(next, me.id);
+              const event = next.mode === '1v1' ? '1v1 online' : next.mode;
+              const pgn = buildPGN({ event, whiteName: escapePGN(whiteName), blackName: escapePGN(blackName), result: next.result!, movesSAN: next.historySAN });
               const startedAt = get().startedAt || Date.now();
               const row = {
-                id: `${next.roomId}-${next.finishedAt || Date.now()}`,
-                createdAt: next.finishedAt || Date.now(),
+                id: `${next.roomId}-${next.finishedAt ?? Date.now()}`,
+                createdAt: next.finishedAt ?? Date.now(),
                 mode: next.mode,
                 result: next.result!,
                 pgn,
@@ -106,23 +110,31 @@ export const useRoomStore = create<State>((set, get) => ({
                 blackName
               };
               await insertGame(row);
+              if (__DEV__) console.log('[archive] inserted local', row.id);
               // optional cloud sync
               const cloud = (await import('@/features/settings/settings.store')).useSettings.getState().cloudArchive;
               const supaUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL || (await import('expo-constants')).default.expoConfig?.extra?.supabaseUrl) as string | undefined;
               if (cloud && supaUrl) {
-                const ok = await upsertGameCloud(row as any, me.id);
-                if (!ok) enqueueGame(row as any, me.id);
+                const pid = (await import('@/core/identity')).getPlayerId();
+                if (__DEV__) console.log('[archive] cloud owner', pid);
+                const ok = await upsertGameCloud(row as any, pid);
+                if (!ok) {
+                  enqueueGame(row as any, pid);
+                  try {
+                    const { toast } = await import('@/ui/atoms');
+                    // Best-effort small toast; avoid noisy logs in production
+                    (toast as any)?.('Cloud save failed (tap for details)');
+                  } catch {}
+                  // eslint-disable-next-line no-console
+                  console.warn('[cloud] save failed; queued', row.id);
+                }
               }
-            } catch {}
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.warn('[archive] save error', err);
+            }
           })();
         }
-        setJSON(KEYS.lastRoomState, {
-          roomId: next.roomId,
-          fen: next.fen,
-          historySAN: next.historySAN,
-          seats: next.seats,
-          lastUpdated: Date.now()
-        });
         // no client auto-seat here to avoid races
       } else if (e.t === 'game/move') {
         logMove('store <- game/move', { san: e.san, fen: e.fen });
@@ -136,13 +148,36 @@ export const useRoomStore = create<State>((set, get) => ({
           driver: nextDriver
         };
         set({ room: updated });
-        setJSON(KEYS.lastRoomState, {
-          roomId: updated.roomId,
-          fen: updated.fen,
-          historySAN: updated.historySAN,
-          seats: updated.seats,
-          lastUpdated: Date.now()
-        });
+      } else if (e.t === 'game/finalize') {
+        // Idempotent archive on explicit finalize broadcast (covers guests and late joiners)
+        const next = e.state;
+        if (next && next.result) {
+          (async () => {
+            try {
+              const { insertGame, init } = await import('@/archive/db');
+              const { buildPGN } = await import('@/archive/pgn');
+              const { derivePlayers, escapePGN } = await import('@/shared/players');
+              await init();
+              const me = get().me;
+              const { whiteName, blackName } = derivePlayers(next, me.id);
+              const event = next.mode === '1v1' ? '1v1 online' : next.mode;
+              const pgn = buildPGN({ event, whiteName: escapePGN(whiteName), blackName: escapePGN(blackName), result: next.result!, movesSAN: next.historySAN });
+              const startedAt = get().startedAt || next.startedAt || Date.now();
+              const row = {
+                id: `${next.roomId}-${next.finishedAt ?? Date.now()}`,
+                createdAt: next.finishedAt ?? Date.now(),
+                mode: next.mode,
+                result: next.result!,
+                pgn,
+                moves: next.historySAN.length,
+                durationMs: Math.max(0, (next.finishedAt || Date.now()) - (startedAt || Date.now())),
+                whiteName,
+                blackName
+              } as const;
+              await insertGame(row as any);
+            } catch {}
+          })();
+        }
       } else if (e.t === 'chat/msg') {
         const r = get().room;
         if (!r) return;

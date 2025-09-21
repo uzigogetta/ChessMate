@@ -7,8 +7,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "scheme": "chessmate",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -45,7 +44,8 @@
           "project": "react-native",
           "organization": "newgen-d0"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { useRoomStore } from '@/features/online/room.store';
-import { flushOutbox } from '@/archive/cloud';
+import { flushOutbox } from '@/shared/cloud';
 
 export function ReconnectListener() {
 	const getState = useRoomStore;

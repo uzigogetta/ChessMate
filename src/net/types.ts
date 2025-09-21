@@ -26,6 +26,7 @@ export type NetEvents =
   | { t: 'room/state'; state: RoomState }
   | { t: 'chat/msg'; from: string; txt: string }
   | { t: 'game/move'; from: string; san: string; fen: string }
+  | { t: 'game/finalize'; state: RoomState }
   | { t: 'game/undoReq'; from: string }
   | { t: 'game/undoAck'; ok: boolean }
   | { t: 'game/resign'; from: string; side: 'w' | 'b' }

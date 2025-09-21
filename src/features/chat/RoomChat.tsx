@@ -34,7 +34,7 @@ export default function RoomChat() {
           placeholder="Message"
           value={input}
           onChangeText={setInput}
-          style={{ flex: 1, backgroundColor: '#222', color: 'white', padding: 8, borderRadius: 8 }}
+          style={{ flex: 1, backgroundColor: 'rgba(120,120,128,0.16)', padding: 8, borderRadius: 8 }}
         />
         <Button title="Send" onPress={send} />
       </View>

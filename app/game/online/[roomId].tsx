@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, ScrollView, Animated, Easing, useWindowDimensions, Platform, Alert } from 'react-native';
-import { colors } from '@/ui/tokens';
+import { View, ScrollView, Animated, Easing, useWindowDimensions, Platform, Alert, useColorScheme } from 'react-native';
+import { themes, ThemeName } from '@/ui/tokens';
 import { useSettings } from '@/features/settings/settings.store';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
 import HeaderIndicators from '@/features/online/HeaderIndicators';
 import { Stack, useNavigation } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import * as Haptics from 'expo-haptics';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { useRoomStore } from '@/features/online/room.store';
@@ -52,8 +54,61 @@ export default function OnlineRoomScreen() {
   const containerPad = fullEdge ? 0 : 12;
   const inset = fullEdge ? 0 : containerPad * 2;
   const boardSize = Math.floor(width - inset);
+  const scheme = useColorScheme();
+  const appTheme = useSettings((s) => s.theme);
+  const activeTheme: ThemeName = (appTheme === 'system' ? (scheme === 'dark' ? 'dark' : 'light') : appTheme) as ThemeName;
+  const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
+  const headerH = Platform.OS === 'ios' ? 44 : 0;
   const [copied, setCopied] = React.useState(false);
   const [archiveToast, setArchiveToast] = React.useState<string | null>(null);
+  const [leftToast, setLeftToast] = React.useState<string | null>(null);
+  const [joinToast, setJoinToast] = React.useState<string | null>(null);
+  const mountAtRef = React.useRef<number>(Date.now());
+
+  // On unmount, leave the room to update presence for peers
+  React.useEffect(() => {
+    return () => {
+      try { leave(); } catch {}
+    };
+  }, []);
+
+  // Opponent left/joined toasts using membership diff (avoid false positives on own join/empty rooms)
+  const prevMemberIdsRef = React.useRef<string[]>([]);
+  const hasBaselineRef = React.useRef<boolean>(false);
+  React.useEffect(() => {
+    const members = room?.members || [];
+    const meId = me.id;
+    const currentOppIds = members.filter((m) => m.id !== meId).map((m) => m.id);
+    const prevOppIds = prevMemberIdsRef.current.filter((id) => id !== meId);
+    // Establish baseline on first valid membership snapshot to avoid toasts on initial join
+    if (!hasBaselineRef.current) {
+      prevMemberIdsRef.current = members.map((m) => m.id);
+      hasBaselineRef.current = true;
+    } else {
+      // Opponent joined: previously none, now >=1
+      if (prevOppIds.length === 0 && currentOppIds.length >= 1 && Date.now() - mountAtRef.current > 1500) {
+        setJoinToast('Opponent joined');
+      }
+      // Opponent left: previously >=1, now none, and I'm still in the room
+      if (prevOppIds.length >= 1 && currentOppIds.length === 0 && room && Date.now() - mountAtRef.current > 1500) {
+        setLeftToast('Opponent left the room');
+      }
+      prevMemberIdsRef.current = members.map((m) => m.id);
+    }
+  }, [room?.members, me.id, room]);
+
+  // Auto-hide toasts
+  React.useEffect(() => {
+    if (!joinToast) return;
+    const t = setTimeout(() => setJoinToast(null), 1500);
+    return () => clearTimeout(t);
+  }, [joinToast]);
+  React.useEffect(() => {
+    if (!leftToast) return;
+    const t = setTimeout(() => setLeftToast(null), 2000);
+    return () => clearTimeout(t);
+  }, [leftToast]);
 
   // Show a one-shot toast when result is set (saved to archive)
   const prevResultRef = React.useRef<string | undefined>(undefined as any);
@@ -83,10 +138,16 @@ export default function OnlineRoomScreen() {
   }, [shake]);
   return (
     <Screen style={{ justifyContent: 'flex-start', paddingHorizontal: containerPad }}>
-      <Stack.Screen options={{ headerShown: true, headerRight: () => <HeaderIndicators /> }} />
+      <Stack.Screen options={{ headerTitle: 'Online Game', headerRight: () => <HeaderIndicators /> }} />
       <ScrollView
         style={{ flex: 1, alignSelf: 'stretch' }}
-        contentContainerStyle={{ alignItems: 'center', paddingBottom: 48, paddingHorizontal: containerPad }}
+        contentContainerStyle={{ 
+          alignItems: 'center', 
+          paddingBottom: 48, 
+          paddingHorizontal: containerPad,
+          paddingTop: 16 
+        }}
+        contentInsetAdjustmentBehavior="automatic"
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
@@ -361,12 +422,26 @@ export default function OnlineRoomScreen() {
         )}
       </ScrollView>
       {Platform.OS === 'android' && (
-        <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 3, backgroundColor: colors.background }} />
+        <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 3, backgroundColor: themes[activeTheme].background }} />
       )}
       {archiveToast && (
         <View style={{ position: 'absolute', bottom: 24, left: 0, right: 0, alignItems: 'center' }}>
           <View style={{ backgroundColor: 'rgba(0,0,0,0.85)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}>
             <Text style={{ color: 'white' }}>{archiveToast}</Text>
+          </View>
+        </View>
+      )}
+      {leftToast && (
+        <View style={{ position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 }}>
+            <Text style={{ color: 'white' }}>{leftToast}</Text>
+          </View>
+        </View>
+      )}
+      {joinToast && (
+        <View style={{ position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 }}>
+            <Text style={{ color: 'white' }}>{joinToast}</Text>
           </View>
         </View>
       )}

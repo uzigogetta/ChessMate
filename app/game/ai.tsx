@@ -5,6 +5,8 @@ import { useSettings } from '@/features/settings/settings.store';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { START_FEN, applyMove, fenToBoard, sideToMove, applySANs } from '@/features/chess/logic/chess.rules';
 import { MockEngine } from '@/features/chess/engine/engine.mock';
+import { Stack } from 'expo-router';
+import { View } from 'react-native';
 
 export default function AIGameScreen() {
   const [fen, setFen] = useState(START_FEN);
@@ -22,48 +24,51 @@ export default function AIGameScreen() {
   const boardSize = Math.floor(width - (fullEdge ? 0 : 24));
   return (
     <Screen style={{ paddingHorizontal: containerPad }}>
-      <Card style={{ marginBottom: 16 }}>
-        <Text>
-          {`AI — Turn: ${turn === 'w' ? 'White' : 'Black'} ${thinking ? '(thinking…)' : ''}`}
-        </Text>
-      </Card>
-      <BoardSkia
-        fen={fen}
-        size={boardSize}
-        onMove={(from, to) => {
-          if (thinking) return;
-          const r = applyMove(fen, { from, to });
-          if (r.ok) {
-            setFen(r.fen);
-            setHistory((h) => [...h, r.san]);
-          }
-        }}
-      />
-      <Button title="Swap Sides" onPress={() => {
-        setMySide((s) => (s === 'white' ? 'black' : 'white'));
-        // trigger effect if AI should move first
-        setFen((f) => f);
-      }} />
-      <Button title="Undo" onPress={async () => {
-        const next = history.slice(0, -1);
-        const newFen = await applySANs(next);
-        setHistory(next);
-        setFen(newFen);
-      }} />
-      <Button title="Reset" onPress={() => {
-        setHistory([]);
-        setFen(START_FEN);
-        // trigger effect to let AI move first if black
-        setFen((f) => f);
-      }} />
-      <AIGameEffects
-        fen={fen}
-        mySide={mySide}
-        engine={engine}
-        setThinking={setThinking}
-        setFen={setFen}
-        setHistory={setHistory}
-      />
+      <Stack.Screen options={{ headerTitle: 'AI Game' }} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Card style={{ marginBottom: 16 }}>
+          <Text>
+            {`AI — Turn: ${turn === 'w' ? 'White' : 'Black'} ${thinking ? '(thinking…)' : ''}`}
+          </Text>
+        </Card>
+        <BoardSkia
+          fen={fen}
+          size={boardSize}
+          onMove={(from, to) => {
+            if (thinking) return;
+            const r = applyMove(fen, { from, to });
+            if (r.ok) {
+              setFen(r.fen);
+              setHistory((h) => [...h, r.san]);
+            }
+          }}
+        />
+        <Button title="Swap Sides" onPress={() => {
+          setMySide((s) => (s === 'white' ? 'black' : 'white'));
+          // trigger effect if AI should move first
+          setFen((f) => f);
+        }} />
+        <Button title="Undo" onPress={async () => {
+          const next = history.slice(0, -1);
+          const newFen = await applySANs(next);
+          setHistory(next);
+          setFen(newFen);
+        }} />
+        <Button title="Reset" onPress={() => {
+          setHistory([]);
+          setFen(START_FEN);
+          // trigger effect to let AI move first if black
+          setFen((f) => f);
+        }} />
+        <AIGameEffects
+          fen={fen}
+          mySide={mySide}
+          engine={engine}
+          setThinking={setThinking}
+          setFen={setFen}
+          setHistory={setHistory}
+        />
+      </View>
     </Screen>
   );
 }

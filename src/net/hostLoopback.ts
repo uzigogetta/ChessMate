@@ -185,9 +185,25 @@ export class HostLoopback implements NetAdapter {
     r.fen = c.fen();
     r.historySAN.push(mv.san);
     r.driver = r.driver === 'w' ? 'b' : 'w';
+    // Terminal detection
+    if (c.isGameOver()) {
+      if (c.isCheckmate()) {
+        const winner: 'w' | 'b' = r.driver === 'w' ? 'b' : 'w';
+        r.result = winner === 'w' ? '1-0' : '0-1';
+      } else if (c.isDraw() || c.isStalemate() || (c as any).isThreefoldRepetition?.()) {
+        r.result = '1/2-1/2';
+      }
+      r.phase = 'RESULT';
+      r.finishedAt = Date.now();
+    }
     r.version = (r.version || 0) + 1;
     this.broadcast({ t: 'game/move', from: this.me?.id || 'host', san: mv.san, fen: r.fen });
     this.emitState();
+    // Emit finalize snapshot explicitly when result known
+    if (r.phase === 'RESULT' && r.result) {
+      const { hostId, ...state } = r;
+      this.broadcast({ t: 'game/finalize', state });
+    }
   }
 
   undo(): void {
@@ -276,6 +292,10 @@ export class HostLoopback implements NetAdapter {
     if (!r) return;
     const { hostId, ...state } = r;
     this.broadcast({ t: 'room/state', state });
+    // If result already known, also broadcast finalize (covers late subscribers using loopback)
+    if (state.phase === 'RESULT' && state.result) {
+      this.broadcast({ t: 'game/finalize', state });
+    }
   }
 
   private broadcast(e: NetEvents) {

@@ -1,20 +1,23 @@
 import { Chess } from 'chess.js';
 import { logReq, logRt, logState, logMove } from '@/debug/netLogger';
 import type { Mode, NetAdapter, NetEvents, Player, RoomState, Seat } from './types';
-import { supabase } from './supabaseClient';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '@/shared/supabaseClient';
 
 type BroadcastEvent =
   | { type: 'room/state'; state: RoomState }
   | { type: 'chat/msg'; from: string; txt: string }
   | { type: 'game/move'; from: string; san: string; fen: string }
+  | { type: 'game/finalize'; state: RoomState }
   | { type: 'room/req'; from: string; req: any }
   | { type: 'room/ack'; to: string; ok: boolean; reason?: string; snapshot?: RoomState };
 
 export class SupabaseRealtimeAdapter implements NetAdapter {
+  private supabase: SupabaseClient;
   private me: Player | null = null;
   private roomId: string | null = null;
   private handler: ((e: NetEvents) => void) | null = null;
-  private channel: ReturnType<typeof supabase.channel> | null = null;
+  private channel: ReturnType<SupabaseClient['channel']> | null = null;
   private state: RoomState | null = null;
   private lastPresenceCount = 0;
   private hostId: string | null = null;
@@ -22,6 +25,10 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   private lastSeen: Record<string, number> = {};
   private pruneTimer: any = null;
   private currentMembers: Set<string> = new Set();
+
+  constructor() {
+    this.supabase = getSupabaseClient();
+  }
 
   async join(roomId: string, mode: Mode, name: string, id: string): Promise<void> {
     this.me = { id, name };
@@ -43,7 +50,7 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
     };
 
     // Create channel with presence keyed by player id and enable self-broadcasts
-    this.channel = supabase.channel(`room:${roomId}`, {
+    this.channel = this.supabase.channel(`room:${roomId}`, {
       config: { presence: { key: id }, broadcast: { self: true } as any }
     });
 
@@ -85,6 +92,10 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         this.state.version = (this.state.version || 0) + 1;
         logState('host emit room/state', this.state);
         this.broadcast({ type: 'room/state', state: this.state });
+        // If already finished, also broadcast finalize snapshot for late joiners
+        if (this.state.phase === 'RESULT' && this.state.result) {
+          this.broadcast({ type: 'game/finalize', state: this.state });
+        }
         this.schedulePrune();
       }
       this.emitState();
@@ -135,8 +146,23 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         bump();
         this.broadcast({ type: 'game/move', from: from, san: mv.san, fen: this.state.fen });
         this.state.driver = c.turn() as 'w' | 'b';
-        // Terminal detection could be added here later
+        // Terminal detection
+        if (c.isGameOver()) {
+          if (c.isCheckmate()) {
+            // side to move lost, so winner is opposite of current turn
+            const winner: 'w' | 'b' = this.state.driver === 'w' ? 'b' : 'w';
+            this.state.result = winner === 'w' ? '1-0' : '0-1';
+          } else if (c.isDraw() || c.isStalemate() || (c as any).isThreefoldRepetition?.()) {
+            this.state.result = '1/2-1/2';
+          }
+          this.state.phase = 'RESULT';
+          this.state.finishedAt = Date.now();
+        }
         this.syncState();
+        // Host: if terminal, also broadcast finalize snapshot immediately to ensure peers persist
+        if (this.state.phase === 'RESULT' && this.state.result) {
+          this.broadcast({ type: 'game/finalize', state: this.state });
+        }
       } else if (req.kind === 'undoReq') {
         if (this.state.phase !== 'ACTIVE') return;
         const prev = this.state.pending || {};
@@ -248,6 +274,14 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         this.state.driver = c.turn() as 'w' | 'b';
       }
       this.handler?.({ t: 'game/move', from: from || this.me?.id || 'peer', san, fen });
+    });
+
+    this.channel.on('broadcast', { event: 'game/finalize' }, (payload: any) => {
+      const incoming: RoomState = payload?.payload?.state || payload?.state;
+      if (!incoming || !incoming.result || incoming.phase !== 'RESULT') return;
+      // Update local snapshot for UI consistency and emit finalize event for store to archive
+      this.state = { ...incoming, seats: { ...incoming.seats }, members: [...incoming.members] };
+      this.handler?.({ t: 'game/finalize', state: this.state });
     });
 
     this.channel.on('broadcast', { event: 'room/ack' }, (payload: any) => {
@@ -474,5 +508,9 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
     return null;
   }
 }
+
+
+
+
 
 

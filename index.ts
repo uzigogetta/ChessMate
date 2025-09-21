@@ -1,4 +1,6 @@
-// Reanimated must be imported at the top of the entry file
+// Gesture Handler MUST be the very first import
+import 'react-native-gesture-handler';
+// Reanimated must be imported near the top of the entry file
 import 'react-native-reanimated';
 // Initialize EAS Insights (sends basic app lifecycle/usage to EAS)
 try {

@@ -1,24 +1,25 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
 import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 
-Sentry.init({
-  dsn: 'https://dc8259d8b6b9b1178f6c8751c8ce4914@o4509963672485888.ingest.de.sentry.io/4509963674058832',
+const sentryDsn =
+  (process.env.EXPO_PUBLIC_SENTRY_DSN as string | undefined)?.trim() ||
+  (Constants.expoConfig?.extra as any)?.sentryDsn;
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    sendDefaultPii: false,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1,
+    integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  });
+} else if (__DEV__) {
+  // eslint-disable-next-line no-console
+  console.warn('[sentry] DSN not configured; telemetry disabled');
+}
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+function Root() {
+  return null;
+}
 
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
-});
-// Placeholder: entry is handled by expo-router via index.ts
-
-export default Sentry.wrap(function App() { return null; });
-
-const styles = StyleSheet.create({});
+export default sentryDsn ? Sentry.wrap(Root) : Root;
