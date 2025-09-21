@@ -80,6 +80,9 @@ importers:
       expo-status-bar:
         specifier: ~3.0.8
         version: 3.0.8(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
+      expo-system-ui:
+        specifier: ~4.0.6
+        version: 4.0.9(expo@54.0.8)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))
       expo-updates:
         specifier: ~29.0.11
         version: 29.0.11(expo@54.0.8)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
@@ -1352,6 +1355,9 @@ packages:
   '@react-native/js-polyfills@0.81.4':
     resolution: {integrity: sha512-sr42FaypKXJHMVHhgSbu2f/ZJfrLzgaoQ+HdpRvKEiEh2mhFf6XzZwecyLBvWqf2pMPZa+CpPfNPiejXjKEy8w==}
     engines: {node: '>= 20.19.4'}
+
+  '@react-native/normalize-colors@0.76.8':
+    resolution: {integrity: sha512-FRjRvs7RgsXjkbGSOjYSxhX5V70c0IzA/jy3HXeYpATMwD9fOR1DbveLW497QGsVdCa0vThbJUtR8rIzAfpHQA==}
 
   '@react-native/normalize-colors@0.81.4':
     resolution: {integrity: sha512-9nRRHO1H+tcFqjb9gAM105Urtgcanbta2tuqCVY0NATHeFPDEAB7gPyiLxCHKMi1NbhP6TH0kxgSWXKZl1cyRg==}
@@ -2962,6 +2968,16 @@ packages:
 
   expo-structured-headers@5.0.0:
     resolution: {integrity: sha512-RmrBtnSphk5REmZGV+lcdgdpxyzio5rJw8CXviHE6qH5pKQQ83fhMEcigvrkBdsn2Efw2EODp4Yxl1/fqMvOZw==}
+
+  expo-system-ui@4.0.9:
+    resolution: {integrity: sha512-hqBc0EWeK/BTB8i4H84vqNjje8GgxhapYrcWdg5qriaRA/u+bNNxhmpZXdAjFuhonOP4SmAbF+gjoJJWsTrhUg==}
+    peerDependencies:
+      expo: '*'
+      react-native: '*'
+      react-native-web: '*'
+    peerDependenciesMeta:
+      react-native-web:
+        optional: true
 
   expo-updates-interface@2.0.0:
     resolution: {integrity: sha512-pTzAIufEZdVPKql6iMi5ylVSPqV1qbEopz9G6TSECQmnNde2nwq42PxdFBaUEd8IZJ/fdJLQnOT3m6+XJ5s7jg==}
@@ -7082,6 +7098,8 @@ snapshots:
 
   '@react-native/js-polyfills@0.81.4': {}
 
+  '@react-native/normalize-colors@0.76.8': {}
+
   '@react-native/normalize-colors@0.81.4': {}
 
   '@react-native/virtualized-lists@0.81.4(@types/react@19.1.13)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)':
@@ -8954,6 +8972,15 @@ snapshots:
       react-native-is-edge-to-edge: 1.2.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
 
   expo-structured-headers@5.0.0: {}
+
+  expo-system-ui@4.0.9(expo@54.0.8)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0)):
+    dependencies:
+      '@react-native/normalize-colors': 0.76.8
+      debug: 4.4.3
+      expo: 54.0.8(@babel/core@7.28.4)(@expo/metro-runtime@6.1.2)(expo-router@6.0.7)(graphql@16.11.0)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))(react@19.1.0)
+      react-native: 0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0)
+    transitivePeerDependencies:
+      - supports-color
 
   expo-updates-interface@2.0.0(expo@54.0.8):
     dependencies:

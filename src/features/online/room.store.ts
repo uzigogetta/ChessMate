@@ -7,6 +7,7 @@ import { getJSON, setJSON, KEYS } from '@/features/storage/mmkv';
 import { getPlayerId } from '@/core/identity';
 import { useChatStore, type ChatMsg } from '@/features/chat/chat.store';
 import { logSupabaseEnv } from '@/shared/supabaseClient';
+import { createArchiveGuard } from '@/features/online/archiveGuard';
 
 type State = {
   me: Player;
@@ -65,6 +66,7 @@ export const useRoomStore = create<State>((set, get) => ({
     set({ me, net, room: undefined, startedAt: undefined });
     setJSON(KEYS.lastIdentity, me);
     let archivedVersion = -1;
+    const archiveGuard = createArchiveGuard();
     // Log Supabase env once per app boot before any first cloud write
     try { logSupabaseEnv(); } catch {}
     net.onEvent((e: NetEvents) => {
@@ -84,6 +86,9 @@ export const useRoomStore = create<State>((set, get) => ({
         // archive exactly once when entering RESULT at a new version
         if (next.phase === 'RESULT' && typeof next.version === 'number' && next.version !== archivedVersion && next.result) {
           archivedVersion = next.version!; // mark early to avoid duplicates
+          if (!archiveGuard.shouldArchive(next)) {
+            return;
+          }
           (async () => {
             try {
               // Debug: begin archive save
@@ -152,6 +157,9 @@ export const useRoomStore = create<State>((set, get) => ({
         // Idempotent archive on explicit finalize broadcast (covers guests and late joiners)
         const next = e.state;
         if (next && next.result) {
+          if (!archiveGuard.shouldArchive(next)) {
+            return;
+          }
           (async () => {
             try {
               const { insertGame, init } = await import('@/archive/db');
@@ -221,5 +229,7 @@ export const useRoomStore = create<State>((set, get) => ({
     (get().net as any).requestUndo?.() ?? (get().net as any).undo?.();
   }
 }));
+
+
 
 

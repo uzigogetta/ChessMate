@@ -1844,3 +1844,802 @@
 09-21 01:01:01.019  2910  2910 I ReactNative: [GESTURE HANDLER] Initialize gesture handler for root view com.facebook.react.runtime.ReactSurfaceView{878dd9 V.E...... .......D 0,0-1080,2340 #1}
 09-21 01:01:01.037  2910  2910 I ReactNative: [GESTURE HANDLER] Tearing down gesture handler registered for root view com.facebook.react.runtime.ReactSurfaceView{878dd9 V.E...... .......D 0,0-1080,2340 #1}
 09-21 01:03:08.717  2910  3371 W ReactNativeJS: '[SQLite] Not available. Skipping table setup.', { [Stack] name: 'Stack' }
+09-21 01:09:34.094  2910  3371 W ReactNativeJS: '[SQLite] Not available. Using in-memory archive.', { [Stack] name: 'Stack' }
+09-21 01:10:05.432  2910  3371 W ReactNativeJS: '[SQLite] Not available. Using in-memory archive.', { [Stack] name: 'Stack' }
+09-21 01:12:49.945  2910  3371 I ReactNativeJS: '[supabase] url=%s keyPresent=%s playerId=%s', 'https://kcegzdycpyeaawgzngxw.supabase.co', true, 'u_seabf6lrvhpv'
+09-21 01:12:50.362  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:12:50.362  2910  3371 I ReactNativeJS:   seats: {},
+09-21 01:12:50.362  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:12:50.362  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:12:50.427  2910  3371 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:12:50.427  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:12:50.427  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:12:50.427  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:12:50.427  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:12:50.427  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:12:50.427  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:12:50.427  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:12:50.454  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         members: [ { id: 'u_seabf6lrvhpv', name: 'Me' } ],
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         phase: 'LOBBY',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         roomId: '4JADHP',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         started: false,
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:         version: 1 },
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:12:50.454  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:12:50.454  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:12:50.667  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.667  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.667  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.667  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.667  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.667  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.670  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.670  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.670  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.670  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.670  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.670  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.673  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.673  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.673  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.673  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.673  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.673  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.676  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.676  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.676  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.676  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.676  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.676  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.773  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.773  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.773  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.773  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.773  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.773  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.839  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.839  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.839  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.839  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.839  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.839  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.848  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.848  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.848  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.848  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.848  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.848  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.856  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.856  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.856  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.856  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.856  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.856  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.864  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.864  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.864  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.864  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.864  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.864  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.949  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.949  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.949  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.949  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.949  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.949  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.972  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.972  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.972  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.972  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.972  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.972  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:12:50.997  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:12:50.997  2910  3371 W ReactNativeJS:   error: 
+09-21 01:12:50.997  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:12:50.997  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:12:50.997  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:12:50.997  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:13:03.870  2910  3371 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:03.870  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv', b1: 'u_5kb818q005m4' },
+09-21 01:13:03.870  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:13:03.870  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:03.872  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:03.872  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv', b1: 'u_5kb818q005m4' },
+09-21 01:13:03.872  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:13:03.872  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:03.948  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         members: 
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         phase: 'LOBBY',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         roomId: '4JADHP',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         started: false,
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:         version: 2 },
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:13:03.948  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:13:03.948  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:05.916  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:05.916  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:05.916  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:05.916  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:05.955  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         members: 
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         phase: 'ACTIVE',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         roomId: '4JADHP',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         startedAt: 1758413585914,
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:         version: 3 },
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:13:05.955  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:05.955  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:07.862  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:07.862  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:07.862  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:07.862  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:07.895  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         members: 
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         pending: { drawFrom: 'u_5kb818q005m4' },
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         phase: 'ACTIVE',
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         roomId: '4JADHP',
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         startedAt: 1758413585914,
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:         version: 4 },
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:13:07.895  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:13:07.896  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:07.896  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:07.896  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:07.896  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:09.033  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:09.033  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:09.033  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:09.033  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:09.035  2910  3371 I ReactNativeJS: '[archive] saving', { id: '4JADHP-1758413589032', version: 5, result: '1/2-1/2' }
+09-21 01:13:09.111  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         finishedAt: 1758413589032,
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         members: 
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         phase: 'RESULT',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         result: '1/2-1/2',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         roomId: '4JADHP',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         startedAt: 1758413585914,
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:         version: 5 },
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:13:09.111  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:09.111  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:10.893  2910  3371 I ReactNativeJS: '[archive] inserted local', '4JADHP-1758413589032'
+09-21 01:13:12.093  2910  3371 I ReactNativeJS: '[archive] cloud owner', 'u_seabf6lrvhpv'
+09-21 01:13:12.406  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:13:12.406  2910  3371 W ReactNativeJS:   error: 
+09-21 01:13:12.406  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:13:12.406  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:13:12.406  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:13:12.406  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy (USING expression) for table "archive_games"' } }
+09-21 01:13:15.849  2910  3371 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:15.849  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:15.849  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:15.849  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:15.853  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:15.853  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:15.853  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:15.853  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:15.854  2910  3371 I ReactNativeJS: '[archive] saving', { id: '4JADHP-1758413589032', version: 6, result: '1/2-1/2' }
+09-21 01:13:15.920  2910  3371 I ReactNativeJS: '[archive] inserted local', '4JADHP-1758413589032'
+09-21 01:13:15.921  2910  3371 I ReactNativeJS: '[archive] cloud owner', 'u_seabf6lrvhpv'
+09-21 01:13:15.923  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         finishedAt: 1758413589032,
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         members: [ { id: 'u_seabf6lrvhpv', name: 'Me' } ],
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         phase: 'RESULT',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         result: '1/2-1/2',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         roomId: '4JADHP',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         startedAt: 1758413585914,
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:         version: 6 },
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:13:15.923  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:13:15.923  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:13:16.102  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:13:16.102  2910  3371 W ReactNativeJS:   error: 
+09-21 01:13:16.102  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:13:16.102  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:13:16.102  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:13:16.102  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy (USING expression) for table "archive_games"' } }
+09-21 01:16:31.368  2910  3371 W ReactNativeJS: 'Route "./game/online/useRoomScreen.ts" is missing the required default export. Ensure a React component is exported as default.', { [Stack] name: 'Stack' }
+09-21 01:16:31.438  2910  2910 I ReactNative: [GESTURE HANDLER] Initialize gesture handler for root view com.facebook.react.runtime.ReactSurfaceView{878dd9 V.E...... .......D 0,0-1080,2340 #1}
+09-21 01:16:31.458  2910  2910 I ReactNative: [GESTURE HANDLER] Tearing down gesture handler registered for root view com.facebook.react.runtime.ReactSurfaceView{878dd9 V.E...... .......D 0,0-1080,2340 #1}
+09-21 01:16:47.852  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:16:47.852  2910  3371 E ReactNativeJS: 
+09-21 01:16:47.852  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:16:47.852  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:16:47.852  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:16:47.852  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:16:47.852  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:16:47.852  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:16:47.852  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:16:58.588  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:16:58.588  2910  3371 E ReactNativeJS: 
+09-21 01:16:58.588  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:16:58.588  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:16:58.588  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:16:58.588  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:16:58.588  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:16:58.588  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:16:58.588  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:17:11.490  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:17:11.490  2910  3371 E ReactNativeJS: 
+09-21 01:17:11.490  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:17:11.490  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:17:11.490  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:17:11.490  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:17:11.490  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:17:11.490  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:17:11.490  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:17:32.314  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:17:32.314  2910  3371 E ReactNativeJS: 
+09-21 01:17:32.314  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:17:32.314  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:17:32.314  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:17:32.314  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:17:32.314  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:17:32.314  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:17:32.314  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:17:37.552  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:17:37.552  2910  3371 E ReactNativeJS: 
+09-21 01:17:37.552  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:17:37.552  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:17:37.552  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:17:37.552  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:17:37.552  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:17:37.552  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:17:37.552  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:18:01.036  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:18:01.036  2910  3371 E ReactNativeJS: 
+09-21 01:18:01.036  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:18:01.036  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:18:01.036  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:18:01.036  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:18:01.036  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:18:01.036  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:18:01.036  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:18:22.344  2910  3371 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\app\game\online\components\RoomHeader.tsx: Unexpected token, expected "}" (23:39)
+09-21 01:18:22.344  2910  3371 E ReactNativeJS: 
+09-21 01:18:22.344  2910  3371 E ReactNativeJS: [0m [90m 21 |[39m   [36mreturn[39m (
+09-21 01:18:22.344  2910  3371 E ReactNativeJS:  [90m 22 |[39m     [33m<[39m[33mCard[39m style[33m=[39m{{ marginBottom[33m:[39m [35m12[39m }}[33m>[39m
+09-21 01:18:22.344  2910  3371 E ReactNativeJS: [31m[1m>[22m[39m[90m 23 |[39m       [33m<[39m[33mText[39m[33m>[39m{isMyTurn [33m?[39m [32m'Your turn'[39m [33m:[39m ${driverLabel} to move}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:18:22.344  2910  3371 E ReactNativeJS:  [90m    |[39m                                        [31m[1m^[22m[39m
+09-21 01:18:22.344  2910  3371 E ReactNativeJS:  [90m 24 |[39m       [33m<[39m[33mText[39m muted[33m>[39m{[33mRoom[39m  ÔÇó [33mYou[39m[33m:[39m  ÔÇó  players}[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+09-21 01:18:22.344  2910  3371 E ReactNativeJS:  [90m 25 |[39m       [33m<[39m[33mPresenceBar[39m members[33m=[39m{room[33m.[39mmembers} seats[33m=[39m{room[33m.[39mseats} myId[33m=[39m{meId} activeTeammate[33m=[39m{[36mnull[39m} mode[33m=[39m{room[33m.[39mmode} [33m/[39m[33m>[39m
+09-21 01:18:22.344  2910  3371 E ReactNativeJS:  [90m 26 |[39m       [33m<[39m[33mView[39m style[33m=[39m{{ flexDirection[33m:[39m [32m'row'[39m[33m,[39m gap[33m:[39m [35m8[39m[33m,[39m marginTop[33m:[39m [35m8[39m }}[33m>[39m[0m] preventSymbolication: true }
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: Cannot connect to Metro.
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: 
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: Try the following to fix the issue:
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: - Ensure that Metro is running and available on the same network
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: - Ensure that your device/emulator is connected to your machine and has USB debugging enabled - run 'adb devices' to see a list of connected devices
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: - If you're on a physical device connected to the same machine, run 'adb reverse tcp:8081 tcp:8081' to forward requests from your device
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: - If your device is on the same Wi-Fi network, set 'Debug server host & port for device' in 'Dev settings' to your machine's IP address and the port of the local dev server - e.g. 10.0.1.1:8081
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: 
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: URL: 192.168.0.56:8081
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: 
+09-21 01:18:46.420  2910  3371 W ReactNativeJS: Error: undefined
+09-21 01:28:19.924  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:19.924  2910  3371 I ReactNativeJS:   seats: {},
+09-21 01:28:19.924  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:19.924  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:19.955  2910  3371 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:19.955  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:19.955  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:19.955  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:19.956  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:19.956  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:19.956  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:19.956  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:19.990  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         members: [ { id: 'u_seabf6lrvhpv', name: 'Me' } ],
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         phase: 'LOBBY',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         started: false,
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:         version: 1 },
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:19.990  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:19.990  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:20.432  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:28:20.432  2910  3371 W ReactNativeJS:   error: 
+09-21 01:28:20.432  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:28:20.432  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:28:20.432  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:28:20.432  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:28:20.558  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:28:20.558  2910  3371 W ReactNativeJS:   error: 
+09-21 01:28:20.558  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:28:20.558  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:28:20.558  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:28:20.558  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:28:20.666  2910  3371 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:28:20.666  2910  3371 W ReactNativeJS:   error: 
+09-21 01:28:20.666  2910  3371 W ReactNativeJS:    { code: '42501',
+09-21 01:28:20.666  2910  3371 W ReactNativeJS:      details: null,
+09-21 01:28:20.666  2910  3371 W ReactNativeJS:      hint: null,
+09-21 01:28:20.666  2910  3371 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:28:31.827  2910  3371 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:31.827  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv', b1: 'u_5kb818q005m4' },
+09-21 01:28:31.827  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:31.827  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:31.827  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:31.827  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv', b1: 'u_5kb818q005m4' },
+09-21 01:28:31.827  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:31.827  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:31.880  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         members: 
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         phase: 'LOBBY',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         started: false,
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:         version: 2 },
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:31.880  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:   started: false,
+09-21 01:28:31.880  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:33.261  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:33.261  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:33.261  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:33.261  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:33.293  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         members: 
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         phase: 'ACTIVE',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         startedAt: 1758414513259,
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:         version: 3 },
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:33.293  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:33.293  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:36.025  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:36.025  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:36.025  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:36.025  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:36.074  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         members: 
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         pending: { drawFrom: 'u_5kb818q005m4' },
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         phase: 'ACTIVE',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         startedAt: 1758414513259,
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:         version: 4 },
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:36.074  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:36.074  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:37.292  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:37.292  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:37.292  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:37.292  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:37.294  2910  3371 I ReactNativeJS: '[archive] saving', { id: 'HAKY7U-1758414517290', version: 5, result: '1/2-1/2' }
+09-21 01:28:37.360  2910  3371 I ReactNativeJS: '[archive] inserted local', 'HAKY7U-1758414517290'
+09-21 01:28:37.360  2910  3371 I ReactNativeJS: '[archive] cloud owner', 'u_seabf6lrvhpv'
+09-21 01:28:37.364  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         finishedAt: 1758414517290,
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         members: 
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:          [ { id: 'u_seabf6lrvhpv', name: 'Me' },
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:            { id: 'u_5kb818q005m4', name: 'Me' } ],
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         phase: 'RESULT',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         result: '1/2-1/2',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         startedAt: 1758414513259,
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:         version: 5 },
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:37.364  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:37.364  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:37.461  2910  3371 I ReactNativeJS: '[cloud] upsert ok', 'HAKY7U-1758414517290'
+09-21 01:28:43.772  2910  3371 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:43.772  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:43.772  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:43.772  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:43.774  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:43.774  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:43.774  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:43.774  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:43.776  2910  3371 I ReactNativeJS: '[archive] saving', { id: 'HAKY7U-1758414517290', version: 6, result: '1/2-1/2' }
+09-21 01:28:43.846  2910  3371 I ReactNativeJS: '[archive] inserted local', 'HAKY7U-1758414517290'
+09-21 01:28:43.847  2910  3371 I ReactNativeJS: '[archive] cloud owner', 'u_seabf6lrvhpv'
+09-21 01:28:43.849  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         finishedAt: 1758414517290,
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         members: [ { id: 'u_seabf6lrvhpv', name: 'Me' } ],
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         phase: 'RESULT',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         result: '1/2-1/2',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         startedAt: 1758414513259,
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:         version: 6 },
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:43.849  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:   seats: { b1: 'u_5kb818q005m4', w1: 'u_seabf6lrvhpv' },
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:43.849  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:43.929  2910  3371 I ReactNativeJS: '[cloud] upsert ok', 'HAKY7U-1758414517290'
+09-21 01:28:50.023  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:50.023  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:50.023  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:50.023  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:28:50.059  2910  3371 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:   payload: 
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:    { state: 
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:       { driver: 'w',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         finishedAt: 1758414517290,
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         historySAN: [],
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         members: [ { id: 'u_seabf6lrvhpv', name: 'Me' } ],
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         mode: '1v1',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         phase: 'RESULT',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         result: '1/2-1/2',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         roomId: 'HAKY7U',
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         started: true,
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         startedAt: 1758414513259,
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:         version: 6 },
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:      type: 'room/state' },
+09-21 01:28:50.059  2910  3371 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:28:50.060  2910  3371 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:28:50.060  2910  3371 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:28:50.060  2910  3371 I ReactNativeJS:   started: true,
+09-21 01:28:50.060  2910  3371 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:43:45.817 21835 22119 I ReactNativeJS: Running "main" with {"rootTag":1,"initialProps":{},"fabric":true}
+09-21 01:43:46.168 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Using Hermes native promise rejection tracking'
+09-21 01:43:46.168 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Unhandled promise rejections will be caught by Sentry.'
+09-21 01:43:46.168 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ReactNativeErrorHandlers'
+09-21 01:43:46.168 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: NativeLinkedErrors'
+09-21 01:43:46.168 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: InboundFilters'
+09-21 01:43:46.169 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: FunctionToString'
+09-21 01:43:46.170 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: Breadcrumbs'
+09-21 01:43:46.170 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: Dedupe'
+09-21 01:43:46.170 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: HttpContext'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: Release'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: EventOrigin'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: SdkInfo'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ReactNativeInfo'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: RewriteFrames'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: DeviceContext'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ModulesLoader'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: AppStart'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: NativeFrames'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: StallTracking'
+09-21 01:43:46.171 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: AppRegistry'
+09-21 01:43:46.172 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ReactNativeTracing'
+09-21 01:43:46.172 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: TimeToDisplay'
+09-21 01:43:46.172 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ExpoContext'
+09-21 01:43:46.172 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: MobileReplay'
+09-21 01:43:46.172 21835 22119 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: DebugSymbolicator'
+09-21 01:43:46.422 21835 21835 I ReactNative: [GESTURE HANDLER] Initialize gesture handler for root view com.facebook.react.runtime.ReactSurfaceView{6e39ae4 V.E...... .......D 0,0-1080,2340 #1}
+09-21 01:43:53.528 21835 22119 W ReactNativeJS: '[SQLite] Not available. Using in-memory archive.', { [Stack] name: 'Stack' }
+09-21 01:46:02.440 21835 22119 I ReactNativeJS: '[supabase] url=%s keyPresent=%s playerId=%s', 'https://kcegzdycpyeaawgzngxw.supabase.co', true, 'u_seabf6lrvhpv'
+09-21 01:46:03.110 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.110 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.110 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.110 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.110 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.110 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.114 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.114 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.114 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.114 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.114 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.114 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.117 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.117 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.117 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.117 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.117 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.117 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.125 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.125 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.125 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.125 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.125 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.125 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.306 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.306 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.306 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.306 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.306 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.306 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.309 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.309 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.309 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.309 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.309 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.309 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.315 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.315 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.315 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.315 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.315 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.315 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.319 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.319 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.319 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.319 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.319 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.319 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.505 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.505 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.505 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.505 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.505 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.505 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.515 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.515 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.515 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.515 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.515 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.515 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.516 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.516 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.516 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.516 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.516 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.516 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:03.517 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:03.517 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:03.517 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:03.517 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:03.517 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:03.517 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:08.405 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:08.405 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:08.405 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:08.405 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:08.405 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:08.405 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:08.505 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:08.505 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:08.505 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:08.505 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:08.505 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:08.505 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:08.580 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:08.580 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:08.580 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:08.580 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:08.580 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:08.580 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:19.537 21835 22119 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:46:19.537 21835 22119 I ReactNativeJS:   seats: {},
+09-21 01:46:19.537 21835 22119 I ReactNativeJS:   started: false,
+09-21 01:46:19.537 21835 22119 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:46:19.595 21835 22119 I ReactNativeJS: '[STATE] host emit room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:46:19.595 21835 22119 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:46:19.595 21835 22119 I ReactNativeJS:   started: false,
+09-21 01:46:19.595 21835 22119 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:46:19.595 21835 22119 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:46:19.595 21835 22119 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:46:19.595 21835 22119 I ReactNativeJS:   started: false,
+09-21 01:46:19.595 21835 22119 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:46:19.630 21835 22119 I ReactNativeJS: '[RT] broadcast room/state', { event: 'room/state',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:   payload: 
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:    { state: 
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:       { driver: 'w',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         historySAN: [],
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         members: [ { id: 'u_seabf6lrvhpv', name: 'Me' } ],
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         mode: '1v1',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         phase: 'LOBBY',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         roomId: 'UKEYJK',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         started: false,
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:         version: 1 },
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:      type: 'room/state' },
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:   type: 'broadcast' }
+09-21 01:46:19.630 21835 22119 I ReactNativeJS: '[STATE] store <- room/state', { fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:   seats: { w1: 'u_seabf6lrvhpv' },
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:   started: false,
+09-21 01:46:19.630 21835 22119 I ReactNativeJS:   historyLEN: 0 }
+09-21 01:46:19.694 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:19.694 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:19.694 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:19.694 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:19.694 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:19.694 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:19.806 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:19.806 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:19.806 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:19.806 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:19.806 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:19.806 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:46:19.866 21835 22119 W ReactNativeJS: '[cloud] upsert error', { status: 401,
+09-21 01:46:19.866 21835 22119 W ReactNativeJS:   error: 
+09-21 01:46:19.866 21835 22119 W ReactNativeJS:    { code: '42501',
+09-21 01:46:19.866 21835 22119 W ReactNativeJS:      details: null,
+09-21 01:46:19.866 21835 22119 W ReactNativeJS:      hint: null,
+09-21 01:46:19.866 21835 22119 W ReactNativeJS:      message: 'new row violates row-level security policy for table "archive_games"' } }
+09-21 01:52:05.169 21835 22119 E ReactNativeJS: { [Error: TransformError SyntaxError: C:\Users\usang\Desktop\ChessMate EXPO SDK 54\mobile project\ChessMate\src\features\online\room.store.ts: Identifier 'createArchiveGuard' has already been declared. (11:9)
+09-21 01:52:05.169 21835 22119 E ReactNativeJS: 
+09-21 01:52:05.169 21835 22119 E ReactNativeJS: [0m [90m  9 |[39m [36mimport[39m { logSupabaseEnv } [36mfrom[39m [32m'@/shared/supabaseClient'[39m[33m;[39m
+09-21 01:52:05.169 21835 22119 E ReactNativeJS:  [90m 10 |[39m [36mimport[39m { createArchiveGuard } [36mfrom[39m [32m'@/features/online/archiveGuard'[39m[33m;[39m
+09-21 01:52:05.169 21835 22119 E ReactNativeJS: [31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { createArchiveGuard } [36mfrom[39m [32m'@/features/online/archiveGuard'[39m[33m;[39m
+09-21 01:52:05.169 21835 22119 E ReactNativeJS:  [90m    |[39m          [31m[1m^[22m[39m
+09-21 01:52:05.169 21835 22119 E ReactNativeJS:  [90m 12 |[39m
+09-21 01:52:05.169 21835 22119 E ReactNativeJS:  [90m 13 |[39m type [33mState[39m [33m=[39m {
+09-21 01:52:05.169 21835 22119 E ReactNativeJS:  [90m 14 |[39m   me[33m:[39m [33mPlayer[39m[33m;[39m[0m] preventSymbolication: true }
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: Cannot connect to Metro.
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: 
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: Try the following to fix the issue:
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: - Ensure that Metro is running and available on the same network
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: - Ensure that your device/emulator is connected to your machine and has USB debugging enabled - run 'adb devices' to see a list of connected devices
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: - If you're on a physical device connected to the same machine, run 'adb reverse tcp:8081 tcp:8081' to forward requests from your device
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: - If your device is on the same Wi-Fi network, set 'Debug server host & port for device' in 'Dev settings' to your machine's IP address and the port of the local dev server - e.g. 10.0.1.1:8081
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: 
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: URL: 192.168.0.56:8081
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: 
+09-21 01:54:29.271 21835 22119 W ReactNativeJS: Error: undefined
+09-21 02:06:41.548 21835 21835 I ReactNative: [GESTURE HANDLER] Tearing down gesture handler registered for root view com.facebook.react.runtime.ReactSurfaceView{6e39ae4 V.E...... ........ 0,0-1080,2340 #1}
+09-21 02:06:46.640 21835 28781 I ReactNativeJS: Running "main" with {"rootTag":1,"initialProps":{},"fabric":true}
+09-21 02:06:46.962 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Using Hermes native promise rejection tracking'
+09-21 02:06:46.962 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Unhandled promise rejections will be caught by Sentry.'
+09-21 02:06:46.962 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ReactNativeErrorHandlers'
+09-21 02:06:46.962 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: NativeLinkedErrors'
+09-21 02:06:46.962 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: InboundFilters'
+09-21 02:06:46.962 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: FunctionToString'
+09-21 02:06:46.964 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: Breadcrumbs'
+09-21 02:06:46.964 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: Dedupe'
+09-21 02:06:46.964 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: HttpContext'
+09-21 02:06:46.964 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: Release'
+09-21 02:06:46.964 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: EventOrigin'
+09-21 02:06:46.964 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: SdkInfo'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ReactNativeInfo'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: RewriteFrames'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: DeviceContext'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ModulesLoader'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: AppStart'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: NativeFrames'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: StallTracking'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: AppRegistry'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ReactNativeTracing'
+09-21 02:06:46.965 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: TimeToDisplay'
+09-21 02:06:46.966 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: ExpoContext'
+09-21 02:06:46.966 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: MobileReplay'
+09-21 02:06:46.966 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', 'Integration installed: DebugSymbolicator'
+09-21 02:06:47.181 21835 21835 I ReactNative: [GESTURE HANDLER] Initialize gesture handler for root view com.facebook.react.runtime.ReactSurfaceView{6e39ae4 V.E...... .......D 0,0-1080,2340 #1}
+09-21 02:06:48.401 21835 28781 W ReactNativeJS: '[SQLite] Not available. Using in-memory archive.', { [Stack] name: 'Stack' }
+09-21 02:18:15.533 21835 21835 I ReactNative: [GESTURE HANDLER] Initialize gesture handler for root view com.facebook.react.runtime.ReactSurfaceView{6e39ae4 V.E...... .......D 0,0-1080,2340 #1}
+09-21 02:18:15.557 21835 21835 I ReactNative: [GESTURE HANDLER] Tearing down gesture handler registered for root view com.facebook.react.runtime.ReactSurfaceView{6e39ae4 V.E...... .......D 0,0-1080,2340 #1}
+09-21 02:36:55.315 21835 28781 E ReactNativeJS: { [ReferenceError: Property 'SearchBarHC' doesn't exist]
+09-21 02:36:55.315 21835 28781 E ReactNativeJS:   componentStack: '\n    at ArchiveListScreen (http://192.168.0.56:8081/app\\(tabs)\\archive\\index.android.bundle//&platform=android&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable&dev=true&minify=false&modulesOnly=true&runModule=false&shallow=true:57:41)\n    at Suspense (<anonymous>)\n    at Route (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:116451:24)\n    at Route(index) (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:117280:24)\n    at StaticContainer (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:113524:17)\n    at EnsureSingleNavigator (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:108504:24)\n    at SceneView (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:113329:22)\n    at RNSScreenContentWrapper (<anonymous>)\n    at ScreenContentWrapper (<anonymous>)\n    at DebugContainer (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:126226:36)\n    at RNSScreen (<anonymous>)\n    at Animated(Anonymous) (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:76947:30)\n    at Suspender (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:124740:22)\n    at Suspense (<anonymous>)\n    at Freeze (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:124754:23)\n    at DelayedFreeze (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform.routerRoot=app&unstable_transformProfile=hermes-stable:124700:22)\n    at InnerScreen (http://192.168.0.56:8081/node_modules/.pnpm/expo-router@6.0.7_ec1acd2dbf6019d3cd1a3ccc612ee926/node_modules/expo-router/entry.bundle//&platform=android&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.bytecode=1&transform
+09-21 02:36:55.315 21835 28781 E ReactNativeJS:   isComponentError: true }, { [Stack] name: 'Stack' }
+09-21 02:36:55.334 21835 21835 I ReactNative: [GESTURE HANDLER] Tearing down gesture handler registered for root view com.facebook.react.runtime.ReactSurfaceView{6e39ae4 V.E...... ......ID 0,0-1080,2340 #1}
+09-21 02:36:55.420 21835 28781 I ReactNativeJS: 'Sentry Logger [log]:', '[AppStartIntegration] Waiting for initial app start was flush, before updating based on runApplication call.'
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: Cannot connect to Metro.
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: 
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: Try the following to fix the issue:
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: - Ensure that Metro is running and available on the same network
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: - Ensure that your device/emulator is connected to your machine and has USB debugging enabled - run 'adb devices' to see a list of connected devices
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: - If you're on a physical device connected to the same machine, run 'adb reverse tcp:8081 tcp:8081' to forward requests from your device
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: - If your device is on the same Wi-Fi network, set 'Debug server host & port for device' in 'Dev settings' to your machine's IP address and the port of the local dev server - e.g. 10.0.1.1:8081
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: 
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: URL: 192.168.0.56:8081
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: 
+09-21 02:37:31.012 21835 28781 W ReactNativeJS: Error: undefined

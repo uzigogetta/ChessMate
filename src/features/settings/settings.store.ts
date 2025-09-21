@@ -5,6 +5,8 @@ type BoardTheme = 'default' | 'classicGreen' | 'native';
 type PieceSet = 'default' | 'native';
 type ThemeMode = 'system' | 'light' | 'dark';
 
+const SETTINGS_VERSION = 1;
+
 type SettingsValues = {
   boardTheme: BoardTheme;
   pieceSet: PieceSet;
@@ -17,6 +19,8 @@ type SettingsValues = {
   reduceMotion: boolean;
   largeUI: boolean;
 };
+
+type StoredSettings = Partial<SettingsValues> & { version?: number };
 
 type Settings = SettingsValues & {
   setBoardTheme: (theme: BoardTheme) => void;
@@ -44,9 +48,19 @@ const DEFAULTS: SettingsValues = {
   largeUI: false,
 };
 
+function migrateSettings(stored: StoredSettings | undefined): SettingsValues {
+  if (!stored) return DEFAULTS;
+  const { version = 0, ...rest } = stored;
+  let values: SettingsValues = { ...DEFAULTS, ...rest };
+  if (version !== SETTINGS_VERSION) {
+    // future migrations can be handled here
+  }
+  return values;
+}
+
 function loadSettings(): SettingsValues {
-  const stored = getJSON<Partial<SettingsValues>>(KEYS.settings);
-  return { ...DEFAULTS, ...(stored ?? {}) };
+  const stored = getJSON<StoredSettings>(KEYS.settings);
+  return migrateSettings(stored);
 }
 
 function pickValues(state: Settings): SettingsValues {
@@ -65,7 +79,7 @@ function pickValues(state: Settings): SettingsValues {
 }
 
 function persist(values: SettingsValues) {
-  setJSON(KEYS.settings, values);
+  setJSON(KEYS.settings, { ...values, version: SETTINGS_VERSION });
 }
 
 export const useSettings = create<Settings>((set) => {

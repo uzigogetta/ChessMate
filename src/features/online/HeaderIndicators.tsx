@@ -4,7 +4,7 @@ import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 import { useRoomStore } from '@/features/online/room.store';
 import { isUploaded } from '@/shared/cloud';
 import { useSettings } from '../settings/settings.store';
-import { themes, ThemeName } from '@/ui/tokens';
+import { themes, ThemeName, getTheme } from '@/ui/tokens';
 import { BlurView } from 'expo-blur';
 import Animated, { 
   useAnimatedStyle, 
@@ -21,7 +21,9 @@ export default function HeaderIndicators() {
   const sys = useColorScheme();
   const mode = useSettings((s) => s.theme);
   const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
-  const c = themes[active];
+  const highContrast = useSettings((s) => s.highContrast);
+  const c = getTheme(active, { highContrast });
+  const reduceMotion = useSettings((s) => s.reduceMotion);
 
   const [introFlash, setIntroFlash] = useState(true);
   useEffect(() => {
@@ -61,6 +63,12 @@ export default function HeaderIndicators() {
   const cloudVisible = introFlash || resultHold || uploading;
 
   const animatedCloudStyle = useAnimatedStyle(() => {
+    if (reduceMotion) {
+      return {
+        opacity: cloudVisible ? 1 : 0,
+        transform: [{ scale: cloudVisible ? 1 : 0.95 }],
+      };
+    }
     return {
       opacity: withTiming(cloudVisible ? 1 : 0, { 
         duration: cloudVisible ? 200 : 300,
@@ -77,6 +85,9 @@ export default function HeaderIndicators() {
   });
 
   const animatedPulseStyle = useAnimatedStyle(() => {
+    if (reduceMotion) {
+      return { opacity: 1, transform: [{ scale: 1 }] };
+    }
     // No pulsing needed here since CloudUploadIndicator handles its own animation
     return {
       opacity: 1,
@@ -89,6 +100,9 @@ export default function HeaderIndicators() {
     // When collapsed: 36px (just connection icon)
     // When expanded: 64px (cloud + smaller gap + connection)
     const targetWidth = cloudVisible ? 64 : 36;
+    if (reduceMotion) {
+      return { width: targetWidth };
+    }
     return {
       width: withSpring(targetWidth, {
         damping: 20,

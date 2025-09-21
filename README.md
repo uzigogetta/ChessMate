@@ -24,3 +24,4 @@
 - Online room example: `/game/online/test123` shows "Room: test123"
  - Chessboard: Tap your piece to see legal dots; tap target to move (turn from FEN).
  - Dev overlay (dev builds): shows fen, turn, your side, and turn status.
+

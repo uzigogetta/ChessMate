@@ -1,158 +1,185 @@
 import React from 'react';
-import { View, ScrollView, Animated, Easing, useWindowDimensions, Platform, Alert, useColorScheme } from 'react-native';
+import { View, ScrollView, useWindowDimensions, Platform, useColorScheme, Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import HeaderIndicators from '@/features/online/HeaderIndicators';
 import { themes, ThemeName } from '@/ui/tokens';
 import { useSettings } from '@/features/settings/settings.store';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Card, Text, Button } from '@/ui/atoms';
-import HeaderIndicators from '@/features/online/HeaderIndicators';
-import { Stack, useNavigation } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useHeaderHeight } from '@react-navigation/elements';
-import * as Haptics from 'expo-haptics';
-import BoardSkia from '@/features/chess/components/board/BoardSkia';
-import { useRoomStore } from '@/features/online/room.store';
-import { Seat } from '@/net/types';
-import { moveToSAN } from '@/features/chess/logic/chess.rules';
-import { isLegalMoveForDriver, validateMove, getTurn } from '@/features/chess/logic/moveHelpers';
-import { logMove } from '@/debug/netLogger';
-import RoomChat from '@/features/chat/RoomChat';
+import { Screen, Card, Text } from '@/ui/atoms';
 import { ReconnectListener } from '@/features/online/reconnect';
+import RoomChat from '@/features/chat/RoomChat';
 import { DevOverlay } from '@/ui/DevOverlay';
-import * as Clipboard from 'expo-clipboard';
-import { Share } from 'react-native';
+import { useRoomStore } from '@/features/online/room.store';
 import { buildInvite } from '@/features/online/invite';
-import PresenceBar from '@/features/online/PresenceBar';
-
-function SeatButton({ label, seat, takenBy, onPress, disabled, nameById, meId }: { label: string; seat: Seat; takenBy?: string; onPress: () => void; disabled?: boolean; nameById: (id?: string) => string; meId: string }) {
-  const occupant = takenBy ? ` • ${takenBy === meId ? 'you' : nameById(takenBy)}` : '';
-  return <Button title={`${label}${occupant}`} onPress={onPress} disabled={disabled} />;
-}
+import { useRoomScreenState } from '@/features/online/room-screen/useRoomScreen';
+import { RoomHeader } from '@/features/online/room-screen/RoomHeader';
+import { SeatControls } from '@/features/online/room-screen/SeatControls';
+import { RoomBoard } from '@/features/online/room-screen/RoomBoard';
+import { RoomActions } from '@/features/online/room-screen/RoomActions';
+import { RoomToasts } from '@/features/online/room-screen/RoomToasts';
+import type { Seat } from '@/net/types';
 
 export default function OnlineRoomScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const router = useRouter();
-  const room = useRoomStore((s) => s.room);
-  const me = useRoomStore((s) => s.me);
-  const takeSeat = useRoomStore.getState().takeSeat;
-  const passBaton = useRoomStore.getState().passBaton;
-  const moveSAN = useRoomStore.getState().moveSAN;
-  const leave = useRoomStore.getState().leave;
-  const start = useRoomStore.getState().start;
-  const resign = useRoomStore.getState().resign;
-  const offerDraw = useRoomStore.getState().offerDraw;
-  const mySeats: Seat[] = room ? (Object.keys(room.seats) as Seat[]).filter((k) => room.seats[k] === me.id) : [];
-  const mySide: 'w' | 'b' | null = room ? (mySeats.some((s) => s.startsWith('w')) ? 'w' : mySeats.some((s) => s.startsWith('b')) ? 'b' : null) : null;
-  const canMove = () => !!room && room.started && !!mySide && mySide === room.driver;
-  const nameById = (id?: string) => (room?.members || []).find((m) => m.id === id)?.name || '—';
-  const is1v1 = room?.mode === '1v1';
-  const minimal = is1v1;
-  const isMyTurn = !!room?.started && !!mySide && mySide === getTurn(room.fen);
-  const readyToStart = room ? (is1v1 ? !!room.seats['w1'] && !!room.seats['b1'] : (!!room.seats['w1'] || !!room.seats['w2']) && (!!room.seats['b1'] || !!room.seats['b2'])) : false;
-  const isHost = room && me && room.members.length > 0 ? me.id === [...room.members].sort((a,b)=>a.id.localeCompare(b.id))[0]?.id : false;
+  const { room, meId, mySeats, mySide, isHost, readyToStart, isMyTurn, isMinimal, nameById } = useRoomScreenState();
+
+  const moveSAN = useRoomStore((state) => state.moveSAN);
+  const passBaton = useRoomStore((state) => state.passBaton);
+  const start = useRoomStore((state) => state.start);
+  const leave = useRoomStore((state) => state.leave);
+  const resign = useRoomStore((state) => state.resign);
+  const offerDraw = useRoomStore((state) => state.offerDraw);
+  const requestUndo = useRoomStore((state) => state.requestUndo);
+  const answerDraw = useRoomStore((state) => state.answerDraw);
+
   const { width } = useWindowDimensions();
-  const fullEdge = useSettings((s) => s.fullEdgeBoard);
+  const fullEdge = useSettings((state) => state.fullEdgeBoard);
+  const themeSetting = useSettings((state) => state.theme);
+  const scheme = useColorScheme();
+  const activeTheme: ThemeName = (themeSetting === 'system' ? (scheme === 'dark' ? 'dark' : 'light') : themeSetting) as ThemeName;
   const containerPad = fullEdge ? 0 : 12;
   const inset = fullEdge ? 0 : containerPad * 2;
   const boardSize = Math.floor(width - inset);
-  const scheme = useColorScheme();
-  const appTheme = useSettings((s) => s.theme);
-  const activeTheme: ThemeName = (appTheme === 'system' ? (scheme === 'dark' ? 'dark' : 'light') : appTheme) as ThemeName;
-  const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
-  const headerH = Platform.OS === 'ios' ? 44 : 0;
+
   const [copied, setCopied] = React.useState(false);
   const [archiveToast, setArchiveToast] = React.useState<string | null>(null);
   const [leftToast, setLeftToast] = React.useState<string | null>(null);
   const [joinToast, setJoinToast] = React.useState<string | null>(null);
   const mountAtRef = React.useRef<number>(Date.now());
 
-  // On unmount, leave the room to update presence for peers
   React.useEffect(() => {
     return () => {
-      try { leave(); } catch {}
+      try {
+        leave();
+      } catch {}
     };
-  }, []);
+  }, [leave]);
 
-  // Opponent left/joined toasts using membership diff (avoid false positives on own join/empty rooms)
   const prevMemberIdsRef = React.useRef<string[]>([]);
   const hasBaselineRef = React.useRef<boolean>(false);
   React.useEffect(() => {
-    const members = room?.members || [];
-    const meId = me.id;
-    const currentOppIds = members.filter((m) => m.id !== meId).map((m) => m.id);
-    const prevOppIds = prevMemberIdsRef.current.filter((id) => id !== meId);
-    // Establish baseline on first valid membership snapshot to avoid toasts on initial join
-    if (!hasBaselineRef.current) {
-      prevMemberIdsRef.current = members.map((m) => m.id);
-      hasBaselineRef.current = true;
-    } else {
-      // Opponent joined: previously none, now >=1
-      if (prevOppIds.length === 0 && currentOppIds.length >= 1 && Date.now() - mountAtRef.current > 1500) {
-        setJoinToast('Opponent joined');
-      }
-      // Opponent left: previously >=1, now none, and I'm still in the room
-      if (prevOppIds.length >= 1 && currentOppIds.length === 0 && room && Date.now() - mountAtRef.current > 1500) {
-        setLeftToast('Opponent left the room');
-      }
-      prevMemberIdsRef.current = members.map((m) => m.id);
-    }
-  }, [room?.members, me.id, room]);
+    const members = room?.members ?? [];
+    if (!room) return;
+    const currentOpponents = members.filter((member) => member.id !== meId).map((member) => member.id);
+    const previousOpponents = prevMemberIdsRef.current.filter((id) => id !== meId);
 
-  // Auto-hide toasts
+    if (!hasBaselineRef.current) {
+      prevMemberIdsRef.current = members.map((member) => member.id);
+      hasBaselineRef.current = true;
+      return;
+    }
+
+    if (previousOpponents.length === 0 && currentOpponents.length >= 1 && Date.now() - mountAtRef.current > 1500) {
+      setJoinToast('Opponent joined');
+    }
+
+    if (previousOpponents.length >= 1 && currentOpponents.length === 0 && Date.now() - mountAtRef.current > 1500) {
+      setLeftToast('Opponent left the room');
+    }
+
+    prevMemberIdsRef.current = members.map((member) => member.id);
+  }, [room, meId]);
+
   React.useEffect(() => {
     if (!joinToast) return;
-    const t = setTimeout(() => setJoinToast(null), 1500);
-    return () => clearTimeout(t);
+    const timeout = setTimeout(() => setJoinToast(null), 1500);
+    return () => clearTimeout(timeout);
   }, [joinToast]);
+
   React.useEffect(() => {
     if (!leftToast) return;
-    const t = setTimeout(() => setLeftToast(null), 2000);
-    return () => clearTimeout(t);
+    const timeout = setTimeout(() => setLeftToast(null), 2000);
+    return () => clearTimeout(timeout);
   }, [leftToast]);
 
-  // Show a one-shot toast when result is set (saved to archive)
-  const prevResultRef = React.useRef<string | undefined>(undefined as any);
+  const prevResultRef = React.useRef<string | undefined>(undefined);
   React.useEffect(() => {
-    const r = room?.result;
-    if (r && prevResultRef.current !== r) {
+    const result = room?.result;
+    if (result && prevResultRef.current !== result) {
       setArchiveToast('Saved to Archive');
-      setTimeout(() => setArchiveToast(null), 1400);
+      const timeout = setTimeout(() => setArchiveToast(null), 1400);
+      return () => clearTimeout(timeout);
     }
-    prevResultRef.current = r as any;
+    prevResultRef.current = result;
   }, [room?.result]);
-  const [flashSq, setFlashSq] = React.useState<string | null>(null);
-  const shake = React.useRef(new Animated.Value(0)).current;
-  const triggerFlash = React.useCallback((sq: string) => {
-    setFlashSq(null);
-    setTimeout(() => setFlashSq(sq), 0);
+
+  const handleInvite = React.useCallback(async () => {
+    if (!room) return;
+    try {
+      await Share.share({ message: buildInvite(room.roomId) });
+    } catch {}
+  }, [room]);
+
+  const handleCopyId = React.useCallback(async () => {
+    if (!room) return;
+    try {
+      await Clipboard.setStringAsync(room.roomId);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {}
+  }, [room]);
+
+  const handleLeave = React.useCallback(() => {
+    leave();
+    router.replace('/game/online');
+  }, [leave, router]);
+
+  const handleSeatSide = React.useCallback((side: 'w' | 'b') => {
+    const net = useRoomStore.getState().net as any;
+    net.seatSide?.(side);
   }, []);
-  const triggerShake = React.useCallback(() => {
-    shake.setValue(0);
-    Animated.sequence([
-      Animated.timing(shake, { toValue: -6, duration: 40, easing: Easing.linear, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: 6, duration: 60, easing: Easing.linear, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: -4, duration: 50, easing: Easing.linear, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: 4, duration: 50, easing: Easing.linear, useNativeDriver: true }),
-      Animated.timing(shake, { toValue: 0, duration: 40, easing: Easing.linear, useNativeDriver: true })
-    ]).start();
-  }, [shake]);
+
+  const handleReleaseSeat = React.useCallback(() => {
+    const net = useRoomStore.getState().net as any;
+    net.releaseSeat?.();
+  }, []);
+
+  const handleAnswerUndo = React.useCallback((accept: boolean) => {
+    const net = useRoomStore.getState().net as any;
+    net.answerUndo?.(accept);
+  }, []);
+
+  const handleAnswerRestart = React.useCallback((accept: boolean) => {
+    const net = useRoomStore.getState().net as any;
+    net.answerRestart?.(accept);
+  }, []);
+
+  const handleRestart = React.useCallback(() => {
+    const net = useRoomStore.getState().net as any;
+    net.restart?.();
+  }, []);
+
+  const handlers = React.useMemo(
+    () => ({
+      onStart: start,
+      onLeave: handleLeave,
+      onResign: resign,
+      onOfferDraw: offerDraw,
+      onUndoRequest: requestUndo,
+      onPassBaton: passBaton,
+      onRestart: handleRestart,
+      onAnswerDraw: answerDraw,
+      onAnswerUndo: handleAnswerUndo,
+      onAnswerRestart: handleAnswerRestart,
+    }),
+    [start, handleLeave, resign, offerDraw, requestUndo, passBaton, handleRestart, answerDraw, handleAnswerUndo, handleAnswerRestart]
+  );
+
   return (
     <Screen style={{ justifyContent: 'flex-start', paddingHorizontal: containerPad }}>
       <Stack.Screen options={{ headerTitle: 'Online Game', headerRight: () => <HeaderIndicators /> }} />
       <ScrollView
         style={{ flex: 1, alignSelf: 'stretch' }}
-        contentContainerStyle={{ 
-          alignItems: 'center', 
-          paddingBottom: 48, 
-          paddingHorizontal: containerPad,
-          paddingTop: 16 
-        }}
+        contentContainerStyle={{ alignItems: 'center', paddingBottom: 48, paddingHorizontal: containerPad, paddingTop: 16 }}
         contentInsetAdjustmentBehavior="automatic"
         nestedScrollEnabled
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        horizontal={false}
         bounces={false}
+        horizontal={false}
         alwaysBounceHorizontal={false}
         directionalLockEnabled
         overScrollMode="never"
@@ -160,292 +187,63 @@ export default function OnlineRoomScreen() {
         fadingEdgeLength={0}
       >
         <ReconnectListener />
-        
+
         {!room && (
           <>
             <Card style={{ marginBottom: 12 }}>
               <Text>{`Room ${roomId}`}</Text>
             </Card>
-            <Text>Joining room…</Text>
+            <Text>Joining room.</Text>
           </>
         )}
-        {!!room && (
+
+        {room && (
           <>
-            <Card style={{ marginBottom: 12 }}>
-              <Text>{isMyTurn ? 'Your turn' : `${room.driver === 'w' ? 'White' : 'Black'} to move`}</Text>
-              <Text muted>{`Room ${room.roomId} • You: ${mySide ? (mySide === 'w' ? 'White' : 'Black') : 'Spectator'} • ${room.members.length} players`}</Text>
-              <PresenceBar members={room.members} seats={room.seats} myId={me.id} activeTeammate={null} mode={room.mode} />
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <Button title="Invite" onPress={async () => { await Share.share({ message: buildInvite(room.roomId) }); }} />
-                <Button
-                  title={copied ? 'Copied!' : 'Copy ID'}
-                  disabled={copied}
-                  variant={copied ? 'success' : 'primary'}
-                  onPress={async () => {
-                    await Clipboard.setStringAsync(room.roomId);
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 1200);
-                  }}
-                />
-              </View>
-            </Card>
-            <Card style={{ marginBottom: 12, gap: 8 }}>
-              <Text>Members</Text>
-              <View style={{ gap: 4 }}>
-                {room.members.map((m) => (
-                  <Text key={m.id} muted={m.id !== me.id}>{`${m.name}${m.id === me.id ? ' (you)' : ''}`}</Text>
-                ))}
-              </View>
-            </Card>
-            {!minimal && (
-              <Card style={{ marginBottom: 12, gap: 8 }}>
-                <Text>Seats</Text>
-                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                  <Button title="Join White" disabled={!!room.seats['w1'] && room.seats['w1'] !== me.id} onPress={() => (useRoomStore.getState().net as any).seatSide?.('w')} />
-                  <Button title="Join Black" disabled={!!room.seats['b1'] && room.seats['b1'] !== me.id} onPress={() => (useRoomStore.getState().net as any).seatSide?.('b')} />
-                  {mySeats.length > 0 && <Button title="Release Seat" onPress={() => (useRoomStore.getState().net as any).releaseSeat?.()} />}
-                </View>
-                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-                  {((room.mode === '1v1' ? ['w1', 'b1'] : ['w1', 'w2', 'b1', 'b2']) as Seat[]).map((s) => (
-                    <SeatButton
-                      key={s}
-                      label={s}
-                      seat={s}
-                      takenBy={room.seats[s]}
-                      nameById={nameById}
-                      meId={me.id}
-                      disabled
-                      onPress={() => {}}
-                    />
-                  ))}
-                </View>
-              </Card>
-            )}
+            <RoomHeader
+              room={room}
+              mySide={mySide}
+              isMyTurn={isMyTurn}
+              meId={meId}
+              copied={copied}
+              onCopyId={handleCopyId}
+              onInvite={handleInvite}
+            />
+
+            <SeatControls
+              room={room}
+              meId={meId}
+              mySeats={mySeats as Seat[]}
+              isMinimal={isMinimal}
+              nameById={nameById}
+              onSeatSide={handleSeatSide}
+              onRelease={handleReleaseSeat}
+            />
+
             <RoomChat />
-            <Animated.View style={{ transform: [{ translateX: shake }], alignSelf: 'center' }}>
-              <BoardSkia
-                fen={room.fen}
-                orientation={mySide ?? 'w'}
-                selectableColor={mySide ?? 'w'}
-                flashSquare={flashSq}
-                size={boardSize}
-                onMove={(from, to) => {
-                  const turn = getTurn(room.fen);
-                  if (!room.started || !mySide || mySide !== turn) {
-                    triggerFlash(from);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    triggerShake();
-                    return;
-                  }
-                  const v = validateMove(room.fen, from, to);
-                  if (v.ok && v.san) {
-                    logMove('UI request', { san: v.san, from: mySide, fen: room.fen });
-                    moveSAN(v.san);
-                  } else {
-                    triggerFlash(from);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    triggerShake();
-                  }
-                }}
-                onOptimisticMove={(from, to, rollback) => {
-                  if (!isLegalMoveForDriver(room, me.id, from, to)) {
-                    triggerFlash(from);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    triggerShake();
-                    return;
-                  }
-                  const v = validateMove(room.fen, from, to);
-                  if (!v.ok || !v.san) {
-                    triggerFlash(from);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    triggerShake();
-                    return;
-                  }
-                  moveSAN(v.san);
-                }}
-              />
-            </Animated.View>
-            {room.result && (
-              <Card style={{ marginTop: 12, gap: 8, alignItems: 'center' }}>
-                <Text style={{ fontSize: 18 }}>
-                  {room.result === '1-0' ? 'White wins' : room.result === '0-1' ? 'Black wins' : 'Draw'}
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <Button
-                    title="Rematch"
-                    onPress={() =>
-                      Alert.alert('Rematch?', 'Ask your opponent to start a new game.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Request', onPress: () => (useRoomStore.getState().net as any).restart?.() }
-                      ])
-                    }
-                  />
-                  <Button
-                    title="Leave Game"
-                    onPress={() => {
-                      leave();
-                      router.replace('/game/online');
-                    }}
-                  />
-                </View>
-              </Card>
-            )}
-            <Card style={{ marginTop: 12, gap: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {room.started && !room.result && (
-                <Button
-                  title="Undo"
-                  onPress={() =>
-                    Alert.alert('Request undo?', 'Ask your opponent to revert the last move.', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Request', onPress: () => useRoomStore.getState().requestUndo() }
-                    ])
-                  }
-                />
-              )}
-              {!room.result && (
-                <Button
-                  title="Resign"
-                  onPress={() =>
-                    Alert.alert('Resign game?', 'Your opponent will be declared the winner.', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Resign', style: 'destructive', onPress: () => resign() }
-                    ])
-                  }
-                />
-              )}
-              {!room.result && !room.pending && (
-                <Button
-                  title="Offer Draw"
-                  onPress={() =>
-                    Alert.alert('Offer a draw?', 'Your opponent can accept or decline.', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Offer Draw', onPress: () => offerDraw() }
-                    ])
-                  }
-                />
-              )}
-              {room.pending && room.pending.drawFrom && room.pending.drawFrom !== me.id && (
-                <>
-                  <Button
-                    title="Accept Draw"
-                    onPress={() =>
-                      Alert.alert('Accept draw?', 'This will end the game as a draw.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Accept', onPress: () => { useRoomStore.getState().answerDraw(true); } }
-                      ])
-                    }
-                  />
-                  <Button
-                    title="Decline"
-                    onPress={() =>
-                      Alert.alert('Decline draw?', 'The draw offer will be dismissed.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Decline', style: 'destructive', onPress: () => { useRoomStore.getState().answerDraw(false); } }
-                      ])
-                    }
-                  />
-                </>
-              )}
-              {room.pending && room.pending.undoFrom && room.pending.undoFrom !== me.id && (
-                <>
-                  <Button
-                    title="Accept Undo"
-                    onPress={() =>
-                      Alert.alert('Accept undo?', 'This will revert the last move.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Accept', onPress: () => (useRoomStore.getState().net as any).answerUndo?.(true) }
-                      ])
-                    }
-                  />
-                  <Button
-                    title="Decline Undo"
-                    onPress={() =>
-                      Alert.alert('Decline undo?', 'Undo request will be dismissed.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Decline', style: 'destructive', onPress: () => (useRoomStore.getState().net as any).answerUndo?.(false) }
-                      ])
-                    }
-                  />
-                </>
-              )}
-              {room.pending && room.pending.restartFrom && room.pending.restartFrom !== me.id && (
-                <>
-                  <Button
-                    title="Accept New Game"
-                    onPress={() =>
-                      Alert.alert('Start new game?', 'Board will reset and a new game will start.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Start', onPress: () => (useRoomStore.getState().net as any).answerRestart?.(true) }
-                      ])
-                    }
-                  />
-                  <Button
-                    title="Decline New Game"
-                    onPress={() =>
-                      Alert.alert('Decline new game?', 'Request will be dismissed.', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Decline', style: 'destructive', onPress: () => (useRoomStore.getState().net as any).answerRestart?.(false) }
-                      ])
-                    }
-                  />
-                </>
-              )}
-              {__DEV__ && (
-                <Button
-                  title="Reset"
-                  onPress={() =>
-                    Alert.alert('Start a new game?', 'This will reset the board and start a new game.', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Reset', style: 'destructive', onPress: () => (useRoomStore.getState().net as any).restart?.() }
-                    ])
-                  }
-                />
-              )}
-              {room.mode === '2v2' && mySide === room.driver && <Button title="Pass Baton" onPress={() => passBaton()} />}
-            </Card>
-            {!room.started && !room.result && (
-              <Button
-                title={isHost ? 'Start Game' : 'Waiting for host…'}
-                onPress={() => start()}
-                disabled={!readyToStart || !isHost || room.phase === 'ACTIVE'}
-              />
-            )}
-            <Button
-              title="Leave Room"
-              onPress={() => {
-                leave();
-                router.replace('/game/online');
-              }}
+
+            <RoomBoard room={room} mySide={mySide} boardSize={boardSize} meId={meId} moveSAN={moveSAN} />
+
+            <RoomActions
+              room={room}
+              mySide={mySide}
+              meId={meId}
+              isHost={isHost}
+              readyToStart={readyToStart}
+              handlers={handlers}
+              showDevReset={__DEV__}
             />
           </>
         )}
       </ScrollView>
+
       {Platform.OS === 'android' && (
         <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 3, backgroundColor: themes[activeTheme].background }} />
       )}
-      {archiveToast && (
-        <View style={{ position: 'absolute', bottom: 24, left: 0, right: 0, alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'rgba(0,0,0,0.85)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 }}>
-            <Text style={{ color: 'white' }}>{archiveToast}</Text>
-          </View>
-        </View>
-      )}
-      {leftToast && (
-        <View style={{ position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 }}>
-            <Text style={{ color: 'white' }}>{leftToast}</Text>
-          </View>
-        </View>
-      )}
-      {joinToast && (
-        <View style={{ position: 'absolute', top: 8, left: 0, right: 0, alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 }}>
-            <Text style={{ color: 'white' }}>{joinToast}</Text>
-          </View>
-        </View>
-      )}
+
+      <RoomToasts archiveToast={archiveToast} leftToast={leftToast} joinToast={joinToast} />
       <DevOverlay />
     </Screen>
   );
 }
+
+

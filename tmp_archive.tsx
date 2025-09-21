@@ -4,7 +4,7 @@ import { Card, Text, Chip, Button } from '@/ui/atoms';
 import { init, listGames, type GameRow, listFavorites, addFavorite, removeFavorite, deleteGame, addFavorites, removeFavorites } from '@/archive/db';
 import { Link, Stack, useRouter, useFocusEffect } from 'expo-router';
 import { isUploaded } from '@/shared/cloud';
-import { themes, ThemeName, getTheme } from '@/ui/tokens';
+import { themes, ThemeName } from '@/ui/tokens';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useSettings } from '@/features/settings/settings.store';
@@ -24,7 +24,7 @@ export default function ArchiveListScreen() {
   const settings = useSettings();
   const mode = settings.theme as 'system'|'light'|'dark';
   const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
-  const c = getTheme(active, { highContrast });
+  const c = themes[active];
   const highContrast = settings.highContrast;
   const reduceMotion = settings.reduceMotion;
   const [query, setQuery] = useState('');
@@ -296,31 +296,7 @@ function resultShort(r: string) { if (r === '1/2-1/2' || r === '1/2') return '½
 function tintWithAlpha(color: any, alpha: number, ui?: ThemeName) { if (typeof color === 'string' && color.startsWith('#')) { const { r, g, b } = hexToRgb(color); return `rgba(${r}, ${g}, ${b}, ${alpha})`; } return `rgba(${ui === 'dark' ? 242 : 28}, ${ui === 'dark' ? 242 : 28}, ${ui === 'dark' ? 247 : 30}, ${alpha})`; }
 function hexToRgb(hex: string) { const h = hex.replace('#',''); const bigint = parseInt(h,16); return { r:(bigint>>16)&255, g:(bigint>>8)&255, b:bigint&255 }; }
 function badgeTintForResult(result: string, c: { primary: any; accent: any; muted: any }, ui: ThemeName) { if (result === '1-0') return ui === 'dark' ? 'rgba(48,209,88,0.24)' : 'rgba(48,209,88,0.22)'; if (result === '0-1') return ui === 'dark' ? 'rgba(10,132,255,0.24)' : 'rgba(10,132,255,0.22)'; return ui === 'dark' ? 'rgba(99,99,102,0.22)' : 'rgba(120,120,128,0.18)'; }
-function Badge({ label, tint, textColor }: { label: string; tint: string; textColor: string }) {
-  const settings = useSettings();
-  const sys = useColorScheme();
-  const highContrast = settings.highContrast;
-  const mode = settings.theme as 'system'|'light'|'dark';
-  const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
-
-  if (highContrast) {
-    let bg = active === 'dark' ? '#FFFFFF' : '#000000';
-    let fg = active === 'dark' ? '#000000' : '#FFFFFF';
-    if (label === '1-0') { bg = active === 'dark' ? '#00FF00' : '#007F00'; fg = active === 'dark' ? '#000000' : '#FFFFFF'; }
-    else if (label === '0-1') { bg = active === 'dark' ? '#FF0000' : '#8B0000'; fg = '#FFFFFF'; }
-    else if (label === '½') { bg = '#8000FF'; fg = '#FFFFFF'; }
-    return (
-      <View style={{ backgroundColor: bg, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: active === 'dark' ? '#FFFFFF' : '#000000' }}>
-        <Text style={{ fontSize: 12, color: fg }}>{label}</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={{ backgroundColor: tint, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize: 12, color: textColor }}>{label}</Text>
-    </View>
-  );
-}
+function Badge({ label, tint, textColor }: { label: string; tint: string; textColor: string }) { return (<View style={{ backgroundColor: tint, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontSize: 12, color: textColor }}>{label}</Text></View>); }
 function badgeTextColor(theme: ThemeName) { return theme === 'dark' ? '#FFFFFF' : '#0B0B0D'; }
 function cloudBadgeTint(c: { primary: any }, ui: ThemeName, highContrast: boolean) { return dynamicColor('rgba(10,132,255,0.18)', 'rgba(10,132,255,0.22)', ui); }
 

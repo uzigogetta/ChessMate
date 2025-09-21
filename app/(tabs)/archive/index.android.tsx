@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, Pressable, RefreshControl, Modal, TextInput, Share, Alert } from 'react-native';
 import { Card, Text as AppText, Chip, Button } from '@/ui/atoms';
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
-import { themes, ThemeName } from '@/ui/tokens';
+import { themes, ThemeName, getTheme } from '@/ui/tokens';
 import { useSettings } from '@/features/settings/settings.store';
 import { useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,13 +15,14 @@ export default function ArchiveListScreen() {
   const [items, setItems] = useState<GameRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [query, setQuery] = useState('');
   const [cloudStatus, setCloudStatus] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const sys = useColorScheme();
   const settings = useSettings();
   const mode = settings.theme as 'system'|'light'|'dark';
   const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
-  const c = themes[active];
+  const c = getTheme(active, { highContrast: settings.highContrast });
 
   const fetchData = useCallback(async () => {
     try {
@@ -32,7 +33,7 @@ export default function ArchiveListScreen() {
         result: 'any', 
         sort: 'new', 
         favoritesOnly: false, 
-        query: '' 
+        query 
       });
       setItems(rows);
       
@@ -48,7 +49,7 @@ export default function ArchiveListScreen() {
       // Fallback to empty list on error
       setItems([]);
     }
-  }, []);
+  }, [query]);
 
   useFocusEffect(React.useCallback(() => { fetchData(); }, [fetchData]));
 
@@ -151,6 +152,24 @@ export default function ArchiveListScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
+          ListHeaderComponent={
+            <View style={{ width: '100%', maxWidth: 600, alignSelf: 'center', gap: 12, marginBottom: 8 }}>
+              <SearchBarHC value={query} onChange={setQuery} hc={settings.highContrast} mode={active} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <AppText muted style={{ fontSize: 13 }}>{items.length} {items.length === 1 ? 'result' : 'results'}</AppText>
+                <Chip label={'Select'} onPress={() => {}} />
+              </View>
+            </View>
+          }
+          ListHeaderComponent={
+            <View style={{ width: '100%', maxWidth: 600, alignSelf: 'center', gap: 12, marginBottom: 8 }}>
+              <SearchBarHC value={query} onChange={setQuery} hc={settings.highContrast} mode={active} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <AppText muted style={{ fontSize: 13 }}>{items.length} {items.length === 1 ? 'result' : 'results'}</AppText>
+                <Chip label={'Select'} onPress={() => {}} />
+              </View>
+            </View>
+          }
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           ListEmptyComponent={
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -166,7 +185,7 @@ export default function ArchiveListScreen() {
       <Modal visible={showFilters} animationType="fade" transparent={true} onRequestClose={() => setShowFilters(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' }}>
           <Pressable style={{ flex: 1 }} onPress={() => setShowFilters(false)} />
-          <View style={{ backgroundColor: c.background, padding: 24, borderTopLeftRadius: 24, borderTopRightRadius: 24, gap: 16 }}>
+          <View style={{ backgroundColor: c.background, padding: 24, borderTopLeftRadius: 24, borderTopRightRadius: 24, gap: 16, borderWidth: settings.highContrast ? 2 : 0, borderColor: settings.highContrast ? (active === 'dark' ? '#FFFFFF' : '#000000') : 'transparent' }}>
             <AppText style={{ fontSize: 20, fontWeight: 'bold' }}>Filter & Sort</AppText>
             <AppText muted>Filters coming soon...</AppText>
             <Button title="Done" onPress={() => setShowFilters(false)} />
@@ -177,11 +196,54 @@ export default function ArchiveListScreen() {
   );
 }
 
+function SearchBarHC({ value, onChange, hc, mode }: { value: string; onChange: (v: string) => void; hc: boolean; mode: ThemeName }) {
+  const bg = hc ? (mode === 'dark' ? '#000000' : '#FFFFFF') : 'transparent';
+  const fg = hc ? (mode === 'dark' ? '#FFFFFF' : '#000000') : undefined;
+  const border = hc ? (mode === 'dark' ? '#1AEBFF' : '#0000FF') : 'transparent';
+  return (
+    <View style={{ borderRadius: 12, backgroundColor: bg, borderWidth: hc ? 2 : 0, borderColor: border, paddingHorizontal: 12, paddingVertical: 8 }}>
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        placeholder={'Search'}
+        placeholderTextColor={hc ? (mode === 'dark' ? '#FFFFFF' : '#000000') : undefined}
+        style={{ color: fg ?? (mode === 'dark' ? '#FFFFFF' : '#000000'), fontSize: 16 }}
+        autoCorrect={false}
+        autoCapitalize="none"
+        clearButtonMode="while-editing"
+      />
+    </View>
+  );
+}
+
 function Badge({ label }: { label: string }) {
   const sys = useColorScheme();
   const settings = useSettings();
   const mode = settings.theme as 'system'|'light'|'dark';
   const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
+  const highContrast = settings.highContrast;
+
+  if (highContrast) {
+    // High-contrast per-result mapping
+    let bg = active === 'dark' ? '#FFFFFF' : '#000000';
+    let fg = active === 'dark' ? '#000000' : '#FFFFFF';
+    if (label === '1-0') {
+      bg = active === 'dark' ? '#00FF00' : '#007F00';
+      fg = active === 'dark' ? '#000000' : '#FFFFFF';
+    } else if (label === '0-1') {
+      bg = active === 'dark' ? '#FF0000' : '#8B0000';
+      fg = '#FFFFFF';
+    } else if (label === '½') {
+      bg = '#8000FF';
+      fg = '#FFFFFF';
+    }
+    return (
+      <View style={{ backgroundColor: bg, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: active === 'dark' ? '#FFFFFF' : '#000000' }}>
+        <Text style={{ fontSize: 12, color: fg, fontWeight: '700' }}>{label}</Text>
+      </View>
+    );
+  }
+
   const tint = active === 'dark' ? 'rgba(99,99,102,0.22)' : 'rgba(120,120,128,0.18)';
   const textColor = active === 'dark' ? '#FFFFFF' : '#0B0B0D';
   return (

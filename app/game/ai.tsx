@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
-import { useWindowDimensions } from 'react-native';
+import { useWindowDimensions, ScrollView } from 'react-native';
 import { useSettings } from '@/features/settings/settings.store';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { START_FEN, applyMove, fenToBoard, sideToMove, applySANs } from '@/features/chess/logic/chess.rules';
 import { MockEngine } from '@/features/chess/engine/engine.mock';
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AIGameScreen() {
   const [fen, setFen] = useState(START_FEN);
@@ -20,13 +21,14 @@ export default function AIGameScreen() {
   const turn = useMemo(() => fenToBoard(fen).turn, [fen]);
   const { width } = useWindowDimensions();
   const fullEdge = useSettings((s) => s.fullEdgeBoard);
+  const insets = useSafeAreaInsets();
   const containerPad = fullEdge ? 0 : 12;
   const boardSize = Math.floor(width - (fullEdge ? 0 : 24));
   return (
-    <Screen style={{ paddingHorizontal: containerPad }}>
+    <Screen style={{ paddingTop: 0, paddingHorizontal: containerPad }}>
       <Stack.Screen options={{ headerTitle: 'AI Game' }} />
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Card style={{ marginBottom: 16 }}>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="on-drag" style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 8, alignItems: 'center', justifyContent: 'flex-start', gap: 12, paddingBottom: 24 }}>
+        <Card>
           <Text>
             {`AI — Turn: ${turn === 'w' ? 'White' : 'Black'} ${thinking ? '(thinking…)' : ''}`}
           </Text>
@@ -45,7 +47,6 @@ export default function AIGameScreen() {
         />
         <Button title="Swap Sides" onPress={() => {
           setMySide((s) => (s === 'white' ? 'black' : 'white'));
-          // trigger effect if AI should move first
           setFen((f) => f);
         }} />
         <Button title="Undo" onPress={async () => {
@@ -57,7 +58,6 @@ export default function AIGameScreen() {
         <Button title="Reset" onPress={() => {
           setHistory([]);
           setFen(START_FEN);
-          // trigger effect to let AI move first if black
           setFen((f) => f);
         }} />
         <AIGameEffects
@@ -68,7 +68,7 @@ export default function AIGameScreen() {
           setFen={setFen}
           setHistory={setHistory}
         />
-      </View>
+      </ScrollView>
     </Screen>
   );
 }

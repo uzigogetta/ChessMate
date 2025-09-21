@@ -14,11 +14,18 @@ import Animated, {
   interpolateColor,
   withSpring,
 } from 'react-native-reanimated';
+import { useSettings } from '@/features/settings/settings.store';
+import { getTheme, themes, ThemeName } from '@/ui/tokens';
 
 const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
 
 export default function ConnectionIndicator() {
   const scheme = useColorScheme();
+  const reduceMotion = useSettings((s) => s.reduceMotion);
+  const mode = useSettings((s) => s.theme);
+  const highContrast = useSettings((s) => s.highContrast);
+  const active: ThemeName = (mode === 'system' ? (scheme === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
+  const c = getTheme(active, { highContrast });
   const room = useRoomStore((s) => s.room);
   const me = useRoomStore((s) => s.me);
   const net = useRoomStore.getState().net as any;
@@ -161,7 +168,7 @@ export default function ConnectionIndicator() {
   // Pulse animation for amber state
   useEffect(() => {
     const needsPulse = color === '#FF9500';
-    if (needsPulse) {
+    if (needsPulse && !reduceMotion) {
       pulseAnim.value = withRepeat(
         withSequence(
           withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
@@ -173,19 +180,23 @@ export default function ConnectionIndicator() {
     } else {
       pulseAnim.value = withTiming(0, { duration: 300 });
     }
-  }, [color, pulseAnim]);
+  }, [color, pulseAnim, reduceMotion]);
 
   // Scale bounce on status change
   const prevStatusRef = useRef(status);
   useEffect(() => {
     if (prevStatusRef.current !== status) {
-      scaleAnim.value = withSequence(
-        withSpring(0.85, { damping: 15, stiffness: 300 }),
-        withSpring(1, { damping: 15, stiffness: 300 })
-      );
+      if (reduceMotion) {
+        scaleAnim.value = withTiming(1, { duration: 0 });
+      } else {
+        scaleAnim.value = withSequence(
+          withSpring(0.85, { damping: 15, stiffness: 300 }),
+          withSpring(1, { damping: 15, stiffness: 300 })
+        );
+      }
       prevStatusRef.current = status;
     }
-  }, [status, scaleAnim]);
+  }, [status, scaleAnim, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(
@@ -232,7 +243,7 @@ export default function ConnectionIndicator() {
     return {
       opacity,
       transform: [{ scale }],
-      backgroundColor: '#34C759',
+      backgroundColor: highContrast ? '#FFFFFF' : '#34C759',
     };
   });
 

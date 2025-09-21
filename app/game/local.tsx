@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
-import { useWindowDimensions } from 'react-native';
+import { useWindowDimensions, ScrollView } from 'react-native';
 import { useSettings } from '@/features/settings/settings.store';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { START_FEN, applyMove, fenToBoard, applySANs } from '@/features/chess/logic/chess.rules';
@@ -18,10 +18,10 @@ export default function LocalGameScreen() {
   const boardSize = Math.floor(width - (fullEdge ? 0 : 24));
   const insets = useSafeAreaInsets();
   return (
-    <Screen style={{ paddingHorizontal: containerPad }}>
+    <Screen style={{ paddingTop: 0, paddingHorizontal: containerPad }}>
       <Stack.Screen options={{ headerTitle: 'Local Game' }} />
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Card style={{ marginBottom: 16 }}>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="on-drag" style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 8, alignItems: 'center', justifyContent: 'flex-start', gap: 12, paddingBottom: 24 }}>
+        <Card>
           <Text>{`Local — Turn: ${turn === 'w' ? 'White' : 'Black'}`}</Text>
         </Card>
         <BoardSkia
@@ -42,7 +42,7 @@ export default function LocalGameScreen() {
           setFen(newFen);
         }} />
         <Button title="Reset" onPress={() => setFen(START_FEN)} />
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
