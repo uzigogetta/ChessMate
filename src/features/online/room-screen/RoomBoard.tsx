@@ -5,6 +5,8 @@ import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { getTurn, validateMove, isLegalMoveForDriver } from '@/features/chess/logic/moveHelpers';
 import type { RoomState } from '@/net/types';
 import { logMove } from '@/debug/netLogger';
+import { useReview } from '@/features/view/review.store';
+import { fenFromSAN } from '@/game/fenFromSAN';
 
 export type RoomBoardProps = {
   room: RoomState;
@@ -12,9 +14,10 @@ export type RoomBoardProps = {
   boardSize: number;
   meId: string;
   moveSAN: (san: string) => void;
+  orientation?: 'w' | 'b'; // optional override for local flip
 };
 
-export function RoomBoard({ room, mySide, boardSize, meId, moveSAN }: RoomBoardProps) {
+export function RoomBoard({ room, mySide, boardSize, meId, moveSAN, orientation }: RoomBoardProps) {
   const [flashSquare, setFlashSquare] = React.useState<string | null>(null);
   const shake = React.useRef(new Animated.Value(0)).current;
 
@@ -43,21 +46,38 @@ export function RoomBoard({ room, mySide, boardSize, meId, moveSAN }: RoomBoardP
     [triggerFlash, triggerShake]
   );
 
+  const livePlies = room.historySAN.length;
+  const { plyIndex, goLive } = useReview();
+  const reviewing = plyIndex < livePlies;
+  const movesToRender = reviewing ? room.historySAN.slice(0, plyIndex) : room.historySAN;
+  const fen = reviewing ? fenFromSAN(movesToRender) : room.fen;
+
+  // Auto-follow live moves when not reviewing
+  const prevLiveRef = React.useRef<number>(livePlies);
+  React.useEffect(() => {
+    const prev = prevLiveRef.current;
+    // If we were at or beyond the previous live end (not reviewing), follow the new live
+    if (plyIndex >= prev) {
+      try { goLive(livePlies); } catch {}
+    }
+    prevLiveRef.current = livePlies;
+  }, [livePlies, plyIndex, goLive]);
+
   return (
     <Animated.View style={{ transform: [{ translateX: shake }], alignSelf: 'center' }}>
       <BoardSkia
-        fen={room.fen}
-        orientation={mySide ?? 'w'}
+        fen={fen}
+        orientation={orientation ?? (mySide ?? 'w')}
         selectableColor={mySide ?? 'w'}
         flashSquare={flashSquare}
         size={boardSize}
         onMove={(from, to) => {
-          const turn = getTurn(room.fen);
-          if (!room.started || !mySide || mySide !== turn) {
+          const turn = getTurn(fen);
+          if (!room.started || !mySide || mySide !== turn || reviewing) {
             rejectMove(from);
             return;
           }
-          const result = validateMove(room.fen, from, to);
+          const result = validateMove(fen, from, to);
           if (result.ok && result.san) {
             logMove('UI request', { san: result.san, from: mySide, fen: room.fen });
             moveSAN(result.san);
@@ -66,11 +86,11 @@ export function RoomBoard({ room, mySide, boardSize, meId, moveSAN }: RoomBoardP
           }
         }}
         onOptimisticMove={(from, to) => {
-          if (!isLegalMoveForDriver(room, meId, from, to)) {
+          if (reviewing || !isLegalMoveForDriver(room, meId, from, to)) {
             rejectMove(from);
             return;
           }
-          const result = validateMove(room.fen, from, to);
+          const result = validateMove(fen, from, to);
           if (!result.ok || !result.san) {
             rejectMove(from);
             return;

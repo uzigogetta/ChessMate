@@ -3,6 +3,7 @@ import { logReq, logRt, logState, logMove } from '@/debug/netLogger';
 import type { Mode, NetAdapter, NetEvents, Player, RoomState, Seat } from './types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/shared/supabaseClient';
+import { detectTerminal } from '@/game/terminal';
 
 type BroadcastEvent =
   | { type: 'room/state'; state: RoomState }
@@ -146,18 +147,16 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
         bump();
         this.broadcast({ type: 'game/move', from: from, san: mv.san, fen: this.state.fen });
         this.state.driver = c.turn() as 'w' | 'b';
-        // Terminal detection
-        if (c.isGameOver()) {
-          if (c.isCheckmate()) {
-            // side to move lost, so winner is opposite of current turn
-            const winner: 'w' | 'b' = this.state.driver === 'w' ? 'b' : 'w';
-            this.state.result = winner === 'w' ? '1-0' : '0-1';
-          } else if (c.isDraw() || c.isStalemate() || (c as any).isThreefoldRepetition?.()) {
-            this.state.result = '1/2-1/2';
+        // Host-only terminal detection with precise reason
+        try {
+          const t = detectTerminal(this.state.fen, this.state.historySAN);
+          if (t.over) {
+            this.state.phase = 'RESULT';
+            this.state.result = t.result;
+            (this.state as any).result_reason = t.reason;
+            this.state.finishedAt = Date.now();
           }
-          this.state.phase = 'RESULT';
-          this.state.finishedAt = Date.now();
-        }
+        } catch {}
         this.syncState();
         // Host: if terminal, also broadcast finalize snapshot immediately to ensure peers persist
         if (this.state.phase === 'RESULT' && this.state.result) {
@@ -476,7 +475,13 @@ export class SupabaseRealtimeAdapter implements NetAdapter {
   private syncState() {
     if (!this.state) return;
     // Only host broadcasts authoritative state
-    if (this.isHost) this.broadcast({ type: 'room/state', state: this.state });
+    if (this.isHost) {
+      this.broadcast({ type: 'room/state', state: this.state });
+      // If the game is finished, also broadcast a finalize snapshot to guarantee persistence
+      if (this.state.phase === 'RESULT' && this.state.result) {
+        this.broadcast({ type: 'game/finalize', state: this.state });
+      }
+    }
     this.emitState();
   }
 

@@ -93,8 +93,8 @@ export function Chip({
   const sys = useColorScheme();
   const mode = useSettings((s) => s.theme);
   const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
-  const c = getTheme(active, { highContrast });
   const highContrast = useSettings((s) => s.highContrast);
+  const c = getTheme(active, { highContrast });
   const largeUI = useSettings((s) => s.largeUI);
   const bgMap: Record<string, string> = {
     neutral: chipTints.neutralBg as string,

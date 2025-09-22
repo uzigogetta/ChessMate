@@ -36,7 +36,8 @@ export default function LocalGameScreen() {
           }}
         />
         <Button title="Undo" onPress={async () => {
-          const next = history.slice(0, -1);
+          const cut = history.length >= 2 ? history.length - 2 : 0;
+          const next = history.slice(0, cut);
           const newFen = await applySANs(next);
           setHistory(next);
           setFen(newFen);

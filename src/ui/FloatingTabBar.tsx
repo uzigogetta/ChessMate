@@ -27,6 +27,37 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
   const circleRoute = Platform.OS === 'ios' ? state.routes[lastIndex] : null;
   const capsuleRoutes = Platform.OS === 'ios' ? state.routes.slice(0, lastIndex) : state.routes;
 
+  // Detect if current focused nested route requests hiding the tab bar
+  const getLeafRoute = (route: any): any => {
+    let r = route;
+    while (r?.state?.routes && r.state.routes.length) {
+      r = r.state.routes[r.state.index];
+    }
+    return r;
+  };
+  const hasDeeperIndex = (route: any): boolean => {
+    let r = route;
+    while (r?.state?.routes && r.state.routes.length) {
+      if (typeof r.state.index === 'number' && r.state.index > 0) return true;
+      r = r.state.routes[r.state.index];
+    }
+    return false;
+  };
+  const focusedTabRoute: any = state.routes[state.index];
+  const leaf = getLeafRoute(focusedTabRoute);
+  const nested = focusedTabRoute?.state;
+  // Show only when at the root of the current tab
+  let hideBar = false;
+  if (!nested) {
+    hideBar = false;
+  } else {
+    const idx = typeof nested.index === 'number' ? nested.index : 0;
+    hideBar = idx > 0 || (leaf?.name && leaf.name !== 'index');
+  }
+  // Honor explicit hide param if present
+  hideBar = hideBar || Boolean(leaf?.params?.hideTabs) || Boolean((globalThis as any).__HIDE_TABS__);
+  if (hideBar) return null;
+
   return (
     <View
       pointerEvents="box-none"
@@ -73,7 +104,13 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
           const isFocused = state.index === index;
           const onPress = () => {
             const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+            if (event.defaultPrevented) return;
+            if (isFocused) {
+              // Pop to top when re-tapping the current tab
+              navigation.emit({ type: 'tabLongPress', target: route.key });
+              return;
+            }
+            navigation.navigate(route.name);
           };
           const label = descriptors[route.key]?.options?.title || route.name;
           const iconName = (ICONS[route.name] || 'ios-albums-outline') as any;

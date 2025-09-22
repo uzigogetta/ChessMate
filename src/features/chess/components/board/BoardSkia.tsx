@@ -1,5 +1,8 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View } from 'react-native';
+import { View, GestureResponderEvent, Animated as RNAnimated, Platform, Pressable, Easing } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { SND } from '../../../../../assets/snd';
+import { BlurView } from 'expo-blur';
 import { Canvas, Rect, Group, Circle, Text as SkiaText, Image as SkiaImage, useImage } from '@shopify/react-native-skia';
 import { themes as uiThemes } from '@/ui/tokens';
 import { useSettings } from '@/features/settings/settings.store';
@@ -9,9 +12,11 @@ import { fenToBoard, legalMovesFrom } from '@/features/chess/logic/chess.rules';
 import { usePieceFont } from '@/ui/fonts';
 import { resolvePiece } from '@/chess/pieces.loader';
 
+
 type Props = {
   fen: string;
   onMove: (from: string, to: string) => void;
+  onMoveWithPromotion?: (from: string, to: string, promotion: 'q'|'r'|'b'|'n') => void;
   onOptimisticMove?: (from: string, to: string, rollback: () => void) => void;
   coords?: boolean;
   orientation?: 'w' | 'b';
@@ -19,11 +24,14 @@ type Props = {
   selectableColor?: 'w' | 'b';
   flashSquare?: string | null;
   size?: number;
+  lastFrom?: string | null;
+  lastTo?: string | null;
+  lastWasCapture?: boolean;
 };
 
 const BOARD_SIZE = 320;
 
-export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', enabled = true, selectableColor, flashSquare, size: sizeProp }: Props) {
+export function BoardSkia({ fen, onMove, onMoveWithPromotion, onOptimisticMove, orientation = 'w', enabled = true, selectableColor, flashSquare, size: sizeProp, lastFrom, lastTo, lastWasCapture }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [optimistic, setOptimistic] = useState<{ from: string; to: string } | null>(null);
   const [invalidSq, setInvalidSq] = useState<string | null>(null);
@@ -142,6 +150,76 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
     [chess, legalTargets, onMove, selected, selectableColor]
   );
 
+  // Move ripple animation on lastTo
+  const pulse = React.useRef(new RNAnimated.Value(0)).current;
+  React.useEffect(() => {
+    if (!lastTo) return;
+    pulse.setValue(0);
+    RNAnimated.sequence([
+      RNAnimated.timing(pulse, { toValue: 1, duration: 220, useNativeDriver: true }),
+      RNAnimated.timing(pulse, { toValue: 0, duration: 220, useNativeDriver: true })
+    ]).start();
+  }, [lastTo]);
+  const rippleScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1.08] });
+  const rippleOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.0, 0.5] });
+
+  // Drag-and-drop state
+  const [drag, setDrag] = React.useState<{ from: string; x: number; y: number; code: string } | null>(null);
+  const startDrag = (sq: string) => {
+    const piece = chess.get(sq as any);
+    if (!piece) return;
+    setDrag({ from: sq, x: 0, y: 0, code: `${piece.color}${piece.type.toUpperCase()}` });
+  };
+  const updateDrag = (x: number, y: number) => setDrag((d) => (d ? { ...d, x, y } : d));
+  const stopDrag = () => setDrag(null);
+
+  // Promotion overlay
+  const [promotion, setPromotion] = React.useState<null | { from: string; to: string; color: 'w'|'b' }>(null);
+  // Haptics + sounds
+  const soundsEnabled = useSettings((s) => s.sounds);
+  const moveSound = React.useRef<any>(null);
+  const captureSound = React.useRef<any>(null);
+  const checkSound = React.useRef<any>(null);
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!soundsEnabled || !(SND.move || SND.capture || SND.check)) return;
+        const mod: any = await import('expo-av').catch(() => null);
+        const Audio = mod?.Audio;
+        if (!Audio) return;
+        if (SND.move) { const [mv] = await Audio.Sound.createAsync(SND.move); if (!mounted) { mv.unloadAsync(); return; } moveSound.current = mv; }
+        if (SND.capture) { const [cap] = await Audio.Sound.createAsync(SND.capture); if (!mounted) { cap.unloadAsync(); return; } captureSound.current = cap; }
+        if (SND.check) { const [chk] = await Audio.Sound.createAsync(SND.check); if (!mounted) { chk.unloadAsync(); return; } checkSound.current = chk; }
+      } catch {}
+    })();
+    return () => { mounted = false; try { moveSound.current?.unloadAsync(); captureSound.current?.unloadAsync(); checkSound.current?.unloadAsync(); } catch {} };
+  }, []);
+  const playMoveFx = (wasCapture: boolean, wasCheck: boolean) => {
+    try { if (useSettings.getState().haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    try {
+      if (!soundsEnabled) return;
+      if (wasCheck && checkSound.current) checkSound.current.replayAsync();
+      else if (wasCapture && captureSound.current) captureSound.current.replayAsync();
+      else if (moveSound.current) moveSound.current.replayAsync();
+    } catch {}
+  };
+
+  // Play on lastTo updates
+  React.useEffect(() => {
+    if (!lastTo) return;
+    const isCheck = (chess as any).isCheck?.() || (chess as any).in_check?.();
+    playMoveFx(!!lastWasCapture, !!isCheck);
+  }, [lastTo]);
+  const isPromotion = (from: string, to: string) => {
+    try {
+      const piece = chess.get(from as any);
+      if (!piece || piece.type !== 'p') return false;
+      const rank = to[1];
+      return (piece.color === 'w' && rank === '8') || (piece.color === 'b' && rank === '1');
+    } catch { return false; }
+  };
+
   if (!font) {
     return <View style={{ width: BOARD_SIZE, height: BOARD_SIZE }} />;
   }
@@ -163,6 +241,10 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
             })
           )}
         </Group>
+
+        {/* last move highlights */}
+        {lastFrom && (() => { const { row, col } = squareToRowCol(lastFrom); return <Rect x={col * cell} y={row * cell} width={cell} height={cell} color={highlight} opacity={0.16} />; })()}
+        {lastTo && (() => { const { row, col } = squareToRowCol(lastTo); return <Rect x={col * cell} y={row * cell} width={cell} height={cell} color={highlight} opacity={0.28} />; })()}
 
         {/* selected highlight */}
         {selected && (() => {
@@ -218,42 +300,150 @@ export function BoardSkia({ fen, onMove, onOptimisticMove, orientation = 'w', en
               const letter = p.type.toUpperCase();
               const cx = x + cell / 2;
               const cy = y + cell / 2;
-              const radius = cell * 0.36;
-              const bg = p.color === 'w' ? boardTheme.pieces.white : boardTheme.pieces.black;
-              const fg = p.color === 'w' ? '#1C1C1E' : '#F2F2F7';
-              const metrics = font.measureText(letter);
+              const ring = mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+              const radius = cell * 0.44;
               return (
-                <Group key={`p-${r}-${c}`}>
-                  <Circle cx={cx} cy={cy} r={radius} color={bg} />
-                  <SkiaText text={letter} x={cx - metrics.width / 2} y={cy + font.getSize() * 0.35} font={font} color={fg} />
+                <Group key={`pl-${r}-${c}`}>
+                  <Circle cx={cx} cy={cy} r={radius} color={ring} />
+                  <SkiaText text={letter} x={x + cell * 0.34} y={y + cell * 0.66} color={mode === 'dark' ? '#fff' : '#000'} font={font} />
                 </Group>
               );
             })
           )}
         </Group>
-
-        {/* optimistic overlay: dim board and show small indicator */}
-        {optimistic && (
-          <Group>
-            <Rect x={0} y={0} width={BOARD_SIZE} height={BOARD_SIZE} color={highlight} opacity={0.06} />
-          </Group>
-        )}
       </Canvas>
-
-      {/* touch overlay */}
+      {/* Move slide overlay */}
+      {lastFrom && lastTo && (() => {
+        try {
+          const moved = chess.get(lastTo as any);
+          if (!moved) return null;
+          const code = `${moved.color}${moved.type.toUpperCase()}` as string;
+          const { row: fr, col: fc } = squareToRowCol(lastFrom);
+          const { row: tr, col: tc } = squareToRowCol(lastTo);
+          const fromX = fc * cell + cell * 0.05;
+          const fromY = fr * cell + cell * 0.05;
+          const toX = tc * cell + cell * 0.05;
+          const toY = tr * cell + cell * 0.05;
+          const prog = React.useRef(new RNAnimated.Value(0)).current;
+          React.useEffect(() => {
+            prog.setValue(0);
+            RNAnimated.timing(prog, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+          }, [lastFrom, lastTo]);
+          const x = prog.interpolate({ inputRange: [0, 1], outputRange: [fromX, toX] });
+          const y = prog.interpolate({ inputRange: [0, 1], outputRange: [fromY, toY] });
+          const img = imgMap[code];
+          if (!img) return null;
+          return (
+            <RNAnimated.View pointerEvents="none" style={{ position: 'absolute', left: x as any, top: y as any }}>
+              <SkiaImage image={img} x={0} y={0} width={cell * 0.9} height={cell * 0.9} />
+            </RNAnimated.View>
+          );
+        } catch { return null; }
+      })()}
+      {/* Animated ripple at lastTo */}
+      {lastTo && (() => {
+        const { row, col } = squareToRowCol(lastTo);
+        const left = col * cell;
+        const top = row * cell;
+        return (
+          <RNAnimated.View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left,
+              top,
+              width: cell,
+              height: cell,
+              transform: [{ scale: rippleScale }],
+              opacity: rippleOpacity,
+              borderRadius: 6,
+              borderWidth: 2,
+              borderColor: lastWasCapture ? '#ff3b30' : highlight,
+            }}
+          />
+        );
+      })()}
+      {/* Check banner */}
+      {((chess as any).isCheck?.() || (chess as any).in_check?.()) && (
+        <View pointerEvents="none" style={{ position: 'absolute', top: 8, alignSelf: 'center', backgroundColor: mode === 'dark' ? 'rgba(255,59,48,0.2)' : 'rgba(255,59,48,0.15)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 }}>
+          <RNAnimated.Text style={{ color: '#ff3b30', fontWeight: '700' }}>Check</RNAnimated.Text>
+        </View>
+      )}
+      {/* Touch overlay to handle taps/select & move */}
       <View
-        pointerEvents={'box-only'}
         style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}
-        onStartShouldSetResponder={() => true}
-        onStartShouldSetResponderCapture={() => true}
-        onResponderRelease={(e) => {
+        onStartShouldSetResponder={() => !!enabled}
+        onResponderMove={(e: GestureResponderEvent) => {
+          if (!enabled) return;
+          const { locationX, locationY } = e.nativeEvent;
+          if (selected && !drag) {
+            startDrag(selected);
+          }
+          if (drag) updateDrag(locationX, locationY);
+        }}
+        onResponderRelease={(e: GestureResponderEvent) => {
+          if (!enabled) return;
           const { locationX, locationY } = e.nativeEvent;
           const col = Math.floor(locationX / cell);
           const row = Math.floor(locationY / cell);
+          if (col < 0 || col > 7 || row < 0 || row > 7) return;
           const sq = toSquare(row, col);
+          if (drag) {
+            const from = drag.from;
+            const to = sq;
+            setSelected(null);
+            stopDrag();
+            if (legalMovesFrom(fen, from).some((m) => m.to === to)) {
+              if (isPromotion(from, to)) {
+                const piece = chess.get(from as any);
+                setPromotion({ from, to, color: piece?.color === 'w' ? 'w' : 'b' });
+              } else {
+                onMove(from, to);
+              }
+            }
+            return;
+          }
           handleTap(sq);
         }}
       />
+      {/* Drag ghost */}
+      {drag && (() => {
+        const { row, col } = squareToRowCol(drag.from);
+        const originX = col * cell + cell * 0.05;
+        const originY = row * cell + cell * 0.05;
+        const gx = Math.max(0, Math.min(size - cell, drag.x - cell / 2));
+        const gy = Math.max(0, Math.min(size - cell, drag.y - cell / 2));
+        const img = imgMap[drag.code];
+        return img ? (
+          <View pointerEvents="none" style={{ position: 'absolute', left: gx, top: gy }}>
+            <SkiaImage image={img} x={0} y={0} width={cell * 0.9} height={cell * 0.9} />
+          </View>
+        ) : null;
+      })()}
+
+      {/* Promotion sheet */}
+      {promotion && (
+        <View style={{ position: 'absolute', inset: 0, justifyContent: 'flex-end' }}>
+          {Platform.OS === 'ios' ? (
+            <BlurView intensity={40} tint={mode as any} style={{ position: 'absolute', inset: 0 }}>
+              <Pressable style={{ flex: 1 }} onPress={() => setPromotion(null)} />
+            </BlurView>
+          ) : (
+            <Pressable style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={() => setPromotion(null)} />
+          )}
+          <View style={{ backgroundColor: mode === 'dark' ? '#1C1C1E' : '#F8F8F8', padding: 16, borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              {(['q','r','b','n'] as const).map((p) => (
+                <Pressable key={p} onPress={() => { const { from, to } = promotion; setPromotion(null); if (onMoveWithPromotion) onMoveWithPromotion(from, to, p); else onMove(from, to); }} style={{ padding: 10, borderRadius: 12, backgroundColor: mode === 'dark' ? '#2C2C2E' : '#ECECEC' }}>
+                  <View style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}>
+                    <RNAnimated.Text style={{ fontSize: 22, color: mode === 'dark' ? '#fff' : '#000', fontWeight: '700' }}>{p.toUpperCase()}</RNAnimated.Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

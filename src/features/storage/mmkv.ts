@@ -23,6 +23,7 @@ export const KEYS = {
   settings: 'cm.settings',
   cloudOutbox: 'cm.cloud.outbox',
   cloudUploaded: 'cm.cloud.uploaded',
+  archiveFilters: 'cm.archive.filters',
 };
 
 

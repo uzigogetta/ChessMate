@@ -38,11 +38,15 @@ export function applyMove(
 ): { ok: true; fen: string; san: string } | { ok: false; fen: string } {
   const fen = normalizeFen(fenOrStart);
   const chess = new Chess(fen);
-  const res = chess.move({ from: mv.from as Square, to: mv.to as Square, promotion: mv.promotion });
-  if (!res) {
+  try {
+    const res = chess.move({ from: mv.from as Square, to: mv.to as Square, promotion: mv.promotion });
+    if (!res) {
+      return { ok: false, fen };
+    }
+    return { ok: true, fen: chess.fen(), san: res.san };
+  } catch {
     return { ok: false, fen };
   }
-  return { ok: true, fen: chess.fen(), san: res.san };
 }
 
 export const sideToMove = (fen: string): 'w' | 'b' => fen.split(' ')[1] as 'w' | 'b';

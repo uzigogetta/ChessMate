@@ -2,13 +2,16 @@ import React from 'react';
 import { View, Platform, Switch, Pressable, ScrollView, useColorScheme, Dimensions } from 'react-native';
 import { Text, Separator, Screen } from '@/ui/atoms';
 import { useSettings } from '@/features/settings/settings.store';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { themes, ThemeName } from '@/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SettingsScreen() {
+  const router = useRouter();
+  const { from, roomId, returnTo } = useLocalSearchParams<{ from?: string; roomId?: string; returnTo?: string }>();
   const s = useSettings();
   const insets = useSafeAreaInsets();
   const sys = useColorScheme();
@@ -17,12 +20,29 @@ export default function SettingsScreen() {
   const c = themes[active];
   const blurTint = active === 'dark' ? 'dark' : 'light';
   const minH = insets.top + Dimensions.get('window').height + 1;
+  // No screen-level tab overrides here; FloatingTabBar hides automatically on non-root routes
+  const backLabel = from === 'game' ? 'Game' : 'Profile';
   return (
     <Screen>
       <Stack.Screen
         options={{
           headerTitle: 'Settings',
           headerLargeTitle: true,
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => {
+                if (returnTo) { router.replace(String(returnTo)); return; }
+                if (router.canGoBack()) { router.back(); return; }
+                if (from === 'game' && roomId) { router.replace(`/game/online/${roomId}`); return; }
+                router.replace('/(tabs)/profile');
+              }}
+              hitSlop={10}
+              style={{ padding: 6 }}
+            >
+              <Ionicons name="chevron-back" size={22} color={c.text as any} />
+            </Pressable>
+          ),
         }}
       />
       <ScrollView

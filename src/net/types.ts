@@ -19,7 +19,20 @@ export type RoomState = {
   finishedAt?: number;
   heartbeats?: Record<string, number>; // playerId -> last ts
   result?: '1-0' | '0-1' | '1/2-1/2' | '*';
+  result_reason?: 'checkmate' | 'stalemate' | 'fifty-move' | 'threefold' | 'insufficient';
   pending?: { drawFrom?: string; undoFrom?: string; restartFrom?: string };
+  // Options are editable in LOBBY by the host. Policies are frozen at START.
+  rated?: boolean;
+  options?: RoomOptions;
+  policies?: RoomPolicies;
+};
+
+export type RoomOptions = {
+  allowTakebacks?: boolean;
+};
+
+export type RoomPolicies = {
+  allowTakebacks?: boolean;
 };
 
 export type NetEvents =
@@ -55,6 +68,9 @@ export interface NetAdapter {
   offerDraw?(): void;
   answerDraw?(accept: boolean): void;
   answerRestart?(accept: boolean): void;
+  // Step 8.4c: host options patch
+  patchRoomOptions?(partial: Partial<RoomOptions>): void;
+  patchRated?(rated: boolean): void;
 }
 
 

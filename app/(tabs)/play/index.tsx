@@ -13,7 +13,7 @@ export default function PlayScreen() {
 				<Card>
 					<Text>Play</Text>
 					<Button title="Start Local Game" onPress={() => router.push('/game/local')} />
-					<Button title="Play vs AI" onPress={() => router.push('/game/ai')} />
+					<Button title="Play vs AI" onPress={() => router.push('/game/ai.menu')} />
 					<Button title="Play Online" onPress={() => router.push('/game/online')} />
 				</Card>
 			</View>

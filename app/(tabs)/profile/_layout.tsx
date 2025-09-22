@@ -44,7 +44,7 @@ export default function ProfileStackLayout() {
             : {})
         }}
       />
-      <Stack.Screen name="settings" options={{ headerTitle: 'Settings' }} />
+      <Stack.Screen name="settings" options={{ headerTitle: 'Settings', headerBackVisible: true }} initialParams={{ hideTabs: true }} />
     </Stack>
   );
 }

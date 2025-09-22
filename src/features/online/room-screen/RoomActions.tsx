@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert, View } from 'react-native';
 import { Card, Button, Text } from '@/ui/atoms';
 import type { RoomState } from '@/net/types';
+import { useReview } from '@/features/view/review.store';
 
 type Handlers = {
   onStart: () => void;
@@ -27,42 +28,11 @@ export type RoomActionsProps = {
 };
 
 export function RoomActions({ room, mySide, meId, isHost, readyToStart, handlers, showDevReset }: RoomActionsProps) {
+  const livePlies = room.historySAN.length;
+  const { plyIndex, setPlyIndex, goLive } = useReview();
   return (
     <>
       <Card style={{ marginTop: 12, gap: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {room.started && !room.result && (
-          <Button
-            title="Undo"
-            onPress={() =>
-              Alert.alert('Request undo?', 'Ask your opponent to revert the last move.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Request', onPress: handlers.onUndoRequest }
-              ])
-            }
-          />
-        )}
-        {!room.result && (
-          <Button
-            title="Resign"
-            onPress={() =>
-              Alert.alert('Resign game?', 'Your opponent will be declared the winner.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Resign', style: 'destructive', onPress: handlers.onResign }
-              ])
-            }
-          />
-        )}
-        {!room.result && !room.pending && (
-          <Button
-            title="Offer Draw"
-            onPress={() =>
-              Alert.alert('Offer a draw?', 'Your opponent can accept or decline.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Offer Draw', onPress: handlers.onOfferDraw }
-              ])
-            }
-          />
-        )}
         {room.pending?.drawFrom && room.pending.drawFrom !== meId && (
           <>
             <Button

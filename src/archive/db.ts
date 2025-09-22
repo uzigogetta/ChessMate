@@ -1,5 +1,4 @@
-import * as SQLite from 'expo-sqlite';
-import { Platform } from 'react-native';
+import { openArchiveDB, exec as sqliteExec, query as sqliteQuery, dbHealthcheck } from '@/archive/sqlite';
 
 export type GameRow = {
   id: string;
@@ -13,7 +12,7 @@ export type GameRow = {
   blackName?: string;
 };
 
-let db: SQLite.SQLiteDatabase | null = null;
+let db: any | null = null;
 let sqliteAvailable = false;
 let warnedUnavailable = false;
 
@@ -37,61 +36,33 @@ function resetMemory() {
   memory.favorites.clear();
 }
 
-export function open() {
+async function ensureDb() {
   if (db) return db;
   try {
-    let mod: any = null;
-    try {
-      mod = require('expo-sqlite/legacy');
-    } catch {}
-    if (!mod) {
-      try {
-        mod = require('expo-sqlite');
-      } catch {}
-    }
-
-    const openLegacy = mod?.openDatabase ?? mod?.default?.openDatabase ?? (SQLite as any).openDatabase;
-    if (typeof openLegacy === 'function') {
-      db = openLegacy('chessmate.db');
-      sqliteAvailable = !!db;
-      return db;
-    }
-
-    if (Platform.OS !== 'android') {
-      const openSync = (mod?.openDatabaseSync ?? mod?.default?.openDatabaseSync ?? (SQLite as any).openDatabaseSync) as
-        | ((name: string) => SQLite.SQLiteDatabase)
-        | undefined;
-      if (typeof openSync === 'function') {
-        db = openSync('chessmate.db');
-        sqliteAvailable = !!db;
-        return db;
-      }
-    }
+    db = await openArchiveDB();
+    sqliteAvailable = !!db;
   } catch (e) {
-    console.error('[SQLite] Failed to open database:', e);
+    // eslint-disable-next-line no-console
+    console.warn('[SQLite] Failed to open DB, falling back to memory store:', e);
+    db = null;
+    sqliteAvailable = false;
   }
-  sqliteAvailable = false;
-  return db as any;
+  return db;
 }
 
 export async function init() {
-  const d: any = open();
+  const d: any = await ensureDb();
   if (!d || usingMemory()) {
     if (!warnedUnavailable) {
       // eslint-disable-next-line no-console
       console.warn('[SQLite] Not available. Using in-memory archive.');
       warnedUnavailable = true;
     }
-    resetMemory();
+    // Ensure memory storage is initialized but do NOT clear existing rows
+    ensureMemoryReady();
     return;
   }
-  try {
-    if (Platform.OS !== 'android') {
-      if (typeof d.execAsync === 'function') await d.execAsync(`PRAGMA journal_mode = WAL;`);
-      else if (typeof d.execSync === 'function') d.execSync(`PRAGMA journal_mode = WAL;`);
-      else await run(`PRAGMA journal_mode = WAL;`);
-    }
-  } catch {}
+  await run(`PRAGMA foreign_keys = ON;`);
   await run(`CREATE TABLE IF NOT EXISTS games (
     id TEXT PRIMARY KEY NOT NULL,
     createdAt INTEGER NOT NULL,
@@ -106,77 +77,21 @@ export async function init() {
   await run(`CREATE TABLE IF NOT EXISTS favorites (
     gameId TEXT PRIMARY KEY NOT NULL
   );`);
+  if (__DEV__) {
+    try { await dbHealthcheck(d); } catch {}
+  }
 }
 
-function run(sql: string, params: any[] = []) {
-  const d: any = open();
-  if (!d || usingMemory()) {
-    return Promise.resolve();
-  }
-  if (Platform.OS === 'android' || !d.runAsync) {
-    return new Promise<void>((resolve, reject) => {
-      d.transaction((tx: any) => {
-        tx.executeSql(sql, params, () => resolve(), (_tx: any, err: any) => {
-          reject(err);
-          return false;
-        });
-      });
-    });
-  }
-  if (typeof d.runAsync === 'function') {
-    return d.runAsync(sql, params).then(() => {});
-  }
-  if (typeof d.runSync === 'function') {
-    d.runSync(sql, params);
-    return Promise.resolve();
-  }
-  return new Promise<void>((resolve, reject) => {
-    d.transaction((tx: any) => {
-      tx.executeSql(sql, params, () => resolve(), (_tx: any, err: any) => {
-        reject(err);
-        return false;
-      });
-    });
-  });
+async function run(sql: string, params: any[] = []) {
+  const d: any = await ensureDb();
+  if (!d || usingMemory()) return;
+  return sqliteExec(d, sql, params);
 }
 
-function query<T = any>(sql: string, params: any[] = []) {
-  const d: any = open();
-  if (!d || usingMemory()) {
-    return Promise.resolve([] as T[]);
-  }
-  if (Platform.OS === 'android' || !d.getAllAsync) {
-    return new Promise<T[]>((resolve, reject) => {
-      d.transaction((tx: any) => {
-        tx.executeSql(sql, params, (_tx: any, res: any) => {
-          const out: T[] = [] as any;
-          for (let i = 0; i < res.rows.length; i++) out.push(res.rows.item(i));
-          resolve(out);
-        }, (_tx: any, err: any) => {
-          reject(err);
-          return false;
-        });
-      });
-    });
-  }
-  if (typeof d.getAllAsync === 'function') {
-    return d.getAllAsync(sql, params) as Promise<T[]>;
-  }
-  if (typeof d.getAllSync === 'function') {
-    return Promise.resolve(d.getAllSync(sql, params) as T[]);
-  }
-  return new Promise<T[]>((resolve, reject) => {
-    d.transaction((tx: any) => {
-      tx.executeSql(sql, params, (_tx: any, res: any) => {
-        const out: T[] = [] as any;
-        for (let i = 0; i < res.rows.length; i++) out.push(res.rows.item(i));
-        resolve(out);
-      }, (_tx: any, err: any) => {
-        reject(err);
-        return false;
-      });
-    });
-  });
+async function query<T = any>(sql: string, params: any[] = []) {
+  const d: any = await ensureDb();
+  if (!d || usingMemory()) return [] as T[];
+  return sqliteQuery<T>(d, sql, params);
 }
 
 function memoryList(filters: ListGamesFilters, limit = 50, offset = 0) {

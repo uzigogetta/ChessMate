@@ -1,5 +1,5 @@
 import { Chess } from 'chess.js';
-import type { Mode, NetAdapter, NetEvents, Player, RoomState, Seat } from './types';
+import type { Mode, NetAdapter, NetEvents, Player, RoomState, RoomOptions, Seat } from './types';
 
 type Room = RoomState & { hostId: string };
 
@@ -43,7 +43,10 @@ export class HostLoopback implements NetAdapter {
         result: undefined,
         pending: undefined,
         hostId: meId,
-        heartbeats: { [meId]: Date.now() }
+        heartbeats: { [meId]: Date.now() },
+        rated: false,
+        options: { allowTakebacks: false },
+        policies: undefined
       };
       rooms.set(roomId, r);
     } else {
@@ -143,6 +146,11 @@ export class HostLoopback implements NetAdapter {
     r.started = true;
     r.phase = 'ACTIVE';
     r.startedAt = Date.now();
+    // snapshot policies
+    r.policies = {
+      allowTakebacks: !!r.options?.allowTakebacks,
+      rated: typeof r.rated === 'boolean' ? r.rated : !!(r.options as any)?.rated
+    };
     // ensure driver is white at start
     r.driver = 'w';
     r.version = (r.version || 0) + 1;
@@ -162,11 +170,36 @@ export class HostLoopback implements NetAdapter {
     r.fen = c.fen();
     r.historySAN = [];
     r.driver = 'w';
+    // keep prior policies snapshot
     r.version = (r.version || 0) + 1;
     this.emitState();
   }
 
   toggleReady?(): void {}
+
+  patchRoomOptions(partial: Partial<RoomOptions>): void {
+    const r = this.getRoom();
+    if (!r || !this.me) return;
+    if (r.hostId !== this.me.id) return; // host-only
+    if (r.phase !== 'LOBBY') return; // locked after start
+    r.options = { ...(r.options || {}), ...partial } as any;
+    r.version = (r.version || 0) + 1;
+    this.emitState();
+  }
+
+  patchRated(rated: boolean): void {
+    const r = this.getRoom();
+    if (!r || !this.me) return;
+    if (r.hostId !== this.me.id) return; // host-only
+    if (r.phase !== 'LOBBY') return; // locked after start
+    r.rated = !!rated;
+    // Force disallow takebacks when rated
+    if (r.rated) {
+      r.options = { ...(r.options || {}), allowTakebacks: false } as any;
+    }
+    r.version = (r.version || 0) + 1;
+    this.emitState();
+  }
 
   passBaton(): void {
     const r = this.getRoom();
@@ -185,12 +218,22 @@ export class HostLoopback implements NetAdapter {
     r.fen = c.fen();
     r.historySAN.push(mv.san);
     r.driver = r.driver === 'w' ? 'b' : 'w';
-    // Terminal detection
+    // Terminal detection (host-only in loopback)
     if (c.isGameOver()) {
       if (c.isCheckmate()) {
         const winner: 'w' | 'b' = r.driver === 'w' ? 'b' : 'w';
         r.result = winner === 'w' ? '1-0' : '0-1';
-      } else if (c.isDraw() || c.isStalemate() || (c as any).isThreefoldRepetition?.()) {
+        (r as any).result_reason = 'checkmate';
+      } else if (c.isStalemate?.()) {
+        r.result = '1/2-1/2';
+        (r as any).result_reason = 'stalemate';
+      } else if ((c as any).isThreefoldRepetition?.()) {
+        r.result = '1/2-1/2';
+        (r as any).result_reason = 'threefold';
+      } else if ((c as any).isInsufficientMaterial?.()) {
+        r.result = '1/2-1/2';
+        (r as any).result_reason = 'insufficient';
+      } else {
         r.result = '1/2-1/2';
       }
       r.phase = 'RESULT';

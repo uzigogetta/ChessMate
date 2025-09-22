@@ -8,12 +8,16 @@ import { useSettings } from '@/features/settings/settings.store';
 import { themes, ThemeName } from '@/ui/tokens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { prewarm } from '@/prewarm';
 
 export default function RootLayout() {
   const scheme = useColorScheme();
   const { theme } = useSettings();
   const active: ThemeName = (theme === 'system' ? (scheme === 'dark' ? 'dark' : 'light') : theme) as ThemeName;
   const c = themes[active];
+  React.useEffect(() => {
+    try { prewarm(); } catch {}
+  }, []);
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 		<SafeAreaProvider>

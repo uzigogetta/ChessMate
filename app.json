@@ -45,7 +45,8 @@
           "organization": "newgen-d0"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-sqlite"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

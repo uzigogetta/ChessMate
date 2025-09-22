@@ -3,6 +3,7 @@ import { View, useColorScheme } from 'react-native';
 import CloudUploadIndicator from '@/features/online/CloudUploadIndicator';
 import { useRoomStore } from '@/features/online/room.store';
 import { isUploaded } from '@/shared/cloud';
+import { isSupabaseConfigured } from '@/shared/supabaseClient';
 import { useSettings } from '../settings/settings.store';
 import { themes, ThemeName, getTheme } from '@/ui/tokens';
 import { BlurView } from 'expo-blur';
@@ -46,7 +47,9 @@ export default function HeaderIndicators() {
 
   const [uploading, setUploading] = useState(false);
   useEffect(() => {
-    if (!room || room.phase !== 'RESULT') {
+    const cloudEnabled = useSettings.getState().cloudArchive;
+    const supaOk = isSupabaseConfigured();
+    if (!room || room.phase !== 'RESULT' || !cloudEnabled || !supaOk) {
       setUploading(false);
       return;
     }
