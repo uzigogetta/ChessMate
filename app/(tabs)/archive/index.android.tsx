@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { View, Text, ScrollView, SectionList, Share, Alert, Pressable, TouchableOpacity, RefreshControl, TextInput, Modal, Animated as RNAnimated, Easing, Platform, PanResponder, LayoutChangeEvent, Dimensions } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
-import RAnimated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
+import RAnimated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, Layout, FadeIn, FadeOut } from 'react-native-reanimated';
 import { applySANs, fenToBoard } from '@/features/chess/logic/chess.rules';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 
@@ -10,21 +10,21 @@ function Expandable({ expanded, children }: { expanded: boolean; children: React
   const measured = React.useRef(0);
   const height = useSharedValue(0);
   const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.98);
+  const scale = useSharedValue(1);
 
   React.useEffect(() => {
     const targetH = expanded ? measured.current : 0;
     const targetO = expanded ? 1 : 0;
-    height.value = withTiming(targetH, { duration: 260 });
-    opacity.value = withTiming(targetO, { duration: 220 });
-    scale.value = withSpring(expanded ? 1 : 0.98, { damping: 16, stiffness: 160, mass: 0.3 });
+    height.value = withTiming(targetH, { duration: expanded ? 180 : 160 });
+    opacity.value = withTiming(targetO, { duration: expanded ? 160 : 140 });
+    scale.value = 1;
   }, [expanded]);
 
   const animatedStyle = useAnimatedStyle(() => ({ height: height.value, opacity: opacity.value, transform: [{ scale: scale.value }] }));
 
   return (
-    <RAnimated.View style={[{ overflow: 'hidden' }, animatedStyle]}>
-      <View
+    <RAnimated.View layout={Layout.duration(160)} style={[{ overflow: 'hidden' }, animatedStyle]}>
+      <RAnimated.View
         onLayout={(e) => {
           measured.current = e.nativeEvent.layout.height;
           // Ensure we show content immediately if already expanded when first measured
@@ -33,9 +33,11 @@ function Expandable({ expanded, children }: { expanded: boolean; children: React
             opacity.value = 1;
           }
         }}
+        entering={FadeIn.duration(140)}
+        exiting={FadeOut.duration(120)}
       >
         {children}
-      </View>
+      </RAnimated.View>
     </RAnimated.View>
   );
 }

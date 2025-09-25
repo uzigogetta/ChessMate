@@ -1,16 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, TextInput } from 'react-native';
 import { Text, Button } from '@/ui/atoms';
 import { useRoomStore } from '@/features/online/room.store';
 import { useChatStore, type ChatMsg } from '@/features/chat/chat.store';
+import { commentaryController, isKnownPersona } from '@/features/commentary/commentary.controller';
 
 export default function RoomChat() {
   const room = useRoomStore((s) => s.room);
   const me = useRoomStore((s) => s.me);
   const [input, setInput] = useState('');
-  const chatGet = useChatStore((s) => s.get);
+  const version = useChatStore((s) => s.version);
   const chatAppend = useChatStore((s) => s.append);
-  const msgs = useMemo(() => (room ? chatGet(room.roomId) : []), [room, chatGet]);
+  const [controllerState, setControllerState] = useState(commentaryController.getState());
+  useEffect(() => commentaryController.subscribe(setControllerState), []);
+  const msgs = useMemo(() => {
+    if (!room) return [];
+    return useChatStore.getState().get(room.roomId);
+  }, [room, version]);
   const canChat = !!room;
   const send = () => {
     if (!room || !input.trim()) return;
@@ -25,9 +31,17 @@ export default function RoomChat() {
   return (
     <View style={{ width: 320, gap: 8 }}>
       <View style={{ maxHeight: 160, width: '100%' }}>
-        {data.map((item) => (
-          <Text key={item.id} muted>{`${new Date(item.ts).toLocaleTimeString()} ${item.from}: ${item.txt}`}</Text>
-        ))}
+        {data.map((item) => {
+          const persona = isKnownPersona(item.from) ? item.from : null;
+          return (
+            <Text key={item.id} muted style={{ color: persona ? '#7b61ff' : undefined }}>
+              {`${new Date(item.ts).toLocaleTimeString()} ${item.from}: ${item.txt}`}
+            </Text>
+          );
+        })}
+        {controllerState.status === 'typing' && controllerState.lastPersona && (
+          <Text muted style={{ color: '#7b61ff' }}>{`${controllerState.lastPersona} is thinking…`}</Text>
+        )}
       </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TextInput

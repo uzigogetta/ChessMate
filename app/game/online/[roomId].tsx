@@ -12,6 +12,7 @@ import { useSettings } from '@/features/settings/settings.store';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
 import { ReconnectListener } from '@/features/online/reconnect';
 import RoomChat from '@/features/chat/RoomChat';
+import { useCommentarySettings, CommentaryStrip, createCommentarySession } from '@/features/commentary';
 // import { DevOverlay } from '@/ui/DevOverlay';
 import { useRoomStore } from '@/features/online/room.store';
 import { buildInvite } from '@/features/online/invite';
@@ -19,11 +20,13 @@ import { useRoomScreenState } from '@/features/online/room-screen/useRoomScreen'
 import { RoomHeader } from '@/features/online/room-screen/RoomHeader';
 import { SeatControls } from '@/features/online/room-screen/SeatControls';
 import { RoomBoard } from '@/features/online/room-screen/RoomBoard';
+import type { BoardStatus } from '@/features/chess/components/board/BoardCore';
 import { RoomActions } from '@/features/online/room-screen/RoomActions';
 import { RoomToasts } from '@/features/online/room-screen/RoomToasts';
 import type { Seat } from '@/net/types';
 import { useReview } from '@/features/view/review.store';
 import { Ionicons } from '@expo/vector-icons';
+import { AnimRegistryProvider } from '@/features/chess/animation/AnimRegistry';
 function BottomBar({ room, mySide, onUndo, onOfferDraw, onResign, onGoLive, bottomInset, iconColor, mode, onFlip, soundsEnabled, toggleSounds, hapticsEnabled, toggleHaptics, boardTheme, onSelectBoardTheme, onOpenSettings }: { room?: any; mySide: 'w'|'b'|null; onUndo: () => void; onOfferDraw: () => void; onResign: () => void; onGoLive: () => void; bottomInset: number; iconColor: string; mode: ThemeName; onFlip: () => void; soundsEnabled: boolean; toggleSounds: () => void; hapticsEnabled: boolean; toggleHaptics: () => void; boardTheme: 'default'|'classicGreen'|'native'; onSelectBoardTheme: (t: 'default'|'classicGreen'|'native') => void; onOpenSettings: () => void }) {
   const { plyIndex, setPlyIndex } = useReview();
   const livePlies = room?.historySAN?.length || 0;
@@ -284,6 +287,7 @@ export default function OnlineRoomScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const router = useRouter();
   const { room, meId, mySeats, mySide, isHost, readyToStart, isMyTurn, isMinimal, nameById } = useRoomScreenState();
+  const commentary = useCommentarySettings();
 
   const moveSAN = useRoomStore((state) => state.moveSAN);
   const passBaton = useRoomStore((state) => state.passBaton);
@@ -310,6 +314,13 @@ export default function OnlineRoomScreen() {
   const [archiveToast, setArchiveToast] = React.useState<string | null>(null);
   const [leftToast, setLeftToast] = React.useState<string | null>(null);
   const [joinToast, setJoinToast] = React.useState<string | null>(null);
+  const [boardStatus, setBoardStatus] = React.useState<BoardStatus | null>(null);
+  const handleBoardStatusChange = React.useCallback((next: BoardStatus | null) => {
+    setBoardStatus((prev) => {
+      if (prev?.key === next?.key) return prev;
+      return next ?? null;
+    });
+  }, []);
   const mountAtRef = React.useRef<number>(Date.now());
 
   React.useEffect(() => {
@@ -356,6 +367,11 @@ export default function OnlineRoomScreen() {
     const timeout = setTimeout(() => setLeftToast(null), 2000);
     return () => clearTimeout(timeout);
   }, [leftToast]);
+
+  React.useEffect(() => {
+    if (!boardStatus) return;
+    logMove('board status', { key: boardStatus.key, kind: boardStatus.kind });
+  }, [boardStatus]);
 
   const prevResultRef = React.useRef<string | undefined>(undefined);
   React.useEffect(() => {
@@ -465,6 +481,7 @@ export default function OnlineRoomScreen() {
   const setBoardTheme = useSettings((s) => s.setBoardTheme);
 
   return (
+    <AnimRegistryProvider>
     <Screen style={{ justifyContent: 'flex-start', paddingHorizontal: containerPad }}>
       <Stack.Screen options={{ headerTitle: 'Online Game', headerRight: () => <HeaderIndicators /> }} />
       <ScrollView
@@ -517,7 +534,7 @@ export default function OnlineRoomScreen() {
 
             <RoomChat />
 
-            <RoomBoard room={room} mySide={mySide} boardSize={boardSize} meId={meId} moveSAN={moveSAN} orientation={flip ?? undefined} />
+            <RoomBoard room={room} mySide={mySide} boardSize={boardSize} meId={meId} moveSAN={moveSAN} orientation={flip ?? undefined} onStatusChange={handleBoardStatusChange} />
 
             <RoomActions
               room={room}
@@ -559,7 +576,7 @@ export default function OnlineRoomScreen() {
         onOpenSettings={() => router.push({ pathname: '/(tabs)/profile/settings', params: { from: 'game', roomId: String(room?.roomId || roomId), returnTo: `/game/online/${String(room?.roomId || roomId)}` } })}
       />
     </Screen>
+  </AnimRegistryProvider>
   );
 }
-
 

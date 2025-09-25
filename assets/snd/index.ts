@@ -9,8 +9,9 @@
 export const SND = {
   move: require('./move.mp3'),
   capture: require('./capture.mp3'),
-  check: require('./boardstart.mp3'),
-  game_end: require('./boardstart.mp3'),
+  check: null as any,
+  game_start: require('./boardstart.mp3'),
+  game_end: null as any,
 } as const;
 
 
