@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Platform, Switch, Pressable, ScrollView, useColorScheme, Dimensions } from 'react-native';
 import { Text, Separator, Screen } from '@/ui/atoms';
 import { useSettings } from '@/features/settings/settings.store';
-import { useCommentarySettings, COMMENTARY_PERSONA_IDS, COMMENTARY_DETAIL_LEVELS } from '@/features/commentary/commentary.settings';
+import { useCommentarySettings, COMMENTARY_PERSONA_IDS, COMMENTARY_DETAIL_LEVELS } from '@/features/commentary';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
