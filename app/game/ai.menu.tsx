@@ -2,12 +2,13 @@ import React from 'react';
 import { View, ScrollView, Pressable, Switch } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
-import { useCommentarySettings } from '@/features/commentary';
+import { useCommentarySettings, COMMENTARY_PERSONA_IDS } from '@/features/commentary';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AIMenuScreen() {
   const [level, setLevel] = React.useState<1|2|3|4|5|6|7|8|9|10|11|12>(4);
   const commentary = useCommentarySettings();
+  const [personaId, setPersonaId] = React.useState(commentary.persona);
   const insets = useSafeAreaInsets();
   return (
     <Screen>
@@ -28,6 +29,32 @@ export default function AIMenuScreen() {
           </View>
         </Card>
         <Card>
+          <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 8 }}>Persona</Text>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {COMMENTARY_PERSONA_IDS.map((id) => {
+              const active = personaId === id;
+              return (
+                <Pressable
+                  key={id}
+                  onPress={() => setPersonaId(id)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 12,
+                    paddingHorizontal: 14,
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: active ? '#7c4dff' : 'rgba(120,120,128,0.36)',
+                    backgroundColor: active ? 'rgba(124,77,255,0.15)' : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontWeight: '600', textTransform: 'capitalize' }}>{id}</Text>
+                  <Text muted style={{ marginTop: 4, fontSize: 12 }}>{id === 'coach' ? 'Supportive guidance' : id === 'rival' ? 'Competitive banter' : 'Analytical insights'}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Card>
+        <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
               <Text style={{ fontSize: 16, fontWeight: '700' }}>Coach commentary</Text>
@@ -36,7 +63,7 @@ export default function AIMenuScreen() {
             <Switch value={commentary.enabled} onValueChange={(v) => commentary.setEnabled(v)} />
           </View>
         </Card>
-        <Button title="Start Game" onPress={() => router.push({ pathname: '/game/ai', params: { level: String(level) } })} />
+        <Button title="Start Game" onPress={() => router.push({ pathname: '/game/ai', params: { level: String(level), persona: personaId, coach: commentary.enabled ? '1' : '0' } })} />
       </ScrollView>
     </Screen>
   );
