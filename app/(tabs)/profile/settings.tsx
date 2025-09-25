@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Platform, Switch, Pressable, ScrollView, useColorScheme, Dimensions } from 'react-native';
 import { Text, Separator, Screen } from '@/ui/atoms';
 import { useSettings } from '@/features/settings/settings.store';
+import { useCommentarySettings, COMMENTARY_PERSONA_IDS, COMMENTARY_DETAIL_LEVELS } from '@/features/commentary/commentary.settings';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
@@ -13,6 +14,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { from, roomId, returnTo } = useLocalSearchParams<{ from?: string; roomId?: string; returnTo?: string }>();
   const s = useSettings();
+  const commentary = useCommentarySettings();
   const insets = useSafeAreaInsets();
   const sys = useColorScheme();
   const mode = useSettings((v) => v.theme);
@@ -60,7 +62,7 @@ export default function SettingsScreen() {
               <Separator />
               <SectionEdges s={s} />
               <Separator />
-              <SectionApp s={s} />
+              <SectionApp s={s} commentary={commentary} />
               <Separator />
               <SectionPieces s={s} />
             </BlurView>
@@ -72,7 +74,7 @@ export default function SettingsScreen() {
               <Separator />
               <SectionEdges s={s} />
               <Separator />
-              <SectionApp s={s} />
+              <SectionApp s={s} commentary={commentary} />
               <Separator />
               <SectionPieces s={s} />
             </View>
@@ -140,7 +142,7 @@ function SectionEdges({ s }: { s: ReturnType<typeof useSettings> }) {
   );
 }
 
-function SectionApp({ s }: { s: ReturnType<typeof useSettings> }) {
+function SectionApp({ s, commentary }: { s: ReturnType<typeof useSettings>; commentary: ReturnType<typeof useCommentarySettings> }) {
   const theme = s.theme;
   const sys = useColorScheme();
   const mode = useSettings((v) => v.theme);
@@ -162,6 +164,48 @@ function SectionApp({ s }: { s: ReturnType<typeof useSettings> }) {
             })}
           </View>
         }
+      />
+      <Divider />
+      <Row
+        left={<Text style={{ fontSize: 16 }}>Commentary</Text>}
+        right={<Switch value={commentary.enabled} onValueChange={(v) => { Haptics.selectionAsync(); commentary.setEnabled(v); }} />}
+      />
+      <Divider />
+      <Row
+        left={<Text style={{ fontSize: 16 }}>Persona</Text>}
+        right={
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {COMMENTARY_PERSONA_IDS.map((id) => {
+              const active = commentary.persona === id;
+              return (
+                <Pressable key={id} onPress={() => { if (!active) { Haptics.selectionAsync(); commentary.setPersona(id); } }} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, backgroundColor: active ? palette.primary + '33' : 'transparent', borderWidth: 1, borderColor: active ? palette.primary + '80' : (isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.12)') }}>
+                  <Text selectable={false} style={{ textTransform: 'capitalize' }}>{id}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        }
+      />
+      <Divider />
+      <Row
+        left={<Text style={{ fontSize: 16 }}>Detail</Text>}
+        right={
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {COMMENTARY_DETAIL_LEVELS.map((id) => {
+              const active = commentary.detail === id;
+              return (
+                <Pressable key={id} onPress={() => { if (!active) { Haptics.selectionAsync(); commentary.setDetail(id); } }} style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, backgroundColor: active ? palette.primary + '33' : 'transparent', borderWidth: 1, borderColor: active ? palette.primary + '80' : (isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.12)') }}>
+                  <Text selectable={false} style={{ textTransform: 'capitalize' }}>{id}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        }
+      />
+      <Divider />
+      <Row
+        left={<Text style={{ fontSize: 16 }}>Typing indicator</Text>}
+        right={<Switch value={commentary.typingIndicator} onValueChange={(v) => { Haptics.selectionAsync(); commentary.setTypingIndicator(v); }} />}
       />
       <Divider />
       <Row left={<Text style={{ fontSize: 16 }}>Haptics</Text>} right={<Switch value={s.haptics} onValueChange={(v) => { Haptics.selectionAsync(); s.setHaptics(v); }} />} />

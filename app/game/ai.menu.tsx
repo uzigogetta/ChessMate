@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import { View, ScrollView, Pressable, Switch } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
+import { useCommentarySettings } from '@/features/commentary';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AIMenuScreen() {
   const [level, setLevel] = React.useState<1|2|3|4|5|6|7|8|9|10|11|12>(4);
+  const commentary = useCommentarySettings();
   const insets = useSafeAreaInsets();
   return (
     <Screen>
@@ -23,6 +25,15 @@ export default function AIMenuScreen() {
                 <Text>{`Lv${lv}`}</Text>
               </Pressable>
             ))}
+          </View>
+        </Card>
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ fontSize: 16, fontWeight: '700' }}>Coach commentary</Text>
+              <Text muted style={{ marginTop: 4 }}>Toggle in-game persona feedback</Text>
+            </View>
+            <Switch value={commentary.enabled} onValueChange={(v) => commentary.setEnabled(v)} />
           </View>
         </Card>
         <Button title="Start Game" onPress={() => router.push({ pathname: '/game/ai', params: { level: String(level) } })} />
