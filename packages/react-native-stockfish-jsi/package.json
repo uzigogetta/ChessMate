@@ -1,5 +1,5 @@
 {
-  "name": "react-native-stockfish-jsi",
+  "name": "@uzigogetta/react-native-stockfish-jsi",
   "version": "0.1.0",
   "main": "index.ts",
   "react-native": "src/index.ts",
