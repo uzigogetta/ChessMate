@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Pressable, Platform } from 'react-native';
+import { View, Pressable, Platform, Switch } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +29,12 @@ type Props = {
   boardTheme: 'default' | 'classicGreen' | 'native';
   onSelectBoardTheme: (t: 'default' | 'classicGreen' | 'native') => void;
   onOpenSettings: () => void;
+  coach?: {
+    available: boolean;
+    enabled: boolean;
+    onToggle: (next: boolean) => void;
+    disabledReason?: string;
+  };
 };
 
 type ThemeOption = {
@@ -64,6 +70,7 @@ export function BottomBar(props: Props) {
     boardTheme,
     onSelectBoardTheme,
     onOpenSettings,
+    coach,
   } = props;
 
   const { plyIndex, setPlyIndex } = useReview();
@@ -316,6 +323,34 @@ export function BottomBar(props: Props) {
           <Text style={{ fontSize: 16 }}>Flip Board</Text>
         </Row>
         <View style={{ height: 1, backgroundColor: mode === 'dark' ? '#2C2C2E' : '#E5E5EA' }} />
+        {coach ? (
+          <Pressable
+            onPress={() => {
+              if (!coach.available) {
+                toast(coach.disabledReason || 'Coach Mode is unavailable in this game.');
+                return;
+              }
+              coach.onToggle(!coach.enabled);
+            }}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12, gap: 12 }}
+          >
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="sparkles-outline" size={22} color={iconColor} />
+                <Text style={{ fontSize: 16 }}>Coach Mode</Text>
+              </View>
+              {!coach.available ? (
+                <Text style={{ fontSize: 12, color: themes[mode].muted as string, marginTop: 4 }}>AI-only feature</Text>
+              ) : null}
+            </View>
+            <Switch
+              value={coach.enabled}
+              onValueChange={(value) => coach.available ? coach.onToggle(value) : undefined}
+              disabled={!coach.available}
+            />
+          </Pressable>
+        ) : null}
+        {coach ? <View style={{ height: 1, backgroundColor: mode === 'dark' ? '#2C2C2E' : '#E5E5EA' }} /> : null}
         <Row onPress={toggleSounds}>
           <Ionicons name={soundsEnabled ? 'volume-high-outline' : 'volume-mute-outline'} size={22} color={iconColor} />
           <Text style={{ fontSize: 16 }}>{soundsEnabled ? 'Disable Sounds' : 'Enable Sounds'}</Text>

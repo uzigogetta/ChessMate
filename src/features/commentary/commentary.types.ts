@@ -22,12 +22,15 @@ export type CommentaryMoveEvent = {
 
 export type CommentarySessionMeta = {
   sessionId: string;
-  mode: 'ai' | 'local' | 'online';
+  mode: 'ai' | 'local' | 'online' | 'replay';
   playerName?: string;
   opponentName?: string;
   aiLevel?: number;
   roomId?: string;
   rated?: boolean;
+  coachEnabled?: boolean;
+  personaId?: CommentaryPersonaId;
+  detail?: CommentaryDetailLevel;
 };
 
 export type CommentaryRequestPayload = CommentaryMoveEvent & {

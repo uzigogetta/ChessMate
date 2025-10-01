@@ -2,7 +2,8 @@ import { customAlphabet } from 'nanoid/non-secure';
 import { START_FEN } from '@/features/chess/logic/chess.rules';
 import { detectTerminal } from '@/game/terminal';
 import { dispatchCommentary, getCommentaryRoomId } from './commentary.service';
-import type { CommentaryMoveEvent, CommentarySessionMeta } from './commentary.types';
+import type { CommentaryMoveEvent, CommentarySessionMeta, CommentaryPersonaId, CommentaryDetailLevel } from './commentary.types';
+import { resolvePersona } from './personas';
 
 const genId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 10);
 
@@ -24,6 +25,8 @@ export type CommentarySession = {
   emitMove(input: CommentaryMoveInput): void;
   reset(historySAN?: string[], fen?: string): void;
   getRoomId(): string;
+  setCoach(enabled: boolean, persona?: CommentaryPersonaId, detail?: CommentaryDetailLevel): void;
+  isCoachEnabled(): boolean;
 };
 
 export function createCommentarySession(meta: Omit<CommentarySessionMeta, 'sessionId'> & { sessionId?: string }): CommentarySession {
@@ -43,6 +46,7 @@ export function createCommentarySession(meta: Omit<CommentarySessionMeta, 'sessi
       current = { ...current, ...partial };
     },
     emitMove(input) {
+      if (!current.coachEnabled) return;
       const moveNumber = input.historySAN.length;
       let result = input.result;
       let reason = input.resultReason;
@@ -66,10 +70,18 @@ export function createCommentarySession(meta: Omit<CommentarySessionMeta, 'sessi
         resultReason: reason,
         timestamp: Date.now(),
       };
-      void dispatchCommentary(event, { session: current });
+      const personaInfo = resolvePersona(current.personaId);
+      void dispatchCommentary(event, {
+        session: current,
+        base: {
+          persona: personaInfo.id,
+          detail: current.detail,
+        },
+      });
     },
     reset(historySAN = [], fen = START_FEN) {
       current = { ...current, sessionId: genId() };
+      if (!current.coachEnabled) return;
       if (historySAN.length > 0) {
         const moveNumber = historySAN.length;
         const termination = detectTerminal('', historySAN);
@@ -86,11 +98,30 @@ export function createCommentarySession(meta: Omit<CommentarySessionMeta, 'sessi
           resultReason: termination.over ? termination.reason : undefined,
           timestamp: Date.now(),
         };
-        void dispatchCommentary(event, { session: current });
+        const personaInfo = resolvePersona(current.personaId);
+        void dispatchCommentary(event, {
+          session: current,
+          base: {
+            persona: personaInfo.id,
+            detail: current.detail,
+          },
+        });
       }
     },
     getRoomId() {
       return getCommentaryRoomId(current);
+    },
+    setCoach(enabled, persona, detail) {
+      const personaInfo = resolvePersona(persona ?? current.personaId);
+      current = {
+        ...current,
+        coachEnabled: enabled,
+        personaId: personaInfo.id,
+        detail: detail ?? current.detail,
+      };
+    },
+    isCoachEnabled() {
+      return !!current.coachEnabled;
     },
   };
 

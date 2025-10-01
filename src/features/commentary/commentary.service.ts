@@ -1,7 +1,7 @@
 import { COMMENTARY_DETAIL_LEVELS, COMMENTARY_PERSONA_IDS, type CommentaryMoveEvent, type CommentaryRequestPayload, type CommentaryResponse, type CommentarySessionMeta, type CommentaryPersonaId, type CommentaryDetailLevel } from './commentary.types';
-import { useCommentarySettings } from './commentary.settings';
 import { useChatStore, type ChatMsg } from '@/features/chat/chat.store';
 import { commentaryController } from './commentary.controller';
+import { resolvePersona } from './personas';
 
 const COMMENTARY_ROOM_PREFIX = 'cm.commentary.';
 
@@ -82,12 +82,10 @@ type DispatchOptions = {
   base?: Partial<Pick<CommentaryRequestPayload, 'persona' | 'detail'>>;
 };
 
-export async function dispatchCommentary(event: CommentaryMoveEvent, options: DispatchOptions) {
-  const settings = useCommentarySettings.getState();
-  if (!settings.enabled) return;
-
-  const persona: CommentaryPersonaId = options.base?.persona ?? settings.persona;
-  const detail: CommentaryDetailLevel = options.base?.detail ?? settings.detail;
+export async function dispatchCommentary(event: CommentaryMoveEvent, options: DispatchOptions & { settings?: { persona?: CommentaryPersonaId; detail?: CommentaryDetailLevel } }) {
+  const sessionPersona = resolvePersona(options.base?.persona ?? options.session.personaId);
+  const persona: CommentaryPersonaId = sessionPersona.id;
+  const detail: CommentaryDetailLevel = options.base?.detail ?? options.session.detail ?? 'standard';
 
   if (!COMMENTARY_PERSONA_IDS.includes(persona)) return;
   if (!COMMENTARY_DETAIL_LEVELS.includes(detail)) return;

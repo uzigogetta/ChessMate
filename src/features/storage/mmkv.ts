@@ -21,6 +21,7 @@ export function getJSON<T = any>(key: string): T | undefined {
 export const KEYS = {
   lastIdentity: 'cm.identity.last',
   settings: 'cm.settings',
+  engineSettings: 'cm.settings.engine',
   cloudOutbox: 'cm.cloud.outbox',
   cloudUploaded: 'cm.cloud.uploaded',
   archiveFilters: 'cm.archive.filters',

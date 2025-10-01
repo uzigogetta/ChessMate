@@ -12,7 +12,7 @@ import { useSettings } from '@/features/settings/settings.store';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
 import { ReconnectListener } from '@/features/online/reconnect';
 import RoomChat from '@/features/chat/RoomChat';
-import { useCommentarySettings, CommentaryStrip, createCommentarySession } from '@/features/commentary';
+import { useCommentarySettings, CommentaryStrip, createCommentarySession, resolvePersona } from '@/features/commentary';
 // import { DevOverlay } from '@/ui/DevOverlay';
 import { useRoomStore } from '@/features/online/room.store';
 import { buildInvite } from '@/features/online/invite';

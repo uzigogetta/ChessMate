@@ -1,11 +1,17 @@
 export type TabDef = {
-  name: 'play' | 'puzzles' | 'archive' | 'profile' | (string & {});
+  name: string;
   label: string;
   ios: { sfDefault: string; sfSelected: string };
   android: { ionicon: string };
 };
 
 export const TABS: TabDef[] = [
+  {
+    name: 'index',
+    label: 'Home',
+    ios: { sfDefault: 'house', sfSelected: 'house.fill' },
+    android: { ionicon: 'home-outline' }
+  },
   {
     name: 'play',
     label: 'Play',
@@ -19,10 +25,10 @@ export const TABS: TabDef[] = [
     android: { ionicon: 'grid-outline' }
   },
   {
-    name: 'archive',
-    label: 'Archive',
-    ios: { sfDefault: 'archivebox', sfSelected: 'archivebox.fill' },
-    android: { ionicon: 'archive-outline' }
+    name: 'friends',
+    label: 'Friends',
+    ios: { sfDefault: 'person.2', sfSelected: 'person.2.fill' },
+    android: { ionicon: 'people-outline' }
   },
   {
     name: 'profile',

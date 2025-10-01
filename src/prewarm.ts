@@ -4,11 +4,12 @@ let ran = false;
 
 async function prewarmDev() {
   try {
-    const [dbMod, _pgn, _cloud, _net] = await Promise.allSettled([
+    const [dbMod, _pgn, _cloud, _net, _engine] = await Promise.allSettled([
       import('@/archive/db'),
       import('@/archive/pgn'),
       import('@/shared/cloud'),
-      import('@/net/supabaseAdapter')
+      import('@/net/supabaseAdapter'),
+      import('@/features/chess/engine/stockfishBrowser').then((m) => m.createBrowserStockfish()),
     ]).then((results) => results.map((r) => (r.status === 'fulfilled' ? (r as any).value : null)));
 
     // Light DB touch: init and list 1 (harmless probe)
@@ -63,7 +64,11 @@ export function prewarm() {
       if (__DEV__) {
         prewarmDev().catch(() => {});
       } else {
-        prefetchPiecesProd().catch(() => {});
+        // Prewarm engine in production too for instant AI games
+        Promise.all([
+          prefetchPiecesProd().catch(() => {}),
+          import('@/features/chess/engine/stockfishBrowser').then((m) => m.createBrowserStockfish()).catch(() => {}),
+        ]);
       }
     }, 300);
   });

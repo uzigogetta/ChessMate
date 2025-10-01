@@ -6,4 +6,5 @@ export * from './commentary.controller';
 export * from './CommentaryStrip';
 export * from './CommentaryAvatar';
 export * from './useCommentaryFeed';
+export * from './personas';
 

@@ -23,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { DeviceEventEmitter } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeOutUp,
@@ -41,6 +42,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useHeaderHeight } from '@react-navigation/elements';
 
@@ -66,7 +68,7 @@ import { useRoomStore } from '@/features/online/room.store';
 
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 const FILTERS_KEY = KEYS.archiveFilters || 'cm.archive.filters';
-const ESTIMATED_ITEM_HEIGHT = 220;
+const ESTIMATED_ITEM_HEIGHT = 240;
 
 type Filters = {
   mode: 'all' | 'online' | 'local' | 'ai';
@@ -83,17 +85,7 @@ type Snackbar = { message: string; actionLabel?: string; onAction?: () => void }
 
 type PreviewState = { fen: string; from: string | null; to: string | null; result?: string | null };
 
-type ExpandedState = { detailsId: string | null; fullDetails: Set<string> };
-
-type PersonaSummary = {
-  id: string;
-  name: string;
-  title: string;
-  fallback: string;
-  gradient: string[];
-  accent: string;
-  tone: string;
-};
+type ExpandedState = { detailsId: string | null; pgnOpen: Set<string> };
 
 function safeFen(raw?: string): string {
   if (!raw || typeof raw !== 'string') return START_FEN;
@@ -174,180 +166,6 @@ function lastMoveSquaresFromPGN(pgn?: string): { from: string | null; to: string
   }
 }
 
-function sanSequenceFromPGN(pgn?: string): string[] {
-  if (!pgn || typeof pgn !== 'string') return [];
-  try {
-    const chess = new Chess();
-    const ok = (chess as any).load_pgn ? (chess as any).load_pgn(pgn) : chess.loadPgn?.(pgn);
-    if (ok === false) return [];
-    const history = chess.history?.() ?? [];
-    if (Array.isArray(history)) return history as string[];
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-function MoveStrip({
-  moves,
-  accent,
-}: {
-  moves: string[];
-  accent: string;
-}) {
-  const rows = useMemo(() => {
-    const output: { index: number; white: string; black: string }[] = [];
-    for (let i = 0; i < moves.length; i += 2) {
-      output.push({
-        index: i / 2 + 1,
-        white: moves[i] ?? '',
-        black: moves[i + 1] ?? '',
-      });
-    }
-    return output;
-  }, [moves]);
-
-  const capsuleHeight = Math.min(200, rows.length * 32 + 24);
-  return (
-    <View
-      style={{
-        borderRadius: 16,
-        overflow: 'hidden',
-        backgroundColor: 'rgba(18,18,20,0.82)',
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(255,255,255,0.04)',
-        marginHorizontal: 2,
-      }}
-    >
-      <LinearGradient
-        colors={[`${accent}33`, `${accent}0D`]}
-        style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-      >
-        <Text style={{ color: '#f8f8f8', fontSize: 14, fontWeight: '600', marginBottom: 8 }}>Move list</Text>
-        <ScrollView
-          style={{ maxHeight: capsuleHeight }}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          contentContainerStyle={{ paddingBottom: 4 }}
-        >
-          {rows.map((row) => (
-            <View
-              key={row.index}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 6,
-                gap: 12,
-              }}
-            >
-              <Text style={{ width: 24, color: 'rgba(248,248,255,0.55)', fontSize: 12 }}>{row.index}.</Text>
-              <View style={{ flex: 1, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.04)' }}>
-                <Text style={{ color: '#f4f4f8', fontSize: 13 }}>{row.white || '–'}</Text>
-              </View>
-              <View style={{ flex: 1, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.04)' }}>
-                <Text style={{ color: '#f4f4f8', fontSize: 13 }}>{row.black || '–'}</Text>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </LinearGradient>
-    </View>
-  );
-}
-
-function CoachTag({ label, accent }: { label: string; accent: string }) {
-  return (
-    <View
-      style={{
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 14,
-        backgroundColor: `${accent}22`,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: `${accent}55`,
-      }}
-    >
-      <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: '600' }}>{label}</Text>
-    </View>
-  );
-}
-
-function CoachCapsule({
-  persona,
-  accent,
-  highContrast,
-}: {
-  persona: PersonaPreset;
-  accent: string;
-  highContrast: boolean;
-}) {
-  const [open, setOpen] = React.useState(false);
-
-  return (
-    <View
-      style={{
-        borderRadius: 18,
-        overflow: 'hidden',
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: highContrast ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.04)',
-        marginHorizontal: 2,
-      }}
-    >
-      <LinearGradient
-        colors={persona.gradient.length ? persona.gradient : [accent, `${accent}88`]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ padding: 16, gap: 14 }}
-      >
-        <Pressable
-          onPress={() => setOpen((prev) => !prev)}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
-          accessibilityRole="button"
-          accessibilityLabel="Toggle coach persona details"
-          accessibilityState={{ expanded: open }}
-        >
-          <CommentaryAvatar fallback={persona.fallback} size={56} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 16 }}>{persona.name}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>{persona.title}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.62)', fontSize: 11, marginTop: 4 }}>
-              Tap to {open ? 'hide' : 'view'} persona profile
-            </Text>
-          </View>
-          <View
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(14,14,22,0.25)',
-            }}
-          >
-            <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={17} color="#fff" />
-          </View>
-        </Pressable>
-
-        {open && (
-          <View style={{ gap: 8 }}>
-            <Text style={{ color: '#ffffff', fontSize: 13, lineHeight: 18 }}>{persona.description}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              <CoachTag label={`Tone • ${persona.tone}`} accent={accent} />
-              <CoachTag label={`Skill • ${persona.engine.skill}`} accent={accent} />
-              {typeof persona.engine.depthBias === 'number' && (
-                <CoachTag label={`Depth +${persona.engine.depthBias}`} accent={accent} />
-              )}
-              {typeof persona.engine.movetimeBiasMs === 'number' && (
-                <CoachTag label={`Extra ${persona.engine.movetimeBiasMs} ms`} accent={accent} />
-              )}
-            </View>
-          </View>
-        )}
-      </LinearGradient>
-    </View>
-  );
-}
-
 function fenFromGame(game: GameRow): string | undefined {
   return fenFromPGN(game.pgn) || (game as any).finalFen || (game as any).fen;
 }
@@ -355,11 +173,10 @@ function fenFromGame(game: GameRow): string | undefined {
 function memoizeBoardState(
   game: GameRow | undefined,
   fenCache: React.MutableRefObject<Map<string, string>>,
-  lastMoveCache: React.MutableRefObject<Map<string, { from: string | null; to: string | null }>>,
-  movesCache: React.MutableRefObject<Map<string, { moves: string[]; signature: string }>>
+  lastMoveCache: React.MutableRefObject<Map<string, { from: string | null; to: string | null }>>
 ) {
   if (!game) {
-    return { boardFen: START_FEN, lastMove: { from: null, to: null }, movesSan: [] as string[] };
+    return { boardFen: START_FEN, lastMove: { from: null, to: null } };
   }
   let boardFen = fenCache.current.get(game.id);
   if (!boardFen) {
@@ -373,18 +190,7 @@ function memoizeBoardState(
     lastMoveCache.current.set(game.id, last);
   }
 
-  const signature = typeof game.pgn === 'string' ? game.pgn : '';
-  let entry = movesCache.current.get(game.id);
-  if (!entry || entry.signature !== signature) {
-    entry = { moves: sanSequenceFromPGN(game.pgn), signature };
-    movesCache.current.set(game.id, entry);
-  }
-
-  return {
-    boardFen: safeFen(boardFen),
-    lastMove: { from: last?.from ?? null, to: last?.to ?? null },
-    movesSan: entry.moves,
-  };
+  return { boardFen: safeFen(boardFen), lastMove: { from: last?.from ?? null, to: last?.to ?? null } };
 }
 
 const AnimatedCard = Animated.createAnimatedComponent(Card);
@@ -394,7 +200,8 @@ export function ArchiveScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const settings = useSettings();
-  const sysTheme = settings.theme === 'system' ? (settings.systemTheme ?? 'light') : settings.theme;
+  const rnScheme = useColorScheme();
+  const sysTheme = settings.theme === 'system' ? (rnScheme === 'dark' ? 'dark' : 'light') : settings.theme;
   const activeTheme = (sysTheme === 'dark' ? 'dark' : 'light') as ThemeName;
   const highContrast = settings.highContrast;
   const reduceMotion = settings.reduceMotion;
@@ -425,16 +232,14 @@ export function ArchiveScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<ExpandedState>({ detailsId: null, fullDetails: new Set() });
+  const [expanded, setExpanded] = useState<ExpandedState>({ detailsId: null, pgnOpen: new Set() });
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filtersInteractive, setFiltersInteractive] = useState(false);
   const [snackbar, setSnackbar] = useState<Snackbar>(null);
-  const [scrollLabel, setScrollLabel] = useState<string | null>(null);
   const [contextItem, setContextItem] = useState<GameRow | null>(null);
   const snackbarTimer = useRef<NodeJS.Timeout | null>(null);
-  const labelTimer = useRef<NodeJS.Timeout | null>(null);
   const listRef = useRef<FlashList<FlatItem>>(null);
   const allowClipped = useRef(true);
 
@@ -445,11 +250,12 @@ export function ArchiveScreen() {
   const summarySV = useSharedValue(0);
   const selectSV = useSharedValue(0);
   const snackbarSV = useSharedValue(0);
+  // Added back to satisfy recent bottomSearchStyle usage
+  const bottomSearchSV = useSharedValue(1);
   const gestureStart = useSharedValue(0);
 
   const fenCache = useRef<Map<string, string>>(new Map());
   const lastMoveCache = useRef<Map<string, { from: string | null; to: string | null }>>(new Map());
-  const moveListCache = useRef<Map<string, { moves: string[]; signature: string }>>(new Map());
 
   const roomName = useRoomStore((s) => s.me?.name);
   const cachedIdentity = useMemo(() => getJSON<{ name?: string }>(KEYS.lastIdentity), []);
@@ -465,10 +271,6 @@ export function ArchiveScreen() {
   useEffect(() => {
     setJSON(FILTERS_KEY, filters);
   }, [filters]);
-
-  useEffect(() => {
-    // When filters change we scroll to top naturally, no manual pagination reset needed.
-  }, [filters.mode, filters.result, filters.sort, filters.favoritesOnly, query]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -647,17 +449,17 @@ export function ArchiveScreen() {
       setExpanded((prev) => {
         const nextId = prev.detailsId === id ? null : id;
         allowClipped.current = nextId === null;
-        return { detailsId: nextId, fullDetails: nextId === null ? new Set() : prev.fullDetails };
+        return { detailsId: nextId, pgnOpen: nextId === null ? new Set() : prev.pgnOpen };
       });
     });
   }, []);
 
-  const toggleFullDetails = useCallback((id: string) => {
+  const togglePGN = useCallback((id: string) => {
     setExpanded((prev) => {
-      const next = new Set(prev.fullDetails);
+      const next = new Set(prev.pgnOpen);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return { ...prev, fullDetails: next };
+      return { ...prev, pgnOpen: next };
     });
   }, []);
 
@@ -671,7 +473,7 @@ export function ArchiveScreen() {
   }, []);
 
   const openPreview = useCallback((game: GameRow) => {
-    const { boardFen, lastMove, movesSan } = memoizeBoardState(game, fenCache, lastMoveCache, moveListCache);
+    const { boardFen, lastMove } = memoizeBoardState(game, fenCache, lastMoveCache);
     setPreview({ fen: boardFen, from: lastMove.from, to: lastMove.to, result: game.result });
     setShowPreview(true);
   }, []);
@@ -702,6 +504,14 @@ export function ArchiveScreen() {
     [activeTheme, copyPGN, favorites, scheduleDelete, shareRows, toggleFavorite]
   );
 
+  const handleReplay = useCallback(
+    (game: GameRow) => {
+      if (!game?.id) return;
+      router.push({ pathname: '/archive/[id]', params: { id: game.id } });
+    },
+    [router]
+  );
+
   useEffect(() => {
     summarySV.value = withTiming(filtersDefault ? 0 : 1, { duration: reduceMotion ? 0 : 200 });
   }, [filtersDefault, reduceMotion, summarySV]);
@@ -718,21 +528,24 @@ export function ArchiveScreen() {
     () => ({
       onToggleFavorite: toggleFavorite,
       onToggleDetails: toggleDetails,
-      onTogglePGN: toggleFullDetails,
+      onTogglePGN: togglePGN,
       onSelect: toggleSelect,
       onShare: shareRows,
       onCopyPGN: copyPGN,
       onPreview: openPreview,
       onDelete: scheduleDelete,
       onContext: handleContext,
+      onReplay: handleReplay,
     }),
-    [copyPGN, handleContext, openPreview, scheduleDelete, shareRows, toggleDetails, toggleFavorite, toggleFullDetails, toggleSelect]
+    [copyPGN, handleContext, handleReplay, openPreview, scheduleDelete, shareRows, toggleDetails, toggleFavorite, togglePGN, toggleSelect]
   );
 
   const renderGameRow = useCallback(
     (game: GameRow) => {
-    const { boardFen, lastMove, movesSan } = memoizeBoardState(game, fenCache, lastMoveCache, moveListCache);
-    const personaPreset = game.coachEnabled ? resolvePersona(game.personaId ?? undefined) : null;
+      const { boardFen, lastMove } = memoizeBoardState(game, fenCache, lastMoveCache);
+      const isFavorite = favorites.includes(game.id) || game.is_favorite;
+      const displayDate = displayDates.get(game.id) || '';
+
       return (
         <ArchiveRow
           key={game.id}
@@ -743,34 +556,18 @@ export function ArchiveScreen() {
           selectMode={selectMode}
           selected={selected.has(game.id)}
           expanded={expanded.detailsId === game.id}
-          showFull={expanded.fullDetails.has(game.id)}
-          favorites={favorites}
-          displayDate={displayDates.get(game.id) || ''}
+          showPGN={expanded.pgnOpen.has(game.id)}
+          isFavorite={isFavorite}
+          displayDate={displayDate}
           reduceMotion={reduceMotion}
           myName={myName}
           boardFen={boardFen}
           lastMove={lastMove}
-          sanMoves={movesSan}
-          coachPersona={personaPreset}
-          coachEnabled={Boolean(game.coachEnabled)}
           {...rowCallbacks}
         />
       );
     },
-    [
-      activeTheme,
-      displayDates,
-      expanded.detailsId,
-      expanded.fullDetails,
-      favorites,
-      highContrast,
-      myName,
-      palette,
-      reduceMotion,
-      rowCallbacks,
-      selectMode,
-      selected,
-    ]
+    [activeTheme, displayDates, expanded.detailsId, expanded.pgnOpen, favorites, highContrast, myName, palette, reduceMotion, rowCallbacks, selectMode, selected]
   );
 
   const renderFlatItem = useCallback(
@@ -791,15 +588,17 @@ export function ArchiveScreen() {
     opacity: summarySV.value,
     transform: [{ translateY: (1 - summarySV.value) * -12 }],
   }));
-
   const selectStyle = useAnimatedStyle(() => ({
     opacity: selectSV.value,
     transform: [{ translateY: (1 - selectSV.value) * 28 }],
   }));
-
   const snackbarStyle = useAnimatedStyle(() => ({
     opacity: snackbarSV.value,
     transform: [{ translateY: (1 - snackbarSV.value) * 16 }],
+  }));
+  const bottomSearchStyle = useAnimatedStyle(() => ({
+    opacity: bottomSearchSV.value,
+    transform: [{ translateY: (1 - bottomSearchSV.value) * 48 }],
   }));
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sheetTranslate.value }] }));
@@ -820,6 +619,21 @@ export function ArchiveScreen() {
       }
     });
   }, [overlayMaxOpacity, reduceMotion, sheetOpenSpring, sheetOpacity, sheetTranslate, sheetHeightSV]);
+
+  useEffect(() => {
+    const subOpen = (DeviceEventEmitter as any)?.addListener?.('openArchiveFilters', openFilters);
+    const subScope = (DeviceEventEmitter as any)?.addListener?.('changeArchiveModeFilter', (mode: Filters['mode']) => {
+      setFilters((prev) => ({ ...prev, mode }));
+    });
+    const subQuery = (DeviceEventEmitter as any)?.addListener?.('changeArchiveQuery', (q: string) => {
+      setQuery(q || '');
+    });
+    return () => {
+      try { subOpen?.remove?.(); } catch {}
+      try { subScope?.remove?.(); } catch {}
+      try { subQuery?.remove?.(); } catch {}
+    };
+  }, [openFilters]);
 
   const closeFilters = useCallback(() => {
     setFiltersInteractive(false);
@@ -889,6 +703,7 @@ export function ArchiveScreen() {
     <>
       {Platform.OS === 'ios' ? (
         <SectionList
+          style={{ flex: 1, backgroundColor: palette.background }}
           sections={sectionData}
           keyExtractor={(item, index) => (item?.id ? String(item.id) : `section-item-${index}`)}
           renderItem={({ item }) => (item ? renderGameRow(item) : null)}
@@ -898,16 +713,17 @@ export function ArchiveScreen() {
             </View>
           )}
           stickySectionHeadersEnabled
-          initialNumToRender={12}
-          maxToRenderPerBatch={12}
-          updateCellsBatchingPeriod={40}
-          windowSize={10}
-          removeClippedSubviews={!selectMode && !expanded.detailsId && allowClipped.current}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[palette.primary]} tintColor={palette.primary} />}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 160, paddingTop: 0 }}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 160 }}
           contentInsetAdjustmentBehavior="automatic"
           scrollEventThrottle={16}
-          ListHeaderComponent={
+          onScroll={({ nativeEvent }) => {
+            const y = nativeEvent.contentOffset?.y || 0;
+            const atTop = y <= 4;
+            bottomSearchSV.value = withTiming(atTop ? 1 : 0, { duration: reduceMotion ? 0 : 180 });
+            // archiveTabsSV removed; bottomSearchSV controls the search capsule when needed
+          }}
+          ListHeaderComponent={Platform.OS === 'ios' ? undefined : (
             <ArchiveHeader
               palette={palette}
               total={items.length}
@@ -916,54 +732,39 @@ export function ArchiveScreen() {
               filtersDefault={filtersDefault}
               onOpenFilters={openFilters}
             />
-          }
+          )}
           ListEmptyComponent={<EmptyState palette={palette} onPlay={() => router.push('/(tabs)/play')} />}
-          ListFooterComponent={items.length === 0 ? (
-            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-              <ActivityIndicator color={palette.primary as string} />
-            </View>
-          ) : null}
         />
       ) : (
-        <FlashList
-          ref={listRef}
-          data={flatData}
-          estimatedItemSize={ESTIMATED_ITEM_HEIGHT}
-          renderItem={renderFlatItem}
-          keyExtractor={(item) => item.key}
-          stickyHeaderIndices={stickyIndices}
-          initialNumToRender={12}
-          maxToRenderPerBatch={12}
-          windowSize={10}
-          updateCellsBatchingPeriod={40}
-          getItemType={(item) => item.type}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[palette.primary]} tintColor={palette.primary} />}
-          ListHeaderComponent={
-            <ArchiveHeader
-              palette={palette}
-              total={items.length}
-              query={query}
-              onChangeQuery={setQuery}
-              filtersDefault={filtersDefault}
-              onOpenFilters={openFilters}
-            />
-          }
-          ListEmptyComponent={<EmptyState palette={palette} onPlay={() => router.push('/(tabs)/play')} />}
-          onScrollBeginDrag={() => {
-            labelTimer.current && clearTimeout(labelTimer.current);
-            labelTimer.current = setTimeout(() => setScrollLabel(null), 1200);
-          }}
-          onMomentumScrollEnd={() => {
-            labelTimer.current && clearTimeout(labelTimer.current);
-            labelTimer.current = setTimeout(() => setScrollLabel(null), 800);
-          }}
-          ListFooterComponent={items.length === 0 ? (
-            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-              <ActivityIndicator color={palette.primary as string} />
-            </View>
-          ) : null}
-        />
+        <View style={{ flex: 1, backgroundColor: palette.background }}>
+          <FlashList
+            ref={listRef}
+            data={flatData}
+            estimatedItemSize={ESTIMATED_ITEM_HEIGHT}
+            renderItem={renderFlatItem}
+            keyExtractor={(item) => item.key}
+            stickyHeaderIndices={stickyIndices}
+            showsVerticalScrollIndicator={false}
+            getItemType={(item) => item.type}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[palette.primary]} tintColor={palette.primary} />}
+            ListHeaderComponent={
+              <ArchiveHeader
+                palette={palette}
+                total={items.length}
+                query={query}
+                onChangeQuery={setQuery}
+                filtersDefault={filtersDefault}
+                onOpenFilters={openFilters}
+              />
+            }
+            ListEmptyComponent={<EmptyState palette={palette} onPlay={() => router.push('/(tabs)/play')} />}
+          />
+        </View>
       )}
+
+      {/* iOS: bottom search handled by Archive tabs content (app/profile/archive/(tabs)/all.tsx) */}
+
+      {/* Removed local mode tabs capsule per request */}
 
       {!filtersDefault && (
         <Animated.View style={[styles.summaryBar, summaryStyle]} pointerEvents="box-none">
@@ -1021,7 +822,10 @@ export function ArchiveScreen() {
         )}
       </Animated.View>
 
-      <Animated.View style={[styles.snackbar, { bottom: Math.max(insets.bottom + 12, 24) }, snackbarStyle]} pointerEvents={snackbar ? 'auto' : 'none'}>
+      <Animated.View
+        style={[styles.snackbar, { bottom: Math.max(insets.bottom + 12, 24) }, snackbarStyle]}
+        pointerEvents={snackbar ? 'auto' : 'none'}
+      >
         {snackbar && (
           <GlassCard>
             <View style={styles.snackbarContent}>
@@ -1036,39 +840,64 @@ export function ArchiveScreen() {
         )}
       </Animated.View>
 
-      {scrollLabel && (
-        <View style={styles.scrollLabel}>
-          <Text style={{ color: palette.text, fontWeight: '600' }}>{scrollLabel}</Text>
-        </View>
-      )}
-
       {showFilters && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-          <Animated.View style={[StyleSheet.absoluteFill, styles.overlay, overlayStyle]} pointerEvents="none" />
-          <TouchableOpacity
-            style={StyleSheet.absoluteFill}
-            activeOpacity={1}
-            onPress={closeFilters}
-            disabled={!filtersInteractive}
-            pointerEvents={filtersInteractive ? 'auto' : 'none'}
-          />
-          <GestureDetector gesture={dragGesture} enabled={filtersInteractive}>
-            <Animated.View
-              onLayout={handleSheetLayout}
-              style={[sheetStyle, { position: 'absolute', left: 0, right: 0, bottom: 0 }]}
-              pointerEvents={filtersInteractive ? 'auto' : 'none'}
-            >
-              <FiltersSheet
-                palette={palette}
-                activeTheme={activeTheme}
-                filters={filters}
-                onChange={setFilters}
-                onClose={closeFilters}
-                insets={insets}
+        Platform.OS === 'ios' ? (
+          <Modal visible transparent presentationStyle="overFullScreen" animationType="none" onRequestClose={closeFilters}>
+            <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+              <Animated.View style={[StyleSheet.absoluteFill, styles.overlay, overlayStyle]} pointerEvents="none" />
+              <TouchableOpacity
+                style={StyleSheet.absoluteFill}
+                activeOpacity={1}
+                onPress={closeFilters}
+                disabled={!filtersInteractive}
+                pointerEvents={filtersInteractive ? 'auto' : 'none'}
               />
-            </Animated.View>
-          </GestureDetector>
-        </View>
+              <GestureDetector gesture={dragGesture} enabled={filtersInteractive}>
+                <Animated.View
+                  onLayout={handleSheetLayout}
+                  style={[sheetStyle, { position: 'absolute', left: 0, right: 0, bottom: 0 }]}
+                  pointerEvents={filtersInteractive ? 'auto' : 'none'}
+                >
+                  <FiltersSheet
+                    palette={palette}
+                    activeTheme={activeTheme}
+                    filters={filters}
+                    onChange={setFilters}
+                    onClose={closeFilters}
+                    insets={insets}
+                  />
+                </Animated.View>
+              </GestureDetector>
+            </View>
+          </Modal>
+        ) : (
+          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+            <Animated.View style={[StyleSheet.absoluteFill, styles.overlay, overlayStyle]} pointerEvents="none" />
+            <TouchableOpacity
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
+              onPress={closeFilters}
+              disabled={!filtersInteractive}
+              pointerEvents={filtersInteractive ? 'auto' : 'none'}
+            />
+            <GestureDetector gesture={dragGesture} enabled={filtersInteractive}>
+              <Animated.View
+                onLayout={handleSheetLayout}
+                style={[sheetStyle, { position: 'absolute', left: 0, right: 0, bottom: 0 }]}
+                pointerEvents={filtersInteractive ? 'auto' : 'none'}
+              >
+                <FiltersSheet
+                  palette={palette}
+                  activeTheme={activeTheme}
+                  filters={filters}
+                  onChange={setFilters}
+                  onClose={closeFilters}
+                  insets={insets}
+                />
+              </Animated.View>
+            </GestureDetector>
+          </View>
+        )
       )}
 
       {contextItem && Platform.OS === 'android' && (
@@ -1098,8 +927,8 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
   selectMode: boolean;
   selected: boolean;
   expanded: boolean;
-  showFull: boolean;
-  favorites: string[];
+  showPGN: boolean;
+  isFavorite: boolean;
   displayDate: string;
   onToggleFavorite: (id: string) => void;
   onToggleDetails: (id: string) => void;
@@ -1110,13 +939,11 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
   onPreview: (game: GameRow) => void;
   onDelete: (rows: GameRow[]) => void;
   onContext: (game: GameRow) => void;
+  onReplay: (game: GameRow) => void;
   reduceMotion: boolean;
   myName: string;
   boardFen: string;
   lastMove: { from: string | null; to: string | null };
-  sanMoves: string[];
-  coachPersona: PersonaPreset | null;
-  coachEnabled: boolean;
 }) {
   const {
     game,
@@ -1126,8 +953,8 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
     selectMode,
     selected,
     expanded,
-    showFull,
-    favorites,
+    showPGN,
+    isFavorite,
     displayDate,
     onToggleFavorite,
     onToggleDetails,
@@ -1138,18 +965,16 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
     onPreview,
     onDelete,
     onContext,
+    onReplay,
     reduceMotion,
     myName,
     boardFen,
     lastMove,
-    sanMoves,
-    coachPersona,
-    coachEnabled,
   } = props;
 
   const pressSV = useSharedValue(1);
   const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: pressSV.value }] }));
-  const isFavorite = favorites.includes(game.id) || game.is_favorite;
+  const favorite = isFavorite;
 
   const handlePress = useCallback(() => {
     if (selectMode) {
@@ -1166,16 +991,28 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
   }, [game, onContext, onSelect, selectMode]);
 
   const summary = useMemo(() => computeOutcome(myName, game, palette, activeTheme), [activeTheme, game, myName, palette]);
+  const normalize = (s?: string | null) => (s ?? '').toString().trim().toLowerCase().replace(/\s+/g, '');
+  const meNorm = normalize(myName);
+  const whiteNorm = normalize(game.whiteName);
+  const blackNorm = normalize(game.blackName);
+  const matches = (a: string, b: string) => !!a && !!b && (a === b || a.includes(b) || b.includes(a));
+  const whiteIsMe = !!meNorm && matches(meNorm, whiteNorm);
+  const blackIsMe = !!meNorm && matches(meNorm, blackNorm);
+  const whiteWon = game.result === '1-0';
+  const blackWon = game.result === '0-1';
+  const draw = game.result === '1/2-1/2';
 
   return (
     <AnimatedCard
-      layout={Layout.springify({ damping: 20, stiffness: 240 })}
+      layout={Layout.springify({ damping: 18, stiffness: 260 }).delay(20)}
       style={{
         marginBottom: 12,
-        borderRadius: 18,
-        padding: 16,
+        borderRadius: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         borderWidth: selected ? 2 : StyleSheet.hairlineWidth,
         borderColor: selected ? palette.primary : highContrast ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.08)',
+        backgroundColor: highContrast ? 'rgba(255,255,255,0.06)' : palette.card,
       }}
     >
       <Pressable
@@ -1199,29 +1036,61 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
           </Text>
         </Animated.View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {isFavorite && <Badge label="★" tint={tintWithAlpha(palette.accent as any, 0.24, activeTheme)} textColor={palette.text} />}
+          {favorite && <Badge label="★" tint={tintWithAlpha(palette.accent as any, 0.24, activeTheme)} textColor={palette.text} />}
           {summary && <OutcomeBadge label={summary.label} color={summary.color} />}
-          <Badge label={resultShort(game.result)} tint={badgeTint(game.result, palette, activeTheme)} textColor={activeTheme === 'dark' ? '#111' : '#111'} />
+          <Badge label={resultShort(game.result)} tint={badgeTint(game.result, palette, activeTheme)} textColor={palette.text} />
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={palette.muted as any} />
         </View>
       </Pressable>
 
       {expanded && (
         <Animated.View
-          entering={FadeInDown.springify({ damping: 18, stiffness: 280 })}
-          exiting={FadeOutUp.springify({ damping: 16, stiffness: 240 })}
-          layout={Layout.springify({ damping: 20, stiffness: 240 })}
+          entering={FadeInDown.springify({ damping: 18, stiffness: 280 }).delay(14)}
+          exiting={FadeOutUp.springify({ damping: 16, stiffness: 240 }).delay(8)}
+          layout={Layout.springify({ damping: 20, stiffness: 240 }).delay(14)}
           style={{
-            marginTop: 18,
+            marginTop: 16,
             borderRadius: 18,
-            padding: 16,
-            backgroundColor: highContrast ? 'rgba(20,20,24,0.9)' : 'rgba(118,106,200,0.12)',
+            padding: 18,
+            backgroundColor: highContrast ? 'rgba(16,16,18,0.95)' : 'rgba(0,0,0,0.04)',
             gap: 16,
           }}
         >
+          <View style={styles.matchHeader}>
+            <PlayerPill
+              name={game.whiteName || 'White'}
+              side="white"
+              isMe={whiteIsMe}
+              result={draw ? 'draw' : whiteWon ? 'win' : 'loss'}
+              palette={palette}
+              highContrast={highContrast}
+            />
+            <View style={[styles.scoreBadge, highContrast && { backgroundColor: 'rgba(255,255,255,0.12)' }] }>
+              <Ionicons
+                name={draw ? 'remove-outline' : whiteWon ? 'trophy-outline' : blackWon ? 'trophy-outline' : 'remove-outline'}
+                size={18}
+                color={draw ? palette.text : palette.primary}
+              />
+              <Text style={styles.scoreText}>{game.result || '?-?'}</Text>
+            </View>
+            <PlayerPill
+              name={game.blackName || 'Black'}
+              side="black"
+              isMe={blackIsMe}
+              result={draw ? 'draw' : blackWon ? 'win' : 'loss'}
+              palette={palette}
+              highContrast={highContrast}
+            />
+          </View>
+
           <Pressable
             onPress={() => onPreview(game)}
-            style={{ alignSelf: 'center', borderRadius: 20, overflow: 'hidden', backgroundColor: highContrast ? 'rgba(255,255,255,0.08)' : 'rgba(32,32,48,0.28)' }}
+            style={{
+              alignSelf: 'center',
+              borderRadius: 24,
+              overflow: 'hidden',
+              backgroundColor: highContrast ? 'rgba(255,255,255,0.08)' : 'rgba(28,28,40,0.42)',
+            }}
           >
             <BoardSkia
               fen={boardFen}
@@ -1235,7 +1104,7 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
 
           <View style={{ alignItems: 'center', gap: 8 }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: palette.text }}>Match summary</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
               <Chip label={summary?.label ?? resultShort(game.result)} tone={summary ? 'success' : 'neutral'} />
               <Chip label={modeLabel(game.mode)} />
               <Chip label={`${game.moves} moves`} />
@@ -1243,54 +1112,38 @@ const ArchiveRow = React.memo(function ArchiveRow(props: {
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 }}>
-            <ActionChip label="Share" onPress={() => onShare([game])} />
-            <ActionChip label={isFavorite ? 'Unfavorite' : 'Favorite'} onPress={() => onToggleFavorite(game.id)} />
-            <ActionChip label="Copy PGN" onPress={() => onCopyPGN(game)} />
-            <ActionChip label="Delete" tone="danger" onPress={() => onDelete([game])} />
+          <View style={styles.actionRow}>
+            <ActionChip label="Replay" onPress={() => onReplay(game)} tone="primary" icon="play-circle" />
+            <ActionChip label="Share" onPress={() => onShare([game])} icon="share-social" />
+            <ActionChip label={favorite ? 'Saved' : 'Save'} onPress={() => onToggleFavorite(game.id)} icon={favorite ? 'heart' : 'heart-outline'} />
+            <ActionChip label="Copy PGN" onPress={() => onCopyPGN(game)} icon="copy" />
+            <ActionChip label="Delete" tone="danger" onPress={() => onDelete([game])} icon="trash-outline" />
           </View>
 
-          {showFull && (
-            <View style={{ gap: 16 }}>
-              {sanMoves.length > 0 && <MoveStrip moves={sanMoves} accent={palette.primary as string} />}
-              {coachEnabled && coachPersona && (
-                <CoachCapsule persona={coachPersona} accent={palette.primary as string} highContrast={highContrast} />
-              )}
-              <ScrollView
-                style={{
-                  maxHeight: 220,
-                  borderRadius: 14,
-                  backgroundColor: highContrast ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                  padding: 14,
-                }}
-                nestedScrollEnabled
-                showsVerticalScrollIndicator={false}
-              >
-                <Text style={{ fontFamily: 'Menlo', fontSize: 13, color: palette.text }}>
-                  {game.pgn?.trim() || 'No PGN available.'}
-                </Text>
-              </ScrollView>
-            </View>
-          )}
+          <Pressable
+            onPress={() => onTogglePGN(game.id)}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              borderRadius: 14,
+              backgroundColor: highContrast ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+            }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '600', color: palette.text }}>
+              {showPGN ? 'Hide PGN' : 'View PGN'}
+            </Text>
+            <Ionicons name={showPGN ? 'chevron-up' : 'chevron-down'} size={16} color={palette.muted as any} />
+          </Pressable>
 
-          {!showFull && (
-            <Pressable
-              onPress={() => onTogglePGN(game.id)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingVertical: 14,
-                paddingHorizontal: 18,
-                borderRadius: 14,
-                backgroundColor: highContrast ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-              }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: '600', color: palette.text }}>
-                View details
+          {showPGN && (
+            <ScrollView style={{ maxHeight: 180, borderRadius: 14, backgroundColor: highContrast ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.04)', padding: 14 }} nestedScrollEnabled>
+              <Text style={{ fontFamily: 'Menlo', fontSize: 13, color: palette.text }}>
+                {game.pgn?.trim() || 'No PGN available.'}
               </Text>
-              <Ionicons name="chevron-down" size={18} color={palette.muted as any} />
-            </Pressable>
+            </ScrollView>
           )}
         </Animated.View>
       )}
@@ -1383,6 +1236,7 @@ function ArchiveHeader({
         <Text muted style={{ fontSize: 13 }}>
           {total} {total === 1 ? 'result' : 'results'}
         </Text>
+        {!filtersDefault && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: palette.primary }} />}
       </View>
     </View>
   );
@@ -1403,23 +1257,15 @@ function FiltersSheet({
   onClose: () => void;
   insets: ReturnType<typeof useSafeAreaInsets>;
 }) {
-  return (
-    <View
-      style={{
-        backgroundColor: palette.card,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        width: '100%',
-        maxHeight: '92%',
-        paddingBottom: Math.max(insets.bottom + 12, 20),
-        shadowColor: '#000',
-        shadowOpacity: 0.25,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: -6 },
-      }}
-    >
+  const isDefault =
+    filters.mode === 'all' &&
+    filters.result === 'any' &&
+    filters.sort === 'new' &&
+    !filters.favoritesOnly;
+  const content = (
+    <>
       <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, alignItems: 'center', gap: 10 }}>
-        <View style={{ width: 44, height: 6, borderRadius: 3, backgroundColor: activeTheme === 'dark' ? '#3A3A3C' : '#E5E5EA' }} />
+        <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: activeTheme === 'dark' ? '#3A3A3C' : '#E5E5EA' }} />
         <Text style={{ color: palette.text, fontWeight: '700', fontSize: 18 }}>Filters</Text>
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>
@@ -1466,9 +1312,65 @@ function FiltersSheet({
           <Switch value={filters.favoritesOnly} onValueChange={(value) => onChange({ ...filters, favoritesOnly: value })} />
         </View>
       </ScrollView>
-      <View style={{ paddingHorizontal: 16 }}>
-        <Button title="Done" onPress={onClose} tone="primary" />
+      <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Reset filters"
+            onPress={() => {
+              if (isDefault) return;
+              try { Haptics.selectionAsync(); } catch {}
+              onChange({ mode: 'all', result: 'any', sort: 'new', favoritesOnly: false });
+            }}
+            hitSlop={8}
+          >
+            <Text style={{ color: isDefault ? (activeTheme === 'dark' ? '#6B6B6F' : '#C7C7CC') : '#8E8E93', fontSize: 16, fontWeight: '600' }}>Reset</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Apply filters"
+            onPress={() => { try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {} onClose(); }}
+            hitSlop={8}
+          >
+            <View style={{ backgroundColor: activeTheme === 'dark' ? '#0A84FF' : '#007AFF', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700' }}>Done</Text>
+            </View>
+          </Pressable>
+        </View>
       </View>
+    </>
+  );
+
+  if (Platform.OS === 'ios') {
+    return (
+      <BlurView
+        intensity={40}
+        tint={activeTheme === 'dark' ? 'dark' : 'light'}
+        style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' }}
+      >
+        <View style={{ width: '100%', paddingBottom: Math.max(insets.bottom + 12, 20) }}>
+          {content}
+        </View>
+      </BlurView>
+    );
+  }
+
+  return (
+    <View
+      style={{
+        backgroundColor: palette.card,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        width: '100%',
+        maxHeight: '92%',
+        paddingBottom: Math.max(insets.bottom + 12, 20),
+        shadowColor: '#000',
+        shadowOpacity: 0.25,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: -6 },
+      }}
+    >
+      {content}
     </View>
   );
 }
@@ -1488,6 +1390,33 @@ function FilterGroup({
   activeTheme: ThemeName;
   onChange: (value: string) => void;
 }) {
+  if (Platform.OS === 'ios') {
+    const trackBg = activeTheme === 'dark' ? '#2C2C2E' : '#E5E5EA';
+    const activeBg = activeTheme === 'dark' ? '#636366' : '#FFFFFF';
+    const textColor = palette.text as string;
+    return (
+      <View style={{ marginVertical: 12 }}>
+        <Text style={{ color: palette.text, fontWeight: '600', fontSize: 14, marginBottom: 10 }}>{title}</Text>
+        <View style={{ flexDirection: 'row', backgroundColor: trackBg, borderRadius: 10, padding: 3 }}>
+          {options.map((opt) => {
+            const active = value === opt.id;
+            return (
+              <Pressable
+                key={opt.id}
+                onPress={() => onChange(opt.id)}
+                style={{ flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: active ? activeBg : 'transparent', alignItems: 'center' }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={opt.label}
+              >
+                <Text style={{ textAlign: 'center', fontSize: 15, color: textColor, fontWeight: active ? '600' : '400' }}>{opt.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={{ marginVertical: 12 }}>
       <Text style={{ color: palette.text, fontWeight: '600', fontSize: 14, marginBottom: 10 }}>{title}</Text>
@@ -1647,12 +1576,32 @@ function EmptyState({ palette, onPlay }: { palette: any; onPlay: () => void }) {
   );
 }
 
-function ActionChip({ label, onPress, tone = 'default' }: { label: string; onPress: () => void; tone?: 'default' | 'muted' | 'danger' }) {
-  const background = tone === 'danger' ? 'rgba(255,69,58,0.16)' : tone === 'muted' ? 'rgba(120,120,128,0.16)' : 'rgba(124,77,255,0.16)';
-  const color = tone === 'danger' ? '#FF453A' : tone === 'muted' ? '#8E8E93' : '#7C4DFF';
+function ActionChip({ label, onPress, tone = 'default', icon }: { label: string; onPress: () => void; tone?: 'default' | 'muted' | 'danger' | 'primary'; icon?: string }) {
+  let background: string;
+  let color: string;
+  switch (tone) {
+    case 'danger':
+      background = 'rgba(255,69,58,0.16)';
+      color = '#FF453A';
+      break;
+    case 'muted':
+      background = 'rgba(120,120,128,0.16)';
+      color = '#8E8E93';
+      break;
+    case 'primary':
+      background = 'rgba(88,86,214,0.18)';
+      color = '#5856D6';
+      break;
+    default:
+      background = 'rgba(124,77,255,0.16)';
+      color = '#7C4DFF';
+  }
   return (
     <TouchableOpacity onPress={onPress} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: background }}>
-      <Text style={{ color, fontWeight: '600' }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {icon ? <Ionicons name={icon as any} size={16} color={color as any} /> : null}
+        <Text style={{ color, fontWeight: '600' }}>{label}</Text>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -1684,14 +1633,54 @@ function OutcomeBadge({ label, color }: { label: string; color: string }) {
 
 function GlassCard({ children }: { children: React.ReactNode }) {
   if (Platform.OS === 'ios') {
+    const rnScheme = useColorScheme();
+    const settingsState = useSettings.getState();
+    const sysPref = settingsState.theme === 'system' ? (rnScheme === 'dark' ? 'dark' : 'light') : settingsState.theme;
+    const activeTheme = (sysPref === 'dark' ? 'dark' : 'light') as ThemeName;
     return (
-      <BlurView intensity={30} tint="dark" style={{ borderRadius: 18, overflow: 'hidden' }}>
+      <BlurView intensity={30} tint={activeTheme === 'dark' ? 'dark' : 'light'} style={{ borderRadius: 18, overflow: 'hidden' }}>
         {children}
       </BlurView>
     );
   }
   return (
     <View style={{ borderRadius: 18, overflow: 'hidden', backgroundColor: 'rgba(28,28,30,0.82)' }}>{children}</View>
+  );
+}
+
+function PlayerPill({
+  name,
+  isMe,
+  side,
+  result,
+  palette,
+  highContrast,
+}: {
+  name: string;
+  isMe: boolean;
+  side: 'white' | 'black';
+  result: 'win' | 'loss' | 'draw';
+  palette: any;
+  highContrast: boolean;
+}) {
+  const baseColor = side === 'white' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.24)';
+  const background = isMe
+    ? side === 'white'
+      ? 'rgba(88,86,214,0.22)'
+      : 'rgba(52,199,89,0.22)'
+    : baseColor;
+  const frame = highContrast ? (side === 'white' ? '#FFFFFF' : '#000000') : 'transparent';
+  const resultLabel = result === 'draw' ? 'Draw' : result === 'win' ? 'Won' : 'Lost';
+  return (
+    <View style={[styles.playerPill, { backgroundColor: background, borderColor: frame }] }>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Ionicons name={side === 'white' ? 'ellipse-outline' : 'ellipse'} size={14} color={side === 'white' ? '#FFFFFF' : '#1C1C1E'} />
+        <Text style={[styles.playerName, { color: palette.text }]} numberOfLines={1}>
+          {isMe ? `(you) ${name || (side === 'white' ? 'White' : 'Black')}` : name || (side === 'white' ? 'White' : 'Black')}
+        </Text>
+      </View>
+      <Text style={{ fontSize: 12, opacity: 0.7, marginTop: 2, color: palette.text }}>{resultLabel}</Text>
+    </View>
   );
 }
 
@@ -1708,6 +1697,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  matchHeader: {
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  scoreBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(124,77,255,0.18)',
+    alignItems: 'center',
+    gap: 4,
+  },
+  scoreText: {
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  playerPill: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  playerName: {
+    fontWeight: '600',
+    fontSize: 14,
   },
   selectionBar: {
     position: 'absolute',
@@ -1736,16 +1755,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
-  scrollLabel: {
-    position: 'absolute',
-    right: 12,
-    top: 110,
-    backgroundColor: 'rgba(0,0,0,0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+  actionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
   },
   overlay: {
     backgroundColor: '#000',
+  },
+  bottomSearch: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    opacity: 1,
+  },
+  archiveTabs: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
   },
 });

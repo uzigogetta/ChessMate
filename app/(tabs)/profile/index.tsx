@@ -1,58 +1,61 @@
 import React from 'react';
-import { Screen, Card, Text } from '@/ui/atoms';
-import { Pressable, useColorScheme, View, Platform } from 'react-native';
-import { Stack, useRouter, Link } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useSettings } from '@/features/settings/settings.store';
-import { ThemeName, themes } from '@/ui/tokens';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
+import { Stack, useRouter } from 'expo-router';
+import { Screen, Card, Text } from '@/ui/atoms';
 
 export default function ProfileScreen() {
-  const router = useRouter();
-  const sys = useColorScheme();
-  const mode = useSettings((s) => s.theme);
-  const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
-  const c = themes[active];
-  const insets = useSafeAreaInsets();
-  return (
-    <Screen>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            Platform.OS === 'android' ? (
-              <Pressable hitSlop={10} style={{ padding: 6 }} onPress={() => router.push('/(tabs)/profile/settings')}>
-                <Ionicons name="settings-outline" size={22} color={c.primary} />
-              </Pressable>
-            ) : (
-              <Link href={'/profile/settings'} asChild>
-                <Pressable>
-                  <View style={{ width: 36, height: 36, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-                    <BlurView intensity={25} tint={active} style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name="settings-outline" size={20} color={c.primary} />
-                    </BlurView>
-                  </View>
-                </Pressable>
-              </Link>
-            )
-          )
-        }}
-      />
-      <View style={{ paddingTop: insets.top, alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-        <Card style={{ gap: 12 }}>
-          <Text>Profile</Text>
-          <Pressable onPress={() => router.push('/archive')}>
-            <Text>Open Archive →</Text>
-          </Pressable>
-          {Platform.OS === 'android' && (
-            <Pressable onPress={() => router.push('/(tabs)/profile/settings')}>
-              <Text>Open Settings (Android) →</Text>
-            </Pressable>
-          )}
-        </Card>
-      </View>
-    </Screen>
-  );
+	const router = useRouter();
+	const insets = useSafeAreaInsets();
+	return (
+		<Screen>
+			<Stack.Screen
+				options={{
+					headerTitle: 'Profile',
+					headerLargeTitle: Platform.OS === 'ios',
+					headerTransparent: Platform.OS === 'ios',
+				}}
+			/>
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+				contentContainerStyle={{ padding: 24, paddingBottom: insets.bottom + 140, gap: 20 }}
+			>
+				<Text style={{ fontSize: 24, fontWeight: '700' }}>Your account</Text>
+				<View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+					<QuickAction label="Archive" onPress={() => router.push('/profile/archive')} />
+					<QuickAction label="Stats" onPress={() => router.push('/profile/stats')} />
+					<QuickAction label="Settings" onPress={() => router.push('/(tabs)/profile/settings')} />
+				</View>
+				<Card style={{ alignItems: 'flex-start', gap: 12 }}>
+					<Text style={{ fontSize: 18, fontWeight: '600' }}>Archive</Text>
+					<Text muted>Browse saved matches, replays, and analysis.</Text>
+					<Pressable onPress={() => router.push('/profile/archive')}>
+						<Text style={{ color: '#3178ff', fontWeight: '600' }}>Open Archive →</Text>
+					</Pressable>
+				</Card>
+				<Card style={{ alignItems: 'flex-start', gap: 12 }}>
+					<Text style={{ fontSize: 18, fontWeight: '600' }}>Settings</Text>
+					<Text muted>Adjust themes, notifications, and Coach Mode defaults.</Text>
+					<Pressable onPress={() => router.push('/(tabs)/profile/settings')}>
+						<Text style={{ color: '#3178ff', fontWeight: '600' }}>Open Settings →</Text>
+					</Pressable>
+				</Card>
+			</ScrollView>
+		</Screen>
+	);
+}
+
+function QuickAction({ label, onPress }: { label: string; onPress: () => void }) {
+	return (
+		<Pressable
+			onPress={onPress}
+			style={{ flexGrow: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16, backgroundColor: 'rgba(72,72,74,0.16)', alignItems: 'center' }}
+			accessibilityRole="button"
+		>
+			<Text style={{ fontWeight: '600' }}>{label}</Text>
+		</Pressable>
+	);
 }
 
 

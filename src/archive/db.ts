@@ -12,6 +12,25 @@ export type GameRow = {
   blackName?: string;
 };
 
+export type RecentGameRow = Pick<GameRow, 'id' | 'createdAt' | 'mode' | 'result' | 'moves' | 'whiteName' | 'blackName'>;
+
+export async function listRecentGames(limit = 3): Promise<RecentGameRow[]> {
+  await ensureDb();
+
+  if (usingMemory()) {
+    return Array.from(memory.games.values())
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, limit)
+      .map(({ id, createdAt, mode, result, moves, whiteName, blackName }) => ({ id, createdAt, mode, result, moves, whiteName, blackName }));
+  }
+
+  const sql = `SELECT id, createdAt, mode, result, moves, whiteName, blackName
+               FROM games
+               ORDER BY createdAt DESC
+               LIMIT ?`;
+  return query<RecentGameRow>(sql, [limit]);
+}
+
 let db: any | null = null;
 let sqliteAvailable = false;
 let warnedUnavailable = false;

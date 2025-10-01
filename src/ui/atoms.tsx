@@ -45,27 +45,44 @@ export function Text({ children, style, muted = false }: { children?: React.Reac
   return <RNText style={[{ color: c.text, fontSize: largeUI ? 20 : 18 }, highContrast && { fontWeight: '700' }, muted && { color: c.muted }, style]}>{children}</RNText>;
 }
 
-export function Button({ title, onPress, disabled, style, variant = 'primary' }: { title: string; onPress?: () => void; disabled?: boolean; style?: any; variant?: 'primary' | 'success' }) {
+export function Button({ title, onPress, disabled, style, variant = 'primary' }: { title: string; onPress?: () => void; disabled?: boolean; style?: any; variant?: 'primary' | 'success' | 'ghost' }) {
   const sys = useColorScheme();
   const mode = useSettings((s) => s.theme);
   const highContrast = useSettings((s) => s.highContrast);
   const largeUI = useSettings((s) => s.largeUI);
   const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
   const c = getTheme(active, { highContrast });
-  // In High Contrast, use role-based colors rather than a single primary everywhere
-  const bg = variant === 'success'
+  
+  const bg = variant === 'ghost' 
+    ? 'transparent'
+    : variant === 'success'
     ? (highContrast ? (active === 'dark' ? '#00FF00' : '#007F00') : '#34C759')
     : (c as any).primary;
+    
+  const labelColor = variant === 'ghost'
+    ? (c as any).primary
+    : highContrast ? (active === 'dark' ? '#000000' : '#FFFFFF') : '#FFFFFF';
+    
   return (
     <Pressable
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [{ marginTop: spacing.lg, backgroundColor: bg, paddingVertical: largeUI ? spacing.md : spacing.sm, paddingHorizontal: largeUI ? spacing.xl : spacing.lg, borderRadius: radii.sm, borderWidth: highContrast ? 2 : 0, borderColor: active === 'dark' ? '#FFFFFF' : '#000000' }, disabled && { opacity: 0.8 }, pressed && { opacity: 0.9 }, style]}
+      style={({ pressed }) => [
+        { 
+          marginTop: spacing.lg, 
+          backgroundColor: bg, 
+          paddingVertical: largeUI ? spacing.md : spacing.sm, 
+          paddingHorizontal: largeUI ? spacing.xl : spacing.lg, 
+          borderRadius: radii.sm, 
+          borderWidth: highContrast || variant === 'ghost' ? 2 : 0, 
+          borderColor: variant === 'ghost' ? (c as any).primary : (active === 'dark' ? '#FFFFFF' : '#000000')
+        }, 
+        disabled && { opacity: 0.4 }, 
+        pressed && { opacity: 0.7 }, 
+        style
+      ]}
     >
-      {(() => {
-        const labelColor = highContrast ? (active === 'dark' ? '#000000' : '#FFFFFF') : '#FFFFFF';
-        return <RNText style={{ color: labelColor, fontWeight: highContrast ? '800' : '600', fontSize: largeUI ? 18 : 16 }}>{title}</RNText>;
-      })()}
+      <RNText style={{ color: labelColor, fontWeight: highContrast ? '800' : '600', fontSize: largeUI ? 18 : 16 }}>{title}</RNText>
     </Pressable>
   );
 }
@@ -131,6 +148,42 @@ export function Chip({
         <RNText style={{ color: textColor, fontSize: largeUI ? 15 : 13, fontWeight: highContrast ? '700' : '500' }}>{label}</RNText>
       </View>
     </Pressable>
+  );
+}
+
+export function Badge({ children, tone = 'neutral', style }: { children?: React.ReactNode; tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger'; style?: any }) {
+  const sys = useColorScheme();
+  const mode = useSettings((s) => s.theme);
+  const highContrast = useSettings((s) => s.highContrast);
+  const active: ThemeName = (mode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : mode) as ThemeName;
+  const c = getTheme(active, { highContrast });
+
+  const palette: Record<string, { bg: string; text: string }> = {
+    neutral: { bg: highContrast ? (active === 'dark' ? '#FFFFFF' : '#000000') : 'rgba(148, 163, 184, 0.18)', text: c.text },
+    accent: { bg: highContrast ? '#FFD60A' : (c as any).primary, text: highContrast ? '#000000' : '#FFFFFF' },
+    success: { bg: highContrast ? '#00FF9D' : '#16a34a', text: highContrast ? '#000000' : '#F8FAFC' },
+    warning: { bg: highContrast ? '#FFB800' : '#FBBF24', text: highContrast ? '#000000' : '#111827' },
+    danger: { bg: highContrast ? '#FF375F' : '#EF4444', text: '#FFFFFF' },
+  };
+  const colours = palette[tone] ?? palette.neutral;
+
+  return (
+    <View
+      style={[
+        {
+          alignSelf: 'flex-start',
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+          borderRadius: 999,
+          backgroundColor: colours.bg,
+          borderWidth: highContrast ? 2 : 0,
+          borderColor: highContrast ? (active === 'dark' ? '#000000' : '#FFFFFF') : 'transparent',
+        },
+        style,
+      ]}
+    >
+      <RNText style={{ color: colours.text, fontSize: 12, fontWeight: highContrast ? '800' : '600' }}>{children}</RNText>
+    </View>
   );
 }
 

@@ -16,32 +16,30 @@ export default function ProfileStackLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerTransparent: Platform.OS === 'ios',
-        headerShadowVisible: false,
         headerLargeTitle: Platform.OS === 'ios',
+        headerTransparent: Platform.OS === 'ios',
+        headerStyle: Platform.OS === 'ios' ? undefined : { backgroundColor: c.background },
+        headerLargeTitleShadowVisible: false,
+        headerShadowVisible: Platform.OS !== 'ios',
         headerTitleStyle: { color: c.text },
         headerLargeTitleStyle: { color: c.text },
-        ...(Platform.OS === 'ios'
-          ? { headerBlurEffect }
-          : { headerStyle: { backgroundColor: themes[active].background } }),
-        headerTintColor: headerTint,
+        headerTintColor: active === 'dark' ? '#FFFFFF' : '#000000',
+        ...(Platform.OS === 'ios' ? { headerBlurEffect: 'systemChromeMaterial' } : {}),
+        headerBackTitleVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
       }}
     >
       <Stack.Screen
         name="index"
         options={{
           headerTitle: 'Profile',
-          ...(Platform.OS === 'android'
-            ? {
-                headerRight: () => (
-                  <Link href={'/(tabs)/profile/settings'} asChild>
-                    <Pressable hitSlop={10} style={{ padding: 6 }}>
-                      <Ionicons name="settings-outline" size={22} color={c.text as any} />
-                    </Pressable>
-                  </Link>
-                )
-              }
-            : {})
+          headerRight: () => (
+            <Link href={'/(tabs)/profile/settings'} asChild>
+              <Pressable hitSlop={10} style={{ padding: 6 }}>
+                <Ionicons name="settings-outline" size={22} color={c.primary as any} />
+              </Pressable>
+            </Link>
+          )
         }}
       />
       <Stack.Screen name="settings" options={{ headerTitle: 'Settings', headerBackVisible: true }} initialParams={{ hideTabs: true }} />

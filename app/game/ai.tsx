@@ -1,18 +1,28 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Screen, Card, Text, Button } from '@/ui/atoms';
-import { useWindowDimensions, ScrollView, Pressable } from 'react-native';
+import {
+  useWindowDimensions,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  View,
+  Animated,
+  Easing,
+  useColorScheme,
+  Modal,
+} from 'react-native';
 import { useSettings } from '@/features/settings/settings.store';
 import BoardSkia from '@/features/chess/components/board/BoardSkia';
 import { BoardStatusBanner } from '@/features/chess/components/board/BoardStatusBanner';
 import type { BoardStatus } from '@/features/chess/components/board/BoardCore';
 import { START_FEN, applyMove, fenToBoard, sideToMove, applySANs } from '@/features/chess/logic/chess.rules';
 import { MockEngine } from '@/features/chess/engine/engine.mock';
-import { StockfishEngine } from '@/features/chess/engine/stockfish.engine';
+import type { EngineInitOptions, SearchCapableEngine } from '@/features/chess/engine/engine.types';
+import { configureEngineWithSettings } from '@/features/chess/engine/EngineManager';
 import { detectTerminal } from '@/game/terminal';
 import { buildPGN } from '@/archive/pgn';
 import { insertGame } from '@/archive/db';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useColorScheme } from 'react-native';
 import { themes, ThemeName } from '@/ui/tokens';
 import { getTheme } from '@/ui/tokens';
 import { BlurView } from 'expo-blur';
@@ -21,19 +31,234 @@ import { useReview } from '@/features/view/review.store';
 import { BottomBar } from '@/features/game/BottomBar';
 import { toast } from '@/ui/toast';
 import { ThemeName as TN2 } from '@/ui/tokens';
-import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SND } from '../../assets/snd';
 import { AnimRegistryProvider } from '@/features/chess/animation/AnimRegistry';
 import { useMoveResolver } from '@/features/chess/animation/MoveResolver';
-import { CommentaryStrip, createCommentarySession } from '@/features/commentary';
+import { CommentaryStrip, createCommentarySession, resolvePersona, useCommentarySettings } from '@/features/commentary';
+import { useEngineSettings } from '@/features/chess/engine/engineSettings.store';
+import type { EngineMode } from '@/features/chess/engine/engineSettings.store';
 
-const AI_PERSONA = {
-  name: 'Stockfish 17',
-  title: 'Grandmaster Engine',
-  fallback: '🤖',
-  gradient: ['rgba(67,97,238,0.36)', 'rgba(25,25,35,0.6)'],
+const styles = StyleSheet.create({
+  badgeWrapper: {
+    position: 'relative',
+    marginRight: 8,
+  },
+  badgeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(16,16,22,0.9)',
+  },
+  badgeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    columnGap: 8,
+  },
+  badgeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  badgeLabel: {
+    color: '#f9fafb',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  badgeChevron: {
+    marginLeft: 4,
+  },
+  modalRoot: {
+    flex: 1,
+  },
+  popoverBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8,10,14,0.35)',
+  },
+  popoverAnchor: {
+    position: 'absolute',
+    minWidth: 220,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(17,17,23,0.92)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.12)',
+    zIndex: 1,
+  },
+  popoverBlur: StyleSheet.absoluteFillObject,
+  popoverContent: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  popoverTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    color: '#cbd5f5',
+  },
+  popoverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  popoverRowActive: {
+    backgroundColor: 'rgba(124,58,237,0.22)',
+  },
+  popoverRowLabel: {
+    fontSize: 12,
+    color: '#d1d5db',
+    fontWeight: '500',
+  },
+  popoverRowLabelActive: {
+    color: '#f8fafc',
+    fontWeight: '700',
+  },
+  popoverDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(148,163,184,0.45)',
+  },
+  popoverCaret: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    top: -7,
+    transform: [{ rotate: '45deg' }],
+    backgroundColor: 'rgba(17,17,23,0.92)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+});
+
+const DEFAULT_PERSONA = resolvePersona(undefined);
+
+type EngineDisplayMode = EngineMode | 'fallback';
+
+const ENGINE_LABELS: Record<EngineDisplayMode, string> = {
+  auto: 'Auto Engine',
+  native: 'Native Engine',
+  browser: 'Browser Engine',
+  fallback: 'Fallback Engine',
 };
+
+const ENGINE_OPTIONS: Array<{ key: EngineDisplayMode; label: string }> = [
+  { key: 'auto', label: ENGINE_LABELS.auto },
+  { key: 'native', label: ENGINE_LABELS.native },
+  { key: 'browser', label: ENGINE_LABELS.browser },
+  { key: 'fallback', label: ENGINE_LABELS.fallback },
+];
+
+const EngineBadge = React.memo(function EngineBadge({
+  color,
+  label,
+  expanded,
+  onToggle,
+  options,
+  activeMode,
+}: {
+  color: string;
+  label: string;
+  expanded: boolean;
+  onToggle: () => void;
+  options: Array<{ key: EngineDisplayMode; label: string }>;
+  activeMode: EngineDisplayMode;
+}) {
+  const animation = React.useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const [anchorRect, setAnchorRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const triggerRef = useRef<View>(null);
+
+  useEffect(() => {
+    Animated.timing(animation, {
+      toValue: expanded ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+
+    if (expanded) {
+      requestAnimationFrame(() => {
+        triggerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          const measuredX = (pageX ?? x) ?? 0;
+          const measuredY = (pageY ?? y) ?? 0;
+          setAnchorRect({ x: measuredX, y: measuredY, width: width ?? 0, height: height ?? 0 });
+        });
+      });
+    }
+  }, [animation, expanded]);
+
+  const scale = animation.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
+  const opacity = animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+
+  return (
+    <View style={styles.badgeWrapper}>
+      <Pressable
+        ref={triggerRef}
+        onPress={onToggle}
+        style={[styles.badgeButton, { borderColor: color }]}
+        accessibilityRole="button"
+        accessibilityLabel="Engine status"
+        accessibilityHint="Tap to view engine configuration"
+      >
+        <View style={styles.badgeContent}>
+          <View style={[styles.badgeDot, { backgroundColor: color }]} />
+          <Text style={styles.badgeLabel}>{label}</Text>
+          <Ionicons
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={14}
+            color="#f9fafb"
+            style={styles.badgeChevron}
+          />
+        </View>
+      </Pressable>
+      <Modal transparent visible={expanded} animationType="fade" onRequestClose={onToggle}>
+        <Pressable style={styles.modalRoot} onPress={onToggle}>
+          <Animated.View
+            style={[
+              styles.popoverAnchor,
+              anchorRect
+                ? {
+                    top: Math.max(60, anchorRect.y + anchorRect.height + 6),
+                    left: Math.max(12, anchorRect.x + anchorRect.width - 240),
+                  }
+                : { top: 76, right: 16 },
+              { transform: [{ scale }], opacity },
+            ]}
+          >
+            <BlurView intensity={40} tint="dark" style={styles.popoverBlur} />
+            <View style={styles.popoverContent}>
+              <Text style={styles.popoverTitle}>Engine Modes</Text>
+              {options.map((option) => (
+                <View
+                  key={option.key}
+                  style={[styles.popoverRow, option.key === activeMode && styles.popoverRowActive]}
+                  pointerEvents="none"
+                >
+                  <Text style={[styles.popoverRowLabel, option.key === activeMode && styles.popoverRowLabelActive]}>
+                    {option.label}
+                  </Text>
+                  <View style={[styles.popoverDot, option.key === activeMode && { backgroundColor: color }]} />
+                </View>
+              ))}
+            </View>
+            <View style={[styles.popoverCaret, { right: 24 }]} />
+          </Animated.View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+});
 
 export default function AIGameScreen() {
   const [fen, setFen] = useState(START_FEN);
@@ -43,31 +268,86 @@ export default function AIGameScreen() {
   const params = useLocalSearchParams();
   const levelParam = Number(params.level || 4);
   const level = (Number.isFinite(levelParam) && levelParam >=1 && levelParam <=12 ? (levelParam as any) : 4);
-  // Prefer real Stockfish; fallback to MockEngine if not healthy
-  const [engine, setEngine] = useState<any>(() => new StockfishEngine({ movetimeMs: 300, skill: level }));
-  const [engineStatus, setEngineStatus] = useState<'init'|'stockfish'|'fallback'|'error'>('init');
+  const commentarySettings = useCommentarySettings();
+  const { coach, persona } = params as { coach?: string; persona?: string };
+  const personaId = persona ?? commentarySettings.persona ?? DEFAULT_PERSONA.id;
+  const personaPreset = resolvePersona(personaId ?? DEFAULT_PERSONA.id);
+  const coachEnabledParam = coach === '1' ? true : coach === '0' ? false : commentarySettings.enabled;
+  const [coachEnabled, setCoachEnabled] = useState(coachEnabledParam);
+  const engineSettings = useEngineSettings();
+  const [engine, setEngineInstance] = useState<SearchCapableEngine | MockEngine | null>(null);
+  const [engineStatus, setEngineStatus] = useState<'init'|'ready'|'fallback'|'error'>('init');
+  const [activeEngineMode, setActiveEngineMode] = useState<EngineDisplayMode>(engineSettings.mode);
+  const [engineExpanded, setEngineExpanded] = useState(false);
+
   useEffect(() => {
-    // when level changes, recreate stockfish engine
-    setEngine(new StockfishEngine({ movetimeMs: 300, skill: level }));
+    let mounted = true;
     setEngineStatus('init');
-  }, [level]);
-  useEffect(() => {
-    let cancelled = false;
     (async () => {
       try {
-        await engine.init?.();
-        // quick healthcheck
-        const test = await engine.bestMove?.(START_FEN, 120);
-        if (!cancelled && test && test.from && test.to) setEngineStatus('stockfish');
-      } catch (e) {
-        if (!cancelled) {
-          setEngineStatus('fallback');
-          setEngine(new MockEngine());
-        }
+        const { engine: instance, mode } = await configureEngineWithSettings();
+        if (!mounted) return;
+        setEngineInstance(instance);
+        setActiveEngineMode(mode === 'mock' ? 'fallback' : (mode as EngineDisplayMode));
+        setEngineStatus('ready');
+      } catch (error) {
+        if (!mounted) return;
+        console.warn('[AI] failed to load engine, using mock', error);
+        const mock = new MockEngine();
+        await mock.init();
+        setEngineInstance(mock);
+        setActiveEngineMode('fallback');
+        setEngineStatus('fallback');
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!engine || typeof engine.bestMove !== 'function') {
+      if ((window as any).__engineTest) delete (window as any).__engineTest;
+      return;
+    }
+
+    const helper = async (depth: number = 8) => {
+      const clampedDepth = Math.max(1, Math.min(20, Math.floor(depth)));
+      const budgetMs = 800 + clampedDepth * 120;
+      const start = Date.now();
+      console.log(`[engineTest] bestmove sanity (depth ${clampedDepth})`);
+      try {
+        const move = await engine.bestMove(START_FEN, budgetMs);
+        const elapsedMs = Date.now() - start;
+        console.log(`[engineTest] ok in ${elapsedMs}ms → ${move.san ?? `${move.from}${move.to}`}`);
+        return { ok: true, elapsedMs, move } as const;
+      } catch (error) {
+        console.error('[engineTest] failed', error);
+        return { ok: false, error } as const;
+      }
+    };
+
+    (window as any).__engineTest = helper;
+    console.log('[engineTest] helper registered on window.__engineTest(depth)');
+
+    return () => {
+      if ((window as any).__engineTest === helper) delete (window as any).__engineTest;
+    };
   }, [engine]);
+
+  useEffect(() => {
+    // Apply persona skill bias without full re-init
+    if (!engine) return;
+    const preset = resolvePersona(persona);
+    const skill = Math.max(1, Math.min(12, preset.engine.skill ?? level));
+    const options: EngineInitOptions = {
+      skill: Math.round((skill / 12) * 20),
+    };
+    engine.init(options).catch((error: unknown) => {
+      console.warn('[AI] skill update failed', error);
+    });
+  }, [engine, persona, level]);
   const turn = useMemo(() => fenToBoard(fen).turn, [fen]);
   const { width } = useWindowDimensions();
   const fullEdge = useSettings((s) => s.fullEdgeBoard);
@@ -87,10 +367,27 @@ export default function AIGameScreen() {
   const BAR_HEIGHT = 64;
   const bottomPad = Math.max(insets.bottom, 12) + BAR_HEIGHT + 16;
   const { play, invalid } = useMoveResolver();
-  const commentarySessionRef = useRef(createCommentarySession({ mode: 'ai', playerName: 'You', opponentName: 'Stockfish', aiLevel: level }));
+  const commentarySessionRef = useRef(
+    createCommentarySession({
+      mode: 'ai',
+      playerName: 'You',
+      opponentName: 'Stockfish',
+      aiLevel: level,
+      coachEnabled,
+      personaId: personaPreset.id,
+      detail: commentarySettings.detail,
+    }),
+  );
   const [commentaryRoomId, setCommentaryRoomId] = useState(commentarySessionRef.current.getRoomId());
   const historyRef = useRef<string[]>(history);
   const fenRef = useRef<string>(fen);
+
+  const personaCard = useMemo(() => ({
+    name: personaPreset.name,
+    title: personaPreset.title,
+    fallback: personaPreset.fallback,
+    gradient: personaPreset.gradient,
+  }), [personaPreset]);
 
   useEffect(() => {
     historyRef.current = history;
@@ -101,13 +398,16 @@ export default function AIGameScreen() {
   }, [fen]);
 
   useEffect(() => {
+    commentarySessionRef.current.setCoach(coachEnabled, personaPreset.id, commentarySettings.detail);
     commentarySessionRef.current.updateMeta({
       playerName: mySide === 'white' ? 'You (White)' : 'You (Black)',
       opponentName: mySide === 'white' ? 'Stockfish (Black)' : 'Stockfish (White)',
       aiLevel: level,
+      personaId: personaPreset.id,
+      detail: commentarySettings.detail,
     });
     setCommentaryRoomId(commentarySessionRef.current.getRoomId());
-  }, [mySide, level]);
+  }, [mySide, level, coachEnabled, personaPreset.id, commentarySettings.detail]);
 
   useEffect(() => {
     commentarySessionRef.current.updateMeta({
@@ -118,6 +418,7 @@ export default function AIGameScreen() {
   }, [orientation]);
 
   const emitCommentary = useCallback((prevFen: string, nextFen: string, san: string, historySAN: string[]) => {
+    if (!commentarySessionRef.current.isCoachEnabled()) return;
     const moverColor = fenToBoard(prevFen).turn;
     const moverRole = moverColor === (mySide === 'white' ? 'w' : 'b') ? 'player' : 'ai';
     commentarySessionRef.current.emitMove({
@@ -166,18 +467,23 @@ export default function AIGameScreen() {
     <AnimRegistryProvider>
     <Screen style={{ paddingTop: 0, paddingHorizontal: containerPad }}>
       <Stack.Screen options={{ headerTitle: 'AI Game', headerRight: () => {
-        const color = engineStatus === 'stockfish' ? '#16a34a' : engineStatus === 'fallback' ? '#64748b' : engineStatus === 'error' ? '#ef4444' : '#f59e0b';
-        const label = engineStatus === 'stockfish' ? 'SF' : engineStatus === 'fallback' ? 'FB' : engineStatus === 'error' ? 'ERR' : '…';
+        const color = engineStatus === 'ready' ? '#16a34a' : engineStatus === 'fallback' ? '#64748b' : engineStatus === 'error' ? '#ef4444' : '#f59e0b';
+        const label = engineStatus === 'ready'
+          ? ENGINE_LABELS[activeEngineMode]
+          : engineStatus === 'fallback'
+          ? ENGINE_LABELS.fallback
+          : engineStatus === 'error'
+          ? 'Error'
+          : 'Initialising…';
         return (
-          <Pressable
-            onPress={() => {
-              if (engineStatus === 'stockfish') { setEngine(new MockEngine()); setEngineStatus('fallback'); }
-              else { setEngine(new StockfishEngine({ movetimeMs: 300, skill: level })); setEngineStatus('init'); }
-            }}
-            style={{ marginRight: 8, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 8, backgroundColor: color }}
-          >
-            <Text style={{ color: '#ffffff', fontWeight: '700' }}>{label}</Text>
-          </Pressable>
+          <EngineBadge
+            color={color}
+            label={label}
+            expanded={engineExpanded}
+            onToggle={() => setEngineExpanded((prev) => !prev)}
+            options={ENGINE_OPTIONS}
+            activeMode={activeEngineMode}
+          />
         );
       } }} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="on-drag" style={{ flex: 1 }} contentContainerStyle={{ paddingTop: 8, alignItems: 'center', justifyContent: 'flex-start', gap: 12, paddingBottom: bottomPad }}>
@@ -187,7 +493,14 @@ export default function AIGameScreen() {
           </Text>
         </Card>
         <BoardStatusBanner status={boardStatus} style={{ paddingHorizontal: fullEdge ? 0 : 12 }} />
-        <CommentaryStrip roomId={commentaryRoomId} persona={AI_PERSONA} evaluation={thinking ? 'Thinking…' : undefined} style={{ width: boardSize, alignSelf: 'center' }} />
+        {coachEnabled ? (
+          <CommentaryStrip
+            roomId={commentaryRoomId}
+            persona={personaCard}
+            evaluation={thinking ? 'Thinking…' : undefined}
+            style={{ width: boardSize, alignSelf: 'center' }}
+          />
+        ) : null}
         <BoardSkia
           onStatusChange={handleBoardStatus}
           fen={fen}
@@ -331,6 +644,15 @@ export default function AIGameScreen() {
         boardTheme={settingsVals.boardTheme}
         onSelectBoardTheme={(t)=> settingsVals.setBoardTheme(t)}
         onOpenSettings={() => router.push('/(tabs)/profile/settings')}
+        coach={{
+          available: true,
+          enabled: coachEnabled,
+          onToggle: (value) => {
+            setCoachEnabled(value);
+            commentarySettings.setEnabled(value);
+            commentarySessionRef.current.setCoach(value, personaPreset.id, commentarySettings.detail);
+          },
+        }}
       />
     </Screen>
     </AnimRegistryProvider>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { COMMENTARY_DETAIL_LEVELS, COMMENTARY_PERSONA_IDS, type CommentaryDetailLevel, type CommentaryPersonaId } from './commentary.types';
 import { getJSON, setJSON, KEYS } from '@/features/storage/mmkv';
+import { useSettings } from '@/features/settings/settings.store';
 
 type CommentarySettingsState = {
   enabled: boolean;
@@ -19,7 +20,7 @@ type StoredCommentarySettings = Partial<CommentarySettingsState> & { version?: n
 const COMMENTARY_SETTINGS_VERSION = 1;
 
 const DEFAULTS: Pick<CommentarySettingsState, 'enabled' | 'persona' | 'detail' | 'typingIndicator'> = {
-  enabled: true,
+  enabled: false,
   persona: 'coach',
   detail: 'standard',
   typingIndicator: true,
@@ -49,12 +50,12 @@ function persist(settings: Pick<CommentarySettingsState, 'enabled' | 'persona' |
 
 export const useCommentarySettings = create<CommentarySettingsState>((set) => ({
   ...loadSettings(),
-  setEnabled(value) {
-    set((state) => {
-      const next = { ...state, enabled: value };
-      persist(next);
-      return next;
-    });
+          setEnabled(value) {
+            set((state) => {
+              const next = { ...state, enabled: value };
+              persist(next);
+              return next;
+            });
   },
   setPersona(persona) {
     set((state) => {

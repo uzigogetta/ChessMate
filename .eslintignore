@@ -5,3 +5,4 @@ ios/
 .expo/
 .expo-shared/
 node_modules/
+packages/react-native-stockfish-jsi/

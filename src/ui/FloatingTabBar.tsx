@@ -15,7 +15,7 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = Object.fromEntries
 export default function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const radius = 26;
-  const height = 52; // 26px radius capsule
+  const height = 52;
   const paddingH = 12;
   const bottom = Math.max(8, insets.bottom + 8);
   const sys = useColorScheme();
@@ -27,7 +27,6 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
   const circleRoute = Platform.OS === 'ios' ? state.routes[lastIndex] : null;
   const capsuleRoutes = Platform.OS === 'ios' ? state.routes.slice(0, lastIndex) : state.routes;
 
-  // Detect if current focused nested route requests hiding the tab bar
   const getLeafRoute = (route: any): any => {
     let r = route;
     while (r?.state?.routes && r.state.routes.length) {
@@ -46,7 +45,6 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
   const focusedTabRoute: any = state.routes[state.index];
   const leaf = getLeafRoute(focusedTabRoute);
   const nested = focusedTabRoute?.state;
-  // Show only when at the root of the current tab
   let hideBar = false;
   if (!nested) {
     hideBar = false;
@@ -54,7 +52,6 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
     const idx = typeof nested.index === 'number' ? nested.index : 0;
     hideBar = idx > 0 || (leaf?.name && leaf.name !== 'index');
   }
-  // Honor explicit hide param if present
   hideBar = hideBar || Boolean(leaf?.params?.hideTabs) || Boolean((globalThis as any).__HIDE_TABS__);
   if (hideBar) return null;
 
@@ -80,7 +77,6 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
         ) : (
           <View style={{ flex: 1, backgroundColor: c.background }} />
         )}
-        {/* subtle inner border */}
         <View
           pointerEvents="none"
           style={{ position: 'absolute', inset: 0, borderRadius: radius, borderWidth: Platform.OS === 'ios' ? 0.5 : 0, borderColor: 'rgba(255,255,255,0.28)' }}
@@ -106,7 +102,6 @@ export default function FloatingTabBar({ state, descriptors, navigation }: Botto
             const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
             if (event.defaultPrevented) return;
             if (isFocused) {
-              // Pop to top when re-tapping the current tab
               navigation.emit({ type: 'tabLongPress', target: route.key });
               return;
             }

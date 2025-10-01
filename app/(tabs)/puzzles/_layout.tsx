@@ -8,23 +8,32 @@ export default function PuzzlesStackLayout() {
   const sys = useColorScheme();
   const { theme } = useSettings();
   const active: ThemeName = (theme === 'system' ? (sys === 'dark' ? 'dark' : 'light') : theme) as ThemeName;
-  const headerBlurEffect = 'systemChromeMaterial';
   const headerTint = active === 'dark' ? '#FFFFFF' : '#000000';
   const c = themes[active];
+
   return (
     <Stack
       screenOptions={{
         headerShown: true,
-        headerTransparent: true,
-        headerShadowVisible: false,
         headerLargeTitle: Platform.OS === 'ios',
+        headerTransparent: Platform.OS === 'ios',
+        headerStyle: Platform.OS === 'ios' ? undefined : { backgroundColor: c.background },
+        headerLargeTitleShadowVisible: false,
+        headerShadowVisible: Platform.OS !== 'ios',
         headerTitleStyle: { color: c.text },
         headerLargeTitleStyle: { color: c.text },
-        ...(Platform.OS === 'ios' ? { headerBlurEffect } : { headerStyle: { backgroundColor: themes[active].background } }),
-        headerTintColor: headerTint,
+        headerTintColor: active === 'dark' ? '#FFFFFF' : '#000000',
+        ...(Platform.OS === 'ios' ? { headerBlurEffect: 'systemChromeMaterial' } : {}),
+        headerBackTitleVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
       }}
     >
-      <Stack.Screen name="index" options={{ headerTitle: 'Puzzles' }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          headerTitle: 'Puzzles',
+        }}
+      />
     </Stack>
   );
 }
