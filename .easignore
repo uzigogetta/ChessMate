@@ -1,10 +1,15 @@
+# Ignore local native folders - EAS will generate them fresh via prebuild
+ios/
+android/
+
 # Ignore large files that aren't needed for builds
 android-archive-crash.log
 tmp_archive.tsx
 temp/
 .vscode/
+.env
 
-# Don't ignore the NNUE files - they're needed!
-# !packages/react-native-stockfish-jsi/ios/stockfish.nnue
-# !packages/react-native-stockfish-jsi/android/src/main/assets/stockfish.nnue
+# Don't ignore the native module's folders (needed for compilation)
+!packages/react-native-stockfish-jsi/ios/
+!packages/react-native-stockfish-jsi/android/
 
