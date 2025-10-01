@@ -115,13 +115,62 @@
 - **NPS**: 1-2M (vs ~50k browser)
 - **Status**: Chess.com/Lichess parity
 
-### Next Steps (Testing & Deployment)
-1. **Build iOS**: `npx expo run:ios` (Xcode will compile Stockfish)
-2. **Build Android**: `npx expo run:android` (Gradle NDK build)
-3. **Test native engine**: Should see "Native Stockfish" in console, instant init
-4. **Benchmark**: Compare depth 16 search (should be <2s native vs ~15s browser)
-5. **EAS Builds**: Configure `eas.json` for production builds
-6. **Thermal testing**: Ensure proper throttling on extended searches
+### Phase 4: NPM Publishing & Autolinking Resolution ✅ (2025-10-01 Evening)
+
+#### The Autolinking Journey (7 Build Iterations)
+- **Issue**: EAS builds showed "Found 12 modules" - Stockfish never discovered ❌
+- **Root Cause**: Podspec location + workspace package structure
+
+#### Attempts & Learnings:
+1. ❌ **Workspace package** - Autolinking can't find `packages/` (only looks in `node_modules/`)
+2. ❌ **Custom Podfile** - expo prebuild overwrote it
+3. ❌ **EAS postClone hook** - Created but unclear if executing
+4. ❌ **react-native.config.js** - Didn't help with workspace packages
+5. ❌ **Podspec in `ios/` subfolder** - Autolinking expects ROOT location
+6. ❌ **Podspec not in "files" array** - Wasn't included in npm package
+7. ✅ **Podspec at package root + in "files"** - **THIS WORKED!**
+
+#### Critical Fixes Applied:
+- **Published to npm**: `@uzigogetta/react-native-stockfish-jsi@0.1.4`
+- **Moved podspec**: From `ios/StockfishJSI.podspec` → `react-native-stockfish-jsi.podspec` (root)
+- **Renamed podspec**: `s.name = "react-native-stockfish-jsi"` (matches filename)
+- **Added to files array**: Ensured podspec published in npm tarball
+- **Removed workspace reference**: Changed from `workspace:*` to `0.1.4`
+
+#### Autolinking Success! ✅
+**EAS Build logs showed:**
+```
+Found 13 modules for target ChessMate
+Auto-linking: ...react-native-stockfish-jsi...  ← DISCOVERED! ✅
+Installing react-native-stockfish-jsi (0.1.3)  ← INSTALLED! ✅
+```
+
+### ⚠️ Current Blocker: C++ Compilation Errors
+
+#### Last Build Error (v0.1.3):
+```
+❌ 'ReactCommon/RCTTurboModule.h' file not found
+❌ no member named 'time' in 'Stockfish::Search::InfoFull' (API changed to 'timeMs')
+❌ invalid operands to binary expression (Score output)
+❌ use of undeclared identifier 'send'
+❌ cannot use 'try' with exceptions disabled
+```
+
+#### Temporary Fix Applied (v0.1.4):
+- Simplified C++ bridge to use `UCIEngine` class directly
+- Removed custom InfoFull struct parsing
+- Removed all try/catch blocks
+- Just redirect stdout and queue commands
+- **Status**: Published but UNTESTED (no Mac for local builds)
+
+### Next Steps (Requires Mac Access)
+1. **Build locally**: `npx expo run:ios` (20-30 min first time)
+2. **Get FULL Xcode errors** (not EAS summaries)
+3. **Fix C++ code** based on Stockfish 17.1 actual API
+4. **Iterate** until clean compilation (3-5 iterations expected)
+5. **Test & optimize**: Multi-threading, NNUE, memory, thermal
+6. **Publish v1.0.0**: Production-ready native engine
+7. **EAS Build**: Will work automatically after Mac fixes
 
 ### Key Files Created/Modified
 - `packages/react-native-stockfish-jsi/cpp/StockfishJSI.cpp` (JSI bridge)
