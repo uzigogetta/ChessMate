@@ -1,6 +1,6 @@
 require 'json'
 
-package = JSON.parse(File.read(File.join(__dir__, '../package.json')))
+package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
 
 Pod::Spec.new do |s|
   s.name         = "react-native-stockfish-jsi"
@@ -13,28 +13,28 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/uzigogetta/ChessMate.git", :tag => "#{s.version}" }
 
   s.source_files = [
-    "StockfishJSI.mm",
-    "../cpp/StockfishJSI.cpp",
-    "../cpp/stockfish/src/*.cpp",
-    "../cpp/stockfish/src/nnue/*.cpp",
-    "../cpp/stockfish/src/nnue/features/*.cpp",
-    "../cpp/stockfish/src/syzygy/*.cpp"
+    "ios/StockfishJSI.mm",
+    "cpp/StockfishJSI.cpp",
+    "cpp/stockfish/src/*.cpp",
+    "cpp/stockfish/src/nnue/*.cpp",
+    "cpp/stockfish/src/nnue/features/*.cpp",
+    "cpp/stockfish/src/syzygy/*.cpp"
   ]
 
   s.exclude_files = [
-    "../cpp/stockfish/src/main.cpp",
-    "../cpp/stockfish/src/benchmark.cpp"
+    "cpp/stockfish/src/main.cpp",
+    "cpp/stockfish/src/benchmark.cpp"
   ]
 
   s.public_header_files = []
   
-  s.header_mappings_dir = "../cpp"
+  s.header_mappings_dir = "cpp"
   
-  s.resources = ["stockfish.nnue"]
+  s.resources = ["ios/stockfish.nnue"]
   
   s.pod_target_xcconfig = {
     "HEADER_SEARCH_PATHS" => [
-      "\"$(PODS_TARGET_SRCROOT)/../cpp/stockfish/src\"",
+      "\"$(PODS_TARGET_SRCROOT)/cpp/stockfish/src\"",
       "\"$(PODS_ROOT)/Headers/Public/React-Core\"",
       "\"$(PODS_ROOT)/Headers/Public/React-RCTFabric\"",
       "\"$(PODS_ROOT)/Headers/Public/ReactCommon\"",
