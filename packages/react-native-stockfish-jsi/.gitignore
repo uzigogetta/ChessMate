@@ -1,0 +1,15 @@
+node_modules/
+.gradle/
+build/
+*.iml
+.idea/
+.DS_Store
+*.log
+android/.cxx/
+android/build/
+android/.gradle/
+ios/build/
+*.xcworkspace
+xcuserdata/
+tsconfig.tsbuildinfo
+

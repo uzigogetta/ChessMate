@@ -1,0 +1,3 @@
+[submodule "packages/react-native-stockfish-jsi/cpp/stockfish"]
+	path = packages/react-native-stockfish-jsi/cpp/stockfish
+	url = https://github.com/official-stockfish/Stockfish.git
