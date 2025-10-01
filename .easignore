@@ -1,0 +1,10 @@
+# Ignore large files that aren't needed for builds
+android-archive-crash.log
+tmp_archive.tsx
+temp/
+.vscode/
+
+# Don't ignore the NNUE files - they're needed!
+# !packages/react-native-stockfish-jsi/ios/stockfish.nnue
+# !packages/react-native-stockfish-jsi/android/src/main/assets/stockfish.nnue
+

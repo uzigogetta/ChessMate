@@ -7,6 +7,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "prebuildCommand": "git submodule update --init --recursive",
       "env": {
         "EXPO_PUBLIC_ENV": "development",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
@@ -23,6 +24,7 @@
       "developmentClient": false,
       "distribution": "internal",
       "channel": "preview",
+      "prebuildCommand": "git submodule update --init --recursive",
       "env": {
         "EXPO_PUBLIC_ENV": "preview"
       },
@@ -37,6 +39,7 @@
       "developmentClient": false,
       "distribution": "store",
       "channel": "production",
+      "prebuildCommand": "git submodule update --init --recursive",
       "env": {
         "EXPO_PUBLIC_ENV": "production"
       }
