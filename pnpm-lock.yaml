@@ -36,8 +36,8 @@ importers:
         specifier: ^2.57.4
         version: 2.57.4
       '@uzigogetta/react-native-stockfish-jsi':
-        specifier: 0.1.3
-        version: 0.1.3(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))
+        specifier: 0.1.4
+        version: 0.1.4(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))
       chess.js:
         specifier: ^1.4.0
         version: 1.4.0
@@ -1798,8 +1798,8 @@ packages:
     peerDependencies:
       '@urql/core': ^5.0.0
 
-  '@uzigogetta/react-native-stockfish-jsi@0.1.3':
-    resolution: {integrity: sha512-f9J5fIYzyBD79yQqhJH/+t87TMYk61HutHP+/lwbUMp5bCK+iYszL+7xgy4DsIA3L7oGF4u75XvsW3SnfjIw0w==}
+  '@uzigogetta/react-native-stockfish-jsi@0.1.4':
+    resolution: {integrity: sha512-tmWCM0TRzH+Sy+qhChUEwBlgAhjC790doJMoSeZ72oU/mcDkMRCloMuXGJRQwYMZwJs7lCxfOQxvERXsa5T4Zg==}
     peerDependencies:
       react-native: ^0.81.0
 
@@ -7612,7 +7612,7 @@ snapshots:
       '@urql/core': 5.2.0(graphql@16.11.0)
       wonka: 6.3.5
 
-  '@uzigogetta/react-native-stockfish-jsi@0.1.3(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))':
+  '@uzigogetta/react-native-stockfish-jsi@0.1.4(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0))':
     dependencies:
       react-native: 0.81.4(@babel/core@7.28.4)(@types/react@19.1.13)(react@19.1.0)
 
