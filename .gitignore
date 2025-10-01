@@ -40,8 +40,7 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
+# generated native folders (let EAS handle iOS, keep android local)
 /ios
-/android
 
 .env.local
