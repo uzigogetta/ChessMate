@@ -5,7 +5,7 @@ module.exports = {
         sourceDir: 'android',
       },
       ios: {
-        podspecPath: 'ios/StockfishJSI.podspec',
+        podspecPath: 'ios/react-native-stockfish-jsi.podspec',
       },
     },
   },

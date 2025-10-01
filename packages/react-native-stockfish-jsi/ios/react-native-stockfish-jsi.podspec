@@ -3,14 +3,14 @@ require 'json'
 package = JSON.parse(File.read(File.join(__dir__, '../package.json')))
 
 Pod::Spec.new do |s|
-  s.name         = "StockfishJSI"
+  s.name         = "react-native-stockfish-jsi"
   s.version      = package['version']
-  s.summary      = package['description']
-  s.homepage     = package['homepage']
-  s.license      = package['license']
-  s.authors      = package['author']
+  s.summary      = package['description'] || "Native Stockfish chess engine for React Native"
+  s.homepage     = package['homepage'] || "https://github.com/uzigogetta/ChessMate"
+  s.license      = package['license'] || "MIT"
+  s.authors      = package['author'] || { "uzigogetta" => "dev@example.com" }
   s.platforms    = { :ios => "13.0" }
-  s.source       = { :git => "https://github.com/yourusername/react-native-stockfish-jsi.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/uzigogetta/ChessMate.git", :tag => "#{s.version}" }
 
   s.source_files = [
     "StockfishJSI.mm",
