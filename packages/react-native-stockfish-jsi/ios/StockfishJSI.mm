@@ -1,4 +1,5 @@
 #import <React/RCTBridge+Private.h>
+#import <React/RCTBridgeModule.h>
 #import <jsi/jsi.h>
 #import <Foundation/Foundation.h>
 #import <string>
@@ -17,7 +18,7 @@ std::string getNNUEPath() {
     return "";
 }
 
-@interface StockfishJSI : NSObject
+@interface StockfishJSI : NSObject <RCTBridgeModule>
 @end
 
 @implementation StockfishJSI
@@ -39,6 +40,11 @@ RCT_EXPORT_MODULE()
 
 - (void)invalidate {
     // Cleanup if needed
+}
+
+// Required by RCTBridgeModule protocol
+- (dispatch_queue_t)methodQueue {
+    return dispatch_get_main_queue();
 }
 
 @end
