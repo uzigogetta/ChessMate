@@ -21,7 +21,7 @@
     "@shopify/flash-list": "^2.0.2",
     "@shopify/react-native-skia": "^2.2.12",
     "@supabase/supabase-js": "^2.57.4",
-    "@uzigogetta/react-native-stockfish-jsi": "0.1.4",
+    "@uzigogetta/react-native-stockfish-jsi": "0.1.6",
     "chess.js": "^1.4.0",
     "expo": "~54.0.11",
     "expo-audio": "~1.0.13",
