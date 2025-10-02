@@ -22,8 +22,7 @@ Pod::Spec.new do |s|
   ]
 
   s.exclude_files = [
-    "cpp/stockfish/src/main.cpp",
-    "cpp/stockfish/src/benchmark.cpp"
+    "cpp/stockfish/src/main.cpp"
   ]
 
   s.public_header_files = []
