@@ -1,9 +1,9 @@
 {
   "name": "@uzigogetta/react-native-stockfish-jsi",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "main": "index.ts",
-  "react-native": "src/index.ts",
-  "types": "src/index.ts",
+  "react-native": "index.ts",
+  "types": "index.ts",
   "license": "MIT",
   "keywords": [
     "react-native",
