@@ -10,7 +10,7 @@ let activeMode: RuntimeMode = 'browser';
 
 async function createNativeEngine(): Promise<SearchCapableEngine | null> {
   try {
-    const native = await import('react-native-stockfish-jsi');
+    const native = await import('@uzigogetta/react-native-stockfish-jsi');
     const EngineCtor = native.NativeStockfish ?? native.default;
     if (!EngineCtor) return null;
     return new EngineCtor() as SearchCapableEngine;
