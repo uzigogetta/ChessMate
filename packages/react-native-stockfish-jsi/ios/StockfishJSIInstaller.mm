@@ -1,5 +1,6 @@
 #import "StockfishJSIInstaller.h"
 #import <React/RCTLog.h>
+#import <React/RCTCxxBridge+Private.h>
 #import <jsi/jsi.h>
 
 using namespace facebook;
@@ -33,14 +34,19 @@ RCT_EXPORT_METHOD(install)
     // 1) Prefer executor injected via RCTRuntimeExecutorModule
     RuntimeExecutor executor = _runtimeExecutor;
     
-    // 2) For Old Architecture: install directly when bridge is ready
-    if (!executor && _bridge && _bridge.runtime) {
-        RCTLogInfo(@"🟡 [StockfishJSIInstaller] Using direct bridge.runtime (Old Arch)");
-        auto runtime = (jsi::Runtime *)_bridge.runtime;
-        installStockfish(*runtime);
-        s_installed = true;
-        RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
-        return;
+    // 2) For Old Architecture: get runtime from CxxBridge
+    if (!executor && _bridge) {
+        RCTCxxBridge *cxxBridge = (RCTCxxBridge *)_bridge;
+        if (cxxBridge && [cxxBridge respondsToSelector:@selector(runtime)]) {
+            RCTLogInfo(@"🟡 [StockfishJSIInstaller] Using CxxBridge runtime (Old Arch)");
+            auto runtime = (jsi::Runtime *)cxxBridge.runtime;
+            if (runtime) {
+                installStockfish(*runtime);
+                s_installed = true;
+                RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
+                return;
+            }
+        }
     }
     
     if (!executor) {
