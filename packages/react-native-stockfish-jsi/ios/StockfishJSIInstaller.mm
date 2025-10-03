@@ -25,34 +25,51 @@ RCT_EXPORT_MODULE();
     RCTLogInfo(@"🟢 [StockfishJSIInstaller] Bridge set, ready to install");
 }
 
-RCT_EXPORT_METHOD(install)
+RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     RCTLogInfo(@"🟢 [StockfishJSIInstaller] install() called from JavaScript!");
     
-    if (!self.bridge) {
-        RCTLogError(@"🔴 [StockfishJSIInstaller] Bridge not available");
-        return;
-    }
-    
-    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-    if (!cxxBridge.runtime) {
-        RCTLogError(@"🔴 [StockfishJSIInstaller] Runtime not available");
-        return;
-    }
-    
-    RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI bindings via RuntimeExecutor...");
-    
-    // Use runtime directly (New Arch compatible)
-    jsi::Runtime *runtime = (jsi::Runtime *)cxxBridge.runtime;
-    if (runtime) {
-        @try {
+    @try {
+        if (!self.bridge) {
+            NSString *error = @"Bridge not available";
+            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+            reject(@"NO_BRIDGE", error, nil);
+            return;
+        }
+        
+        RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+        if (!cxxBridge) {
+            NSString *error = @"Not a CxxBridge";
+            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+            reject(@"NOT_CXX_BRIDGE", error, nil);
+            return;
+        }
+        
+        if (!cxxBridge.runtime) {
+            NSString *error = @"Runtime not available";
+            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+            reject(@"NO_RUNTIME", error, nil);
+            return;
+        }
+        
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI bindings...");
+        
+        // Use runtime directly
+        jsi::Runtime *runtime = (jsi::Runtime *)cxxBridge.runtime;
+        if (runtime) {
             installStockfish(*runtime);
             RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
-        } @catch (NSException *exception) {
-            RCTLogError(@"🔴 [StockfishJSIInstaller] Failed to install: %@", exception.reason);
+            resolve(@{@"success": @YES});
+        } else {
+            NSString *error = @"Runtime pointer is null";
+            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+            reject(@"NULL_RUNTIME", error, nil);
         }
-    } else {
-        RCTLogError(@"🔴 [StockfishJSIInstaller] Runtime is null");
+    } @catch (NSException *exception) {
+        NSString *error = [NSString stringWithFormat:@"Exception: %@", exception.reason];
+        RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+        reject(@"EXCEPTION", error, nil);
     }
 }
 
