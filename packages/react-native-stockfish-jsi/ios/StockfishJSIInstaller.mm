@@ -56,19 +56,27 @@ RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
             return;
         }
         
-        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI bindings...");
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI bindings on JS thread...");
         
-        // Use runtime directly
-        jsi::Runtime *runtime = (jsi::Runtime *)cxxBridge.runtime;
-        if (runtime) {
-            installStockfish(*runtime);
-            RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
-            resolve(@{@"success": @YES});
-        } else {
-            NSString *error = @"Runtime pointer is null";
-            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
-            reject(@"NULL_RUNTIME", error, nil);
-        }
+        // CRITICAL: Install on the JavaScript thread!
+        dispatch_async(cxxBridge.jsMessageThread, ^{
+            @try {
+                jsi::Runtime *runtime = (jsi::Runtime *)cxxBridge.runtime;
+                if (runtime) {
+                    installStockfish(*runtime);
+                    RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
+                    resolve(@{@"success": @YES});
+                } else {
+                    NSString *error = @"Runtime pointer is null";
+                    RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+                    reject(@"NULL_RUNTIME", error, nil);
+                }
+            } @catch (NSException *exception) {
+                NSString *error = [NSString stringWithFormat:@"Exception in JS thread: %@", exception.reason];
+                RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+                reject(@"JS_THREAD_EXCEPTION", error, nil);
+            }
+        });
     } @catch (NSException *exception) {
         NSString *error = [NSString stringWithFormat:@"Exception: %@", exception.reason];
         RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
