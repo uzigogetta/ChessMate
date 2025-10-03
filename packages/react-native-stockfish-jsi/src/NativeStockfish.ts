@@ -6,46 +6,58 @@ const LINKING_ERROR =
   `react-native-stockfish-jsi: Native module not found. ` +
   `Did you create a custom dev client and reinstall the app?`;
 
-// Trigger JSI installation via RuntimeExecutor
-function ensureJSIInstalled(): void {
-  const mod = (global as any).StockfishJSI;
-  if (mod) {
+// Helper to get JSI object (lazy)
+function getJSI(): any | undefined {
+  return (global as any).StockfishJSI;
+}
+
+// Ensure JSI is installed and wait for it to be available
+export async function ensureJSIInstalled(timeoutMs = 3000): Promise<void> {
+  // Already installed?
+  if (getJSI()) {
     console.log('[NativeStockfish] ✅ JSI already installed');
     return;
   }
   
+  // Trigger installation
   const installer = NativeModules.StockfishJSIInstaller;
   if (!installer || !installer.install) {
-    console.warn('[NativeStockfish] ⚠️ Installer module not found');
     throw new Error(LINKING_ERROR);
   }
   
   console.log('[NativeStockfish] 🟢 Calling installer.install() (RuntimeExecutor-based)...');
-  installer.install();
-  console.log('[NativeStockfish] 🟢 Installation scheduled on JS thread via RuntimeExecutor');
+  installer.install();  // Schedules async install on JS thread
+  
+  // Poll for global to appear (installer runs async)
+  const start = Date.now();
+  while (!getJSI()) {
+    if (Date.now() - start > timeoutMs) {
+      console.error('[NativeStockfish] ❌ JSI not installed after timeout');
+      throw new Error(LINKING_ERROR);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 16));  // ~60fps polling
+  }
+  
+  console.log('[NativeStockfish] ✅ JSI installed successfully!');
 }
-
-const StockfishJSIResolver = () => {
-  const mod = (global as any).StockfishJSI;
-  if (!mod) throw new Error(LINKING_ERROR);
-  return mod;
-};
 
 type Listener = (line: string) => void;
 
 export class NativeStockfish {
   private listeners: Listener[] = [];
-  private installed = false;
+  private api: any | null = null;
 
   async init(options: Record<string, any> = {}) {
-    if (!this.installed) {
-      ensureJSIInstalled();
-      // Give RuntimeExecutor time to install (async)
-      await new Promise(resolve => setTimeout(resolve, 200));
-      this.installed = true;
+    // Wait for JSI to be installed
+    if (!this.api) {
+      await ensureJSIInstalled();
+      this.api = getJSI();
+      if (!this.api) {
+        throw new Error(LINKING_ERROR);
+      }
     }
     
-    const native = StockfishJSIResolver();
+    const native = this.api;
     native.install?.();
     native.setOnMessage?.((line: string) => {
       for (const listener of this.listeners) {
@@ -56,8 +68,8 @@ export class NativeStockfish {
   }
 
   send(command: string) {
-    const native = StockfishJSIResolver();
-    native.send?.(command);
+    if (!this.api) throw new Error('Engine not initialized');
+    this.api.send?.(command);
   }
 
   onMessage(listener: Listener) {
@@ -65,8 +77,10 @@ export class NativeStockfish {
   }
 
   dispose() {
-    const native = StockfishJSIResolver();
-    native.dispose?.();
+    if (this.api) {
+      this.api.dispose?.();
+    }
+    this.api = null;
     this.listeners = [];
   }
 }

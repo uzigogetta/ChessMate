@@ -25,7 +25,11 @@ RCT_EXPORT_METHOD(install)
     
     auto executor = _runtimeExecutor;
     if (!executor) {
-        RCTLogError(@"🔴 [StockfishJSIInstaller] RuntimeExecutor not available");
+        RCTLogWarn(@"⚠️ [StockfishJSIInstaller] RuntimeExecutor not available yet; retrying in 50ms");
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 50 * NSEC_PER_MSEC),
+                       dispatch_get_main_queue(), ^{
+                           [self install];
+                       });
         return;
     }
 
