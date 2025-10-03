@@ -6,8 +6,8 @@ const LINKING_ERROR =
   `react-native-stockfish-jsi: Native module not found. ` +
   `Did you create a custom dev client and reinstall the app?`;
 
-// Install JSI via RuntimeExecutor (called from JS)
-async function ensureJSIInstalled(): Promise<void> {
+// Trigger JSI installation via RuntimeExecutor
+function ensureJSIInstalled(): void {
   const mod = (global as any).StockfishJSI;
   if (mod) {
     console.log('[NativeStockfish] ✅ JSI already installed');
@@ -21,27 +21,8 @@ async function ensureJSIInstalled(): Promise<void> {
   }
   
   console.log('[NativeStockfish] 🟢 Calling installer.install() (RuntimeExecutor-based)...');
-  
-  try {
-    await installer.install();
-    console.log('[NativeStockfish] 🟢 Installer returned, waiting for JSI...');
-    
-    // Wait for async RuntimeExecutor to complete
-    for (let i = 0; i < 20; i++) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const check = (global as any).StockfishJSI;
-      if (check) {
-        console.log('[NativeStockfish] ✅ JSI installed via RuntimeExecutor!');
-        return;
-      }
-    }
-    
-    console.error('[NativeStockfish] ❌ JSI not installed after 2s timeout');
-    throw new Error(LINKING_ERROR);
-  } catch (error) {
-    console.error('[NativeStockfish] ❌ Installer call failed:', error);
-    throw new Error(LINKING_ERROR);
-  }
+  installer.install();
+  console.log('[NativeStockfish] 🟢 Installation scheduled on JS thread via RuntimeExecutor');
 }
 
 const StockfishJSIResolver = () => {
@@ -58,7 +39,9 @@ export class NativeStockfish {
 
   async init(options: Record<string, any> = {}) {
     if (!this.installed) {
-      await ensureJSIInstalled();
+      ensureJSIInstalled();
+      // Give RuntimeExecutor time to install (async)
+      await new Promise(resolve => setTimeout(resolve, 200));
       this.installed = true;
     }
     

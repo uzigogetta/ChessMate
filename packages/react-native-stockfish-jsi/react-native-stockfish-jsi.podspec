@@ -14,6 +14,7 @@ Pod::Spec.new do |s|
 
   s.source_files = [
     "ios/StockfishJSI.mm",
+    "ios/StockfishJSIInstaller.h",
     "ios/StockfishJSIInstaller.mm",
     "cpp/StockfishJSI.cpp",
     "cpp/stockfish/src/*.cpp",

@@ -1,71 +1,46 @@
-#import <React/RCTBridgeModule.h>
+#import "StockfishJSIInstaller.h"
 #import <React/RCTLog.h>
-#import <ReactCommon/RuntimeExecutor.h>
 #import <jsi/jsi.h>
 
 using namespace facebook;
 using namespace facebook::react;
 
-// Forward declaration from StockfishJSI.cpp
+// Your C++ binder that sets global.StockfishJSI
 extern "C" void installStockfish(jsi::Runtime& rt);
 
-// Protocol for runtime executor (New Architecture)
-@protocol RCTRuntimeExecutorModule <NSObject>
-@property (nonatomic, readonly) RuntimeExecutor runtimeExecutor;
-@end
+@implementation StockfishJSIInstaller
 
-@interface StockfishJSIInstaller : NSObject <RCTBridgeModule, RCTRuntimeExecutorModule>
-@end
+RCT_EXPORT_MODULE(StockfishJSIInstaller);
 
-@implementation StockfishJSIInstaller {
-    BOOL _installed;
-}
+@synthesize runtimeExecutor = _runtimeExecutor; // Injected by React Native
 
-RCT_EXPORT_MODULE();
+static bool s_installed = false;
 
-// Synthesize the runtime executor (injected by React Native)
-@synthesize runtimeExecutor = _runtimeExecutor;
-
-+ (BOOL)requiresMainQueueSetup {
-    return YES;
-}
-
-// Exported method to trigger installation from JavaScript
-RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(install)
 {
-    RCTLogInfo(@"🟢 [StockfishJSIInstaller] install() called from JavaScript!");
-    
-    if (_installed) {
-        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Already installed");
-        resolve(@{@"success": @YES, @"alreadyInstalled": @YES});
+    if (s_installed) {
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Already installed, skipping");
         return;
     }
     
-    RuntimeExecutor executor = _runtimeExecutor;
+    auto executor = _runtimeExecutor;
     if (!executor) {
         RCTLogError(@"🔴 [StockfishJSIInstaller] RuntimeExecutor not available");
-        reject(@"NO_EXECUTOR", @"RuntimeExecutor not available", nil);
         return;
     }
+
+    RCTLogInfo(@"🟢 [StockfishJSIInstaller] Scheduling JSI install via RuntimeExecutor...");
     
-    RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI via RuntimeExecutor...");
-    
-    // Execute on JS thread via RuntimeExecutor (New Arch official way)
-    executor([=](jsi::Runtime& runtime) {
-        @try {
+    executor([=](jsi::Runtime& rt) {
+        try {
             RCTLogInfo(@"🟢 [StockfishJSIInstaller] Running on JS thread, installing bindings...");
-            installStockfish(runtime);
+            installStockfish(rt);  // Sets global.StockfishJSI
+            s_installed = true;
             RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
-        } @catch (NSException *exception) {
-            RCTLogError(@"🔴 [StockfishJSIInstaller] Installation failed: %@", exception.reason);
+        } catch (const std::exception& e) {
+            RCTLogError(@"🔴 [StockfishJSIInstaller] ❌ Install failed: %s", e.what());
         }
     });
-    
-    _installed = YES;
-    
-    // Resolve immediately - installation happens async via executor
-    resolve(@{@"success": @YES});
 }
 
 @end
