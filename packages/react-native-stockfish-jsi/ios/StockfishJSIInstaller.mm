@@ -30,18 +30,22 @@ RCT_EXPORT_MODULE();
     return YES;
 }
 
-// Called when module is initialized - install JSI bindings here!
-- (void)initialize {
-    RCTLogInfo(@"🟢 [StockfishJSIInstaller] initialize() called");
+// Exported method to trigger installation from JavaScript
+RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    RCTLogInfo(@"🟢 [StockfishJSIInstaller] install() called from JavaScript!");
     
     if (_installed) {
-        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Already installed, skipping");
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Already installed");
+        resolve(@{@"success": @YES, @"alreadyInstalled": @YES});
         return;
     }
     
     RuntimeExecutor executor = _runtimeExecutor;
     if (!executor) {
         RCTLogError(@"🔴 [StockfishJSIInstaller] RuntimeExecutor not available");
+        reject(@"NO_EXECUTOR", @"RuntimeExecutor not available", nil);
         return;
     }
     
@@ -54,11 +58,14 @@ RCT_EXPORT_MODULE();
             installStockfish(runtime);
             RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
         } @catch (NSException *exception) {
-            RCTLogError(@"🔴 [StockfishJSIInstaller] Failed: %@", exception.reason);
+            RCTLogError(@"🔴 [StockfishJSIInstaller] Installation failed: %@", exception.reason);
         }
     });
     
     _installed = YES;
+    
+    // Resolve immediately - installation happens async via executor
+    resolve(@{@"success": @YES});
 }
 
 @end
