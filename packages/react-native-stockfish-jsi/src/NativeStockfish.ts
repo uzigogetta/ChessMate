@@ -6,6 +6,14 @@ const LINKING_ERROR =
   `react-native-stockfish-jsi: Native module not found. ` +
   `Did you create a custom dev client and reinstall the app?`;
 
+// 🔍 DEBUG: Check what's available
+console.log('[NativeStockfish] 🔍 All NativeModules:', Object.keys(NativeModules).filter(k => k.includes('Stock') || k.includes('JSI')));
+console.log('[NativeStockfish] 🔍 StockfishJSI exists?', !!NativeModules.StockfishJSI);
+if (NativeModules.StockfishJSI) {
+  console.log('[NativeStockfish] 🔍 StockfishJSI methods:', Object.keys(NativeModules.StockfishJSI));
+}
+console.log('[NativeStockfish] 🔍 global.StockfishJSI exists?', !!(global as any).StockfishJSI);
+
 // Helper to ensure JSI is installed
 async function ensureJSIInstalled(): Promise<void> {
   const mod = (global as any).StockfishJSI;
