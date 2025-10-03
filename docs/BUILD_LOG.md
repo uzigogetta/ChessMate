@@ -1,5 +1,71 @@
 # Build Log
 
+## Session: RuntimeExecutor Bridge Fallback Fix (2025-10-03)
+
+### Phase 7: RuntimeExecutor Bridge Fallback Implementation ✅
+
+**Problem Identified:**
+- RuntimeExecutor NULL when `install()` first called in Expo + RN 0.81 with New Architecture
+- RCTRuntimeExecutorModule protocol path not always injected by React Native
+- Previous retry logic (50ms) kept polling NULL executor indefinitely
+
+**Root Cause:**
+- Expo/RN 0.81 (New Arch) quirk: RuntimeExecutor not consistently injected via RCTRuntimeExecutorModule
+- Bridge provides alternative path to RuntimeExecutor once app bootstraps
+- Need bridge fallback to handle this timing issue
+
+**Solution Implemented:**
+1. **StockfishJSIInstaller.h Changes:**
+   - Added `#import <React/RCTBridge.h>`
+   - Added `#import <React/RCTRuntimeExecutorModule.h>` (use official protocol)
+   - Added `@property (nonatomic, weak) RCTBridge *bridge;` to interface
+   - Removed inline RCTRuntimeExecutorModule protocol definition
+
+2. **StockfishJSIInstaller.mm Changes:**
+   - Added `@synthesize bridge = _bridge;` for bridge injection
+   - Implemented `- (void)setBridge:(RCTBridge *)bridge` with logging
+   - Added two-tier RuntimeExecutor acquisition:
+     1. Primary: `_runtimeExecutor` (RCTRuntimeExecutorModule)
+     2. Fallback: `_bridge.runtimeExecutor` (works in Expo/RN 0.81)
+   - Increased retry delay from 50ms to 70ms
+   - Added logging for bridge fallback path
+
+3. **NativeStockfish.ts Changes:**
+   - Increased timeout from 3000ms to 5000ms
+   - Changed polling interval from 16ms to 25ms
+   - Updated error message to be more specific
+   - Updated log message to mention "bridge fallback"
+
+**Expected Behavior:**
+- When `install()` is called, executor checks in this order:
+  1. Try `_runtimeExecutor` (preferred)
+  2. If NULL, try `_bridge.runtimeExecutor` (fallback)
+  3. If both NULL, retry after 70ms
+- Bridge fallback should succeed once app bootstraps
+- Console logs should show:
+  - `🟢 [StockfishJSIInstaller] setBridge called`
+  - `🟡 [StockfishJSIInstaller] Using bridge.runtimeExecutor fallback` (if needed)
+  - `🟢 [StockfishJSIInstaller] Scheduling JSI install via RuntimeExecutor...`
+  - `🟢 [StockfishJSIInstaller] Running on JS thread, installing bindings...`
+  - `🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!`
+
+**Files Modified:**
+- `packages/react-native-stockfish-jsi/ios/StockfishJSIInstaller.h`
+- `packages/react-native-stockfish-jsi/ios/StockfishJSIInstaller.mm`
+- `packages/react-native-stockfish-jsi/src/NativeStockfish.ts`
+
+**Next Steps:**
+1. Clean Pods: `cd ios && pod deintegrate && pod install && cd ..`
+2. Test on Mac: `npx expo run:ios`
+3. Verify console logs show successful bridge fallback
+4. Test native engine in-game
+5. If successful, publish updated package to npm
+6. Create EAS build with native engine
+
+**Status:** ✅ Implementation complete, ready for testing
+
+---
+
 ## Session: Browser Engine Optimization & Native JSI Preparation (2025-10-01)
 
 ### Phase 1: Browser Engine Production Polish ✅

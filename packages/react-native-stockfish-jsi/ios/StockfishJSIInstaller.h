@@ -1,10 +1,9 @@
 #import <React/RCTBridgeModule.h>
+#import <React/RCTBridge.h>
 #import <ReactCommon/RuntimeExecutor.h>
-
-@protocol RCTRuntimeExecutorModule <NSObject>
-@property (nonatomic, readonly) facebook::react::RuntimeExecutor runtimeExecutor;
-@end
+#import <React/RCTRuntimeExecutorModule.h>
 
 @interface StockfishJSIInstaller : NSObject <RCTBridgeModule, RCTRuntimeExecutorModule>
+@property (nonatomic, weak) RCTBridge *bridge;
 @end
 

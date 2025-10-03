@@ -12,7 +12,7 @@ function getJSI(): any | undefined {
 }
 
 // Ensure JSI is installed and wait for it to be available
-export async function ensureJSIInstalled(timeoutMs = 3000): Promise<void> {
+export async function ensureJSIInstalled(timeoutMs = 5000): Promise<void> {
   // Already installed?
   if (getJSI()) {
     console.log('[NativeStockfish] ✅ JSI already installed');
@@ -25,17 +25,17 @@ export async function ensureJSIInstalled(timeoutMs = 3000): Promise<void> {
     throw new Error(LINKING_ERROR);
   }
   
-  console.log('[NativeStockfish] 🟢 Calling installer.install() (RuntimeExecutor-based)...');
-  installer.install();  // Schedules async install on JS thread
+  console.log('[NativeStockfish] 🟢 Calling installer.install() (RuntimeExecutor-based with bridge fallback)...');
+  installer.install();  // Schedules async install on JS thread (idempotent)
   
   // Poll for global to appear (installer runs async)
   const start = Date.now();
   while (!getJSI()) {
     if (Date.now() - start > timeoutMs) {
       console.error('[NativeStockfish] ❌ JSI not installed after timeout');
-      throw new Error(LINKING_ERROR);
+      throw new Error('react-native-stockfish-jsi: JSI not installed in time');
     }
-    await new Promise((resolve) => setTimeout(resolve, 16));  // ~60fps polling
+    await new Promise((resolve) => setTimeout(resolve, 25));  // Poll every 25ms
   }
   
   console.log('[NativeStockfish] ✅ JSI installed successfully!');
