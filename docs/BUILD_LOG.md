@@ -212,10 +212,15 @@ Installing react-native-stockfish-jsi (0.1.3)  ← INSTALLED! ✅
 - OR use proper TurboModule pattern
 - OR use RCTHost delegate methods (Bridgeless mode)
 
-### Phase 6: New Architecture JSI Installation Fix (2025-10-03) ✅
+### Phase 6: New Architecture JSI Installation - RuntimeExecutor Journey (2025-10-03) ⚡
 
-#### The Solution Implemented (v0.1.9):
-**Dual-Architecture Support** - Works with both Old and New Architecture!
+#### Session Summary:
+Implemented **RuntimeExecutor pattern** (official React Native team recommendation) after discovering Old Architecture patterns don't work in New Arch.
+
+#### Versions & Iterations (v0.1.9 → v0.3.0):
+**v0.1.9-v0.1.13**: Initial attempts with `setBridge` and notifications
+**v0.2.0-v0.2.5**: Attempted various bridge/thread approaches
+**v0.3.0**: **RuntimeExecutor pattern** (current, recommended solution)
 
 ##### iOS Native Side (`ios/StockfishJSI.mm`):
 1. **Retry-based installation** - Polls for runtime availability
@@ -252,14 +257,47 @@ Installing react-native-stockfish-jsi (0.1.3)  ← INSTALLED! ✅
 1. **Old Architecture**: `setBridge` called automatically → JSI installs
 2. **New Architecture**: JS calls `NativeModules.StockfishJSI.install()` → Triggers module load → `setBridge` called → JSI installs with retry logic
 
-#### Next Steps (Testing Required):
-1. **Test locally on Mac**: `npx expo run:ios` (3-5 min per iteration, no EAS credits!)
-2. **Verify** logs show "[StockfishJSI] ✅ Successfully installed JSI bindings"
-3. **Test** `global.StockfishJSI` is available
-4. **Verify** native engine loads and performs
-5. **Publish** working version (v0.1.9)
-6. **ONE final EAS build** (confirmed working)
-7. **Optimize**: Multi-threading, NNUE, performance profiling
+#### Implementation Details (v0.3.0):
+
+**iOS Installer Module:**
+- File: `packages/react-native-stockfish-jsi/ios/StockfishJSIInstaller.h` + `.mm`
+- Protocol: `RCTRuntimeExecutorModule` (official New Arch API)
+- Pattern: `@synthesize runtimeExecutor` → `executor([=](Runtime& rt) { installStockfish(rt); })`
+- Retry logic: 50ms retry if executor not available yet
+- Logging: `RCTLogInfo` for Metro visibility
+
+**JavaScript Wrapper:**
+- Pattern: Lazy polling for `global.StockfishJSI`
+- Triggers: `NativeModules.StockfishJSIInstaller.install()`
+- Polling: 16ms intervals (60fps) with 3s timeout
+- Fixes: Race condition between async install and sync access
+
+**Key Learning:**
+- Old patterns (`setBridge`, notifications, `invokeAsync`) don't work in Expo + New Arch
+- `RuntimeExecutor` is the **official** way (recommended by RN team)
+- JSI installation is **async** via executor - JS must poll for availability
+
+#### Current Status (Mac Testing):
+- ✅ Code compiles successfully
+- ✅ Installer module loads
+- ⚠️ RuntimeExecutor initially NULL (retry logic added)
+- 🧪 **Need to test if retry successfully gets executor**
+
+#### Next Steps:
+1. **Test v0.3.0 on Mac**: `git pull && npx expo run:ios`
+2. **Look for logs**: 
+   - `⚠️ RuntimeExecutor not available yet; retrying...` (may appear)
+   - `🟢 Scheduling JSI install via RuntimeExecutor...` (should appear after retry)
+   - `🟢 ✅ JSI bindings installed successfully!`
+   - `✅ JSI installed successfully!` (from JS polling)
+3. **If works**: Publish v0.3.0 to npm
+4. **Final EAS build** with published package
+5. **If still fails**: May need Expo config plugin to inject AppDelegate code
+
+#### Alternative Paths if RuntimeExecutor Stays NULL:
+1. **Disable New Architecture**: Set `"newArchEnabled": false` in app.json
+2. **Expo Config Plugin**: Inject JSI installation directly in AppDelegate
+3. **Use Browser Engine**: Already production-ready!
 
 ### Resources for Continuation:
 - `docs/CONTINUE_HERE.md` - Full handoff with template for new chat
