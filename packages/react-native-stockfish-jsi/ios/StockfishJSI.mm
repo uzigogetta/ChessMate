@@ -57,9 +57,15 @@ RCT_EXPORT_MODULE()
 }
 
 - (void)bridgeDidInitialize:(NSNotification *)notification {
-    NSLog(@"[StockfishJSI] Bridge did initialize notification received");
+    NSLog(@"[StockfishJSI] ⚡ Bridge did initialize notification received");
     if (!_installed && _bridge) {
+        NSLog(@"[StockfishJSI] ⚡ Attempting to install JSI from notification...");
         [self tryInstallJSI:_bridge];
+        if (_installed) {
+            NSLog(@"[StockfishJSI] ⚡⚡⚡ SUCCESS! JSI installed from notification!");
+        } else {
+            NSLog(@"[StockfishJSI] ⚠️ JSI installation from notification failed");
+        }
     }
 }
 
