@@ -33,10 +33,14 @@ RCT_EXPORT_METHOD(install)
     // 1) Prefer executor injected via RCTRuntimeExecutorModule
     RuntimeExecutor executor = _runtimeExecutor;
     
-    // 2) Fallback: ask the bridge for its executor (works in Expo/RN 0.81)
-    if (!executor && _bridge) {
-        RCTLogInfo(@"🟡 [StockfishJSIInstaller] Using bridge.runtimeExecutor fallback");
-        executor = _bridge.runtimeExecutor;
+    // 2) For Old Architecture: install directly when bridge is ready
+    if (!executor && _bridge && _bridge.runtime) {
+        RCTLogInfo(@"🟡 [StockfishJSIInstaller] Using direct bridge.runtime (Old Arch)");
+        auto runtime = (jsi::Runtime *)_bridge.runtime;
+        installStockfish(*runtime);
+        s_installed = true;
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
+        return;
     }
     
     if (!executor) {
