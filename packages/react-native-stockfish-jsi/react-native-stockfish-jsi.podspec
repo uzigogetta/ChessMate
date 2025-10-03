@@ -16,13 +16,19 @@ Pod::Spec.new do |s|
     "ios/StockfishJSI.mm",
     "cpp/StockfishJSI.cpp",
     "cpp/stockfish/src/*.cpp",
+    "cpp/stockfish/src/*.h",
     "cpp/stockfish/src/nnue/*.cpp",
+    "cpp/stockfish/src/nnue/*.h",
     "cpp/stockfish/src/nnue/features/*.cpp",
-    "cpp/stockfish/src/syzygy/*.cpp"
+    "cpp/stockfish/src/nnue/features/*.h",
+    "cpp/stockfish/src/nnue/layers/*.h",
+    "cpp/stockfish/src/syzygy/*.cpp",
+    "cpp/stockfish/src/syzygy/*.h"
   ]
 
   s.exclude_files = [
-    "cpp/stockfish/src/main.cpp"
+    "cpp/stockfish/src/main.cpp",
+    "cpp/stockfish/src/benchmark.cpp"
   ]
 
   s.public_header_files = []
