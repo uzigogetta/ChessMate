@@ -163,14 +163,76 @@ Installing react-native-stockfish-jsi (0.1.3)  ← INSTALLED! ✅
 - Just redirect stdout and queue commands
 - **Status**: Published but UNTESTED (no Mac for local builds)
 
-### Next Steps (Requires Mac Access)
-1. **Build locally**: `npx expo run:ios` (20-30 min first time)
-2. **Get FULL Xcode errors** (not EAS summaries)
-3. **Fix C++ code** based on Stockfish 17.1 actual API
-4. **Iterate** until clean compilation (3-5 iterations expected)
-5. **Test & optimize**: Multi-threading, NNUE, memory, thermal
-6. **Publish v1.0.0**: Production-ready native engine
-7. **EAS Build**: Will work automatically after Mac fixes
+### Phase 5: Mac Local Debugging & JSI Integration (2025-10-02 Night) ⚠️
+
+#### MacInCloud Setup & Local Testing
+- ✅ Rented MacInCloud (Mac Mini M4, AI Projects preset)
+- ✅ Cloned repo, installed dependencies, downloaded Stockfish submodule
+- ✅ Built locally with `npx expo run:ios`
+
+#### Compilation Fixes (v0.1.5 → v0.1.8):
+1. **v0.1.5**: Removed unused React headers (`RCTUtils.h`, `RCTTurboModule.h`)
+2. **v0.1.6**: Included `benchmark.cpp` (UCIEngine requires it)
+3. **v0.1.7**: Added `RCTBridgeModule` protocol conformance + `methodQueue` method
+4. **v0.1.8**: Fixed package entry points (`"react-native": "index.ts"`)
+
+#### Mac Build Results:
+- ✅ **All Stockfish C++ compiled successfully** (search.cpp, engine.cpp, uci.cpp, etc.)
+- ✅ **Build succeeded**: 0 errors, 1236 warnings (SDK version mismatches only)
+- ✅ **App opened in Simulator** (no crash with v0.1.7+)
+- ⚠️ **Metro couldn't run** (Desktop folder permissions on Managed server)
+
+### ⚠️ Current Blocker: New Architecture JSI Installation
+
+#### The Issue:
+- ✅ Native module **compiles** (Mac proved it)
+- ✅ Autolinking **works** (CocoaPods installs it)
+- ✅ Metro **bundles** it (shows in logs)
+- ❌ `global.StockfishJSI` **not set** at runtime
+- ❌ Error: `"Native module not found"`
+- ⚠️ Falls back to browser engine
+
+#### Root Cause:
+**New Architecture incompatibility:**
+- App has `"newArchEnabled": true` (latest & greatest) ✅
+- Current JSI installation uses Old Architecture `setBridge` method ❌
+- In New Arch, `setBridge` is **never called** ❌
+- JSI installation never happens ❌
+
+#### Current Implementation (Doesn't Work with New Arch):
+```objc
+// ios/StockfishJSI.mm
+- (void)setBridge:(RCTBridge *)bridge {  // ❌ Never called in New Arch
+    installStockfish(*(facebook::jsi::Runtime *)cxxBridge.runtime);
+}
+```
+
+#### What's Needed (New Architecture Compatible):
+- Install JSI in AppDelegate when runtime is ready
+- OR use proper TurboModule pattern
+- OR use RCTHost delegate methods (Bridgeless mode)
+
+### Next Steps (Requires Mac for Rapid Iteration)
+1. **Implement New Arch JSI installation** (AppDelegate or TurboModule)
+2. **Test locally on Mac**: `npx expo run:ios` (3-5 min per iteration, no EAS credits!)
+3. **Verify** `global.StockfishJSI` is available
+4. **Test** native engine loads and performs
+5. **Publish** working version (v0.2.0 or v1.0.0)
+6. **ONE final EAS build** (confirmed working)
+7. **Optimize**: Multi-threading, NNUE, performance profiling
+
+### Resources for Continuation:
+- `docs/CONTINUE_HERE.md` - Full handoff with template for new chat
+- `docs/MAC_QUICKSTART.md` - Mac setup instructions
+- `docs/NATIVE_ENGINE_HANDOFF.md` - Technical details and history
+- Package: https://www.npmjs.com/package/@uzigogetta/react-native-stockfish-jsi
+- Repo: https://github.com/uzigogetta/ChessMate
+
+### Estimated Time to Completion (With Mac):
+- JSI installation fix: 30-60 min
+- Local testing/iteration: 1-2 hours  
+- Performance optimization: 1-2 hours
+- **Total: 3-5 hours to production-ready native engine**
 
 ### Key Files Created/Modified
 - `packages/react-native-stockfish-jsi/cpp/StockfishJSI.cpp` (JSI bridge)
