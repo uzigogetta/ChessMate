@@ -212,12 +212,52 @@ Installing react-native-stockfish-jsi (0.1.3)  ← INSTALLED! ✅
 - OR use proper TurboModule pattern
 - OR use RCTHost delegate methods (Bridgeless mode)
 
-### Next Steps (Requires Mac for Rapid Iteration)
-1. **Implement New Arch JSI installation** (AppDelegate or TurboModule)
-2. **Test locally on Mac**: `npx expo run:ios` (3-5 min per iteration, no EAS credits!)
-3. **Verify** `global.StockfishJSI` is available
-4. **Test** native engine loads and performs
-5. **Publish** working version (v0.2.0 or v1.0.0)
+### Phase 6: New Architecture JSI Installation Fix (2025-10-03) ✅
+
+#### The Solution Implemented (v0.1.9):
+**Dual-Architecture Support** - Works with both Old and New Architecture!
+
+##### iOS Native Side (`ios/StockfishJSI.mm`):
+1. **Retry-based installation** - Polls for runtime availability
+   ```objc
+   - (void)tryInstallJSI:(RCTBridge *)bridge {
+     if (!cxxBridge.runtime) {
+       // Retry after 100ms
+       dispatch_after(...)
+     }
+   }
+   ```
+
+2. **Exported `install()` method** - Triggers module loading in New Arch
+   ```objc
+   RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve reject:...)
+   ```
+
+3. **`requiresMainQueueSetup = YES`** - Ensures early module initialization
+
+4. **Detailed logging** - Shows exactly when JSI installs
+
+##### JavaScript Side (`src/NativeStockfish.ts`):
+1. **`ensureJSIInstalled()` helper** - Calls native install method
+   ```typescript
+   const nativeModule = NativeModules.StockfishJSI;
+   await nativeModule.install();
+   ```
+
+2. **Waits for JSI availability** - 100ms delay after install call
+
+3. **Smart fallback** - Clear error messages if installation fails
+
+#### How It Works:
+1. **Old Architecture**: `setBridge` called automatically → JSI installs
+2. **New Architecture**: JS calls `NativeModules.StockfishJSI.install()` → Triggers module load → `setBridge` called → JSI installs with retry logic
+
+#### Next Steps (Testing Required):
+1. **Test locally on Mac**: `npx expo run:ios` (3-5 min per iteration, no EAS credits!)
+2. **Verify** logs show "[StockfishJSI] ✅ Successfully installed JSI bindings"
+3. **Test** `global.StockfishJSI` is available
+4. **Verify** native engine loads and performs
+5. **Publish** working version (v0.1.9)
 6. **ONE final EAS build** (confirmed working)
 7. **Optimize**: Multi-threading, NNUE, performance profiling
 

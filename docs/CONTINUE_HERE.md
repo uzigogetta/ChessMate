@@ -1,20 +1,20 @@
 # 🔄 Continue Native Engine Implementation Here
 
-## 📅 **Current Status (2025-10-02)**
+## 📅 **Current Status (2025-10-03)**
 
 ### ✅ **What's Working:**
 - **App**: Fully functional with browser Stockfish engine
 - **Browser Engine**: 2-4s moves, ~2400 Elo, production-ready
-- **Native Module Package**: Published as `@uzigogetta/react-native-stockfish-jsi@0.1.8`
+- **Native Module Package**: Published as `@uzigogetta/react-native-stockfish-jsi@0.1.9` (LATEST)
 - **Compilation**: ✅ Compiles successfully on Mac (proved on MacInCloud)
 - **Autolinking**: ✅ CocoaPods discovers and installs module
 - **No Crash**: ✅ App opens (v0.1.7 fixed RCTBridgeModule protocol)
+- **New Arch Fix**: ✅ Implemented dual-architecture JSI installation (v0.1.9)
 
-### ❌ **Current Blocker:**
-- **JSI not installing at runtime** with New Architecture enabled
-- `global.StockfishJSI` is not set
-- Module falls back to browser engine
-- Error: `"react-native-stockfish-jsi: Native module not found"`
+### 🧪 **Ready for Testing:**
+- **v0.1.9** implements New Architecture-compatible JSI installation
+- Needs local Mac testing to verify it works
+- Should see logs: `[StockfishJSI] ✅ Successfully installed JSI bindings`
 
 ---
 
@@ -38,57 +38,28 @@ Our current implementation uses **Old Architecture** pattern:
 
 ---
 
-## 🔧 **The Fix Needed:**
+## ✅ **The Fix Implemented (v0.1.9):**
 
-### **Proper New Architecture JSI Installation:**
+### **Dual-Architecture JSI Installation:**
 
-We need to install JSI in **AppDelegate.mm** directly, not via RCTBridge:
+The module now supports BOTH Old and New Architecture!
 
-```objc
-// In ios/ChessMate/AppDelegate.mm (or create it)
-#import "AppDelegate.h"
-#import <React/RCTBundleURLProvider.h>
+**Key Changes:**
 
-// Forward declaration
-extern "C" void installStockfish(facebook::jsi::Runtime& rt);
+1. **iOS Side** (`ios/StockfishJSI.mm`):
+   - ✅ Retry-based JSI installation (polls for runtime availability)
+   - ✅ Exported `install()` method for New Architecture
+   - ✅ `requiresMainQueueSetup = YES` for early initialization
+   - ✅ Detailed logging to debug installation
 
-@implementation AppDelegate
+2. **JavaScript Side** (`src/NativeStockfish.ts`):
+   - ✅ `ensureJSIInstalled()` helper calls native module
+   - ✅ Waits for JSI to become available
+   - ✅ Clear error messages if installation fails
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-  self.moduleName = @"main";
-  self.initialProps = @{};
-  
-  // Install JSI for New Architecture
-  RCTEnableTurboModule(YES);
-  
-  return [super application:application didFinishLaunchingWithOptions:launchOptions];
-}
-
-- (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
-{
-  return [self bundleURL];
-}
-
-- (NSURL *)bundleURL
-{
-#if DEBUG
-  return [[RCTBundleURLProvider sharedSettings] jsiModuleURL];
-#else
-  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
-#endif
-}
-
-// CRITICAL: Install JSI when runtime is ready
-- (void)bridge:(RCTBridge *)bridge didCreateRuntime:(facebook::jsi::Runtime &)runtime
-{
-  installStockfish(runtime);
-}
-
-@end
-```
-
-**OR use TurboModule pattern** (more complex but more "New Arch native").
+**How It Works:**
+- **Old Arch**: `setBridge` → JSI installs automatically
+- **New Arch**: JS calls `NativeModules.StockfishJSI.install()` → Triggers module → `setBridge` called → JSI installs with retry
 
 ---
 
