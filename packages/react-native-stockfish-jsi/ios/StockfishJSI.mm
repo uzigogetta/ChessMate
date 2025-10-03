@@ -36,8 +36,31 @@ RCT_EXPORT_MODULE()
     if (self = [super init]) {
         _installed = NO;
         NSLog(@"[StockfishJSI] Module initialized");
+        
+        // Listen for bridge ready notification
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(bridgeDidInitialize:)
+                                                     name:RCTJavaScriptDidLoadNotification
+                                                   object:nil];
+        
+        // Also try with a delay as fallback
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if (!self->_installed) {
+                NSLog(@"[StockfishJSI] Attempting delayed JSI installation...");
+                if (self->_bridge) {
+                    [self tryInstallJSI:self->_bridge];
+                }
+            }
+        });
     }
     return self;
+}
+
+- (void)bridgeDidInitialize:(NSNotification *)notification {
+    NSLog(@"[StockfishJSI] Bridge did initialize notification received");
+    if (!_installed && _bridge) {
+        [self tryInstallJSI:_bridge];
+    }
 }
 
 // OLD Architecture: called when bridge is set
@@ -87,6 +110,7 @@ RCT_EXPORT_MODULE()
 
 - (void)invalidate {
     NSLog(@"[StockfishJSI] Module invalidated");
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     _installed = NO;
     _bridge = nil;
 }
