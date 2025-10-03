@@ -1,5 +1,6 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTBridgeModule.h>
+#import <React/RCTLog.h>
 #import <jsi/jsi.h>
 #import <Foundation/Foundation.h>
 #import <string>
@@ -35,6 +36,7 @@ RCT_EXPORT_MODULE()
 - (instancetype)init {
     if (self = [super init]) {
         _installed = NO;
+        RCTLogInfo(@"🔵 [StockfishJSI] Module initialized - THIS SHOULD SHOW IN METRO!");
         NSLog(@"[StockfishJSI] Module initialized");
         
         // Listen for bridge ready notification
@@ -46,6 +48,7 @@ RCT_EXPORT_MODULE()
         // Also try with a delay as fallback
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             if (!self->_installed) {
+                RCTLogInfo(@"🔵 [StockfishJSI] Attempting delayed JSI installation...");
                 NSLog(@"[StockfishJSI] Attempting delayed JSI installation...");
                 if (self->_bridge) {
                     [self tryInstallJSI:self->_bridge];
@@ -57,13 +60,17 @@ RCT_EXPORT_MODULE()
 }
 
 - (void)bridgeDidInitialize:(NSNotification *)notification {
+    RCTLogInfo(@"🔵 [StockfishJSI] ⚡ Bridge did initialize notification received");
     NSLog(@"[StockfishJSI] ⚡ Bridge did initialize notification received");
     if (!_installed && _bridge) {
+        RCTLogInfo(@"🔵 [StockfishJSI] ⚡ Attempting to install JSI from notification...");
         NSLog(@"[StockfishJSI] ⚡ Attempting to install JSI from notification...");
         [self tryInstallJSI:_bridge];
         if (_installed) {
+            RCTLogInfo(@"🔵 [StockfishJSI] ⚡⚡⚡ SUCCESS! JSI installed from notification!");
             NSLog(@"[StockfishJSI] ⚡⚡⚡ SUCCESS! JSI installed from notification!");
         } else {
+            RCTLogInfo(@"🔵 [StockfishJSI] ⚠️ JSI installation from notification failed");
             NSLog(@"[StockfishJSI] ⚠️ JSI installation from notification failed");
         }
     }
@@ -72,12 +79,14 @@ RCT_EXPORT_MODULE()
 // OLD Architecture: called when bridge is set
 - (void)setBridge:(RCTBridge *)bridge {
     _bridge = bridge;
+    RCTLogInfo(@"🔵 [StockfishJSI] setBridge called!");
+    NSLog(@"[StockfishJSI] setBridge called");
     if (_installed) {
+        RCTLogInfo(@"🔵 [StockfishJSI] Already installed, skipping");
         NSLog(@"[StockfishJSI] Already installed, skipping");
         return;
     }
     
-    NSLog(@"[StockfishJSI] setBridge called");
     [self tryInstallJSI:bridge];
 }
 
