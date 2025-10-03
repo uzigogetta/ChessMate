@@ -49,25 +49,29 @@ RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
             return;
         }
         
-        if (!cxxBridge.runtime) {
-            NSString *error = @"Runtime not available";
-            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
-            reject(@"NO_RUNTIME", error, nil);
-            return;
-        }
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Scheduling JSI installation on JS thread...");
         
-        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI bindings...");
-        
-        jsi::Runtime *runtime = (jsi::Runtime *)cxxBridge.runtime;
-        if (runtime) {
-            installStockfish(*runtime);
-            RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
-            resolve(@{@"success": @YES});
-        } else {
-            NSString *error = @"Runtime pointer is null";
-            RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
-            reject(@"NULL_RUNTIME", error, nil);
-        }
+        // Use invokeAsync to ensure we're on the JS thread when accessing runtime
+        [cxxBridge invokeAsync:^{
+            @try {
+                jsi::Runtime *runtime = (jsi::Runtime *)cxxBridge.runtime;
+                if (!runtime) {
+                    NSString *error = @"Runtime not available";
+                    RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+                    reject(@"NO_RUNTIME", error, nil);
+                    return;
+                }
+                
+                RCTLogInfo(@"🟢 [StockfishJSIInstaller] Installing JSI bindings on JS thread...");
+                installStockfish(*runtime);
+                RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
+                resolve(@{@"success": @YES});
+            } @catch (NSException *exception) {
+                NSString *error = [NSString stringWithFormat:@"Exception on JS thread: %@", exception.reason];
+                RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
+                reject(@"JS_THREAD_EXCEPTION", error, nil);
+            }
+        }];
     } @catch (NSException *exception) {
         NSString *error = [NSString stringWithFormat:@"Exception: %@", exception.reason];
         RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
