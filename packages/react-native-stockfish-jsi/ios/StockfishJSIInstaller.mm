@@ -9,20 +9,16 @@ using namespace facebook;
 extern "C" void installStockfish(jsi::Runtime& rt);
 
 @interface StockfishJSIInstaller : NSObject <RCTBridgeModule>
-@property (nonatomic, weak) RCTBridge *bridge;
 @end
 
 @implementation StockfishJSIInstaller
 
 RCT_EXPORT_MODULE();
 
+@synthesize bridge = _bridge;
+
 + (BOOL)requiresMainQueueSetup {
     return YES;
-}
-
-- (void)setBridge:(RCTBridge *)bridge {
-    self.bridge = bridge;
-    RCTLogInfo(@"🟢 [StockfishJSIInstaller] Bridge set, ready to install");
 }
 
 RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
@@ -31,14 +27,21 @@ RCT_EXPORT_METHOD(install:(RCTPromiseResolveBlock)resolve
     RCTLogInfo(@"🟢 [StockfishJSIInstaller] install() called from JavaScript!");
     
     @try {
-        if (!self.bridge) {
+        RCTBridge *bridge = [RCTBridge currentBridge];
+        if (!bridge) {
+            bridge = _bridge;
+        }
+        
+        if (!bridge) {
             NSString *error = @"Bridge not available";
             RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
             reject(@"NO_BRIDGE", error, nil);
             return;
         }
         
-        RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Bridge found, casting to CxxBridge...");
+        
+        RCTCxxBridge *cxxBridge = (RCTCxxBridge *)bridge;
         if (!cxxBridge) {
             NSString *error = @"Not a CxxBridge";
             RCTLogError(@"🔴 [StockfishJSIInstaller] %@", error);
