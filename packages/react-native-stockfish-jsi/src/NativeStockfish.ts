@@ -6,53 +6,37 @@ const LINKING_ERROR =
   `react-native-stockfish-jsi: Native module not found. ` +
   `Did you create a custom dev client and reinstall the app?`;
 
-// Install JSI bindings via the installer module (New Architecture compatible)
-let installAttempted = false;
-
+// Auto-install happens in native initialize() method (RuntimeExecutor-based)
+// Just wait for it to be available
 async function ensureJSIInstalled(): Promise<void> {
-  // Check if already installed
   const mod = (global as any).StockfishJSI;
   if (mod) {
     console.log('[NativeStockfish] ✅ JSI already installed');
     return;
   }
   
-  // Only try installation once
-  if (!installAttempted) {
-    installAttempted = true;
-    
-    // Use the installer module (RuntimeExecutor-based, New Arch compatible)
-    const installer = NativeModules.StockfishJSIInstaller;
-    if (installer && installer.install) {
-      console.log('[NativeStockfish] 🟢 Calling StockfishJSIInstaller.install()...');
-      try {
-        await installer.install();
-        console.log('[NativeStockfish] 🟢 Installer called successfully');
-        
-        // Give it a moment to install
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Check if it worked
-        const modAfter = (global as any).StockfishJSI;
-        if (modAfter) {
-          console.log('[NativeStockfish] ✅ JSI installed successfully!');
-          return;
-        } else {
-          console.warn('[NativeStockfish] ⚠️ Installer called but JSI not available yet');
-        }
-      } catch (error) {
-        console.error('[NativeStockfish] ❌ Installer failed:', error);
-      }
-    } else {
-      console.warn('[NativeStockfish] ⚠️ StockfishJSIInstaller module not found');
+  // Trigger module load by accessing it
+  const installer = NativeModules.StockfishJSIInstaller;
+  if (!installer) {
+    console.warn('[NativeStockfish] ⚠️ Installer module not found');
+    throw new Error(LINKING_ERROR);
+  }
+  
+  console.log('[NativeStockfish] 🟢 Installer module loaded, waiting for JSI...');
+  
+  // Wait for auto-installation to complete (happens in native initialize())
+  for (let i = 0; i < 20; i++) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const check = (global as any).StockfishJSI;
+    if (check) {
+      console.log('[NativeStockfish] ✅ JSI installed via RuntimeExecutor!');
+      return;
     }
   }
   
-  // Final check
-  const finalCheck = (global as any).StockfishJSI;
-  if (!finalCheck) {
-    throw new Error(LINKING_ERROR);
-  }
+  // Still not available after 2 seconds
+  console.error('[NativeStockfish] ❌ JSI not installed after 2s timeout');
+  throw new Error(LINKING_ERROR);
 }
 
 const StockfishJSIResolver = () => {
