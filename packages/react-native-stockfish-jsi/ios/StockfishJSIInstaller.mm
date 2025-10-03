@@ -32,14 +32,10 @@ RCT_EXPORT_METHOD(install)
     RCTLogInfo(@"🟢 [StockfishJSIInstaller] Scheduling JSI install via RuntimeExecutor...");
     
     executor([=](jsi::Runtime& rt) {
-        try {
-            RCTLogInfo(@"🟢 [StockfishJSIInstaller] Running on JS thread, installing bindings...");
-            installStockfish(rt);  // Sets global.StockfishJSI
-            s_installed = true;
-            RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
-        } catch (const std::exception& e) {
-            RCTLogError(@"🔴 [StockfishJSIInstaller] ❌ Install failed: %s", e.what());
-        }
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] Running on JS thread, installing bindings...");
+        installStockfish(rt);  // Sets global.StockfishJSI
+        s_installed = true;
+        RCTLogInfo(@"🟢 [StockfishJSIInstaller] ✅ JSI bindings installed successfully!");
     });
 }
 
