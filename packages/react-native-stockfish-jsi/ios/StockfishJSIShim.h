@@ -1,8 +1,10 @@
 #import <Foundation/Foundation.h>
 
+@class EXJavaScriptRuntime;
+
 @interface StockfishJSIShim : NSObject
 
-+ (void)installWithRuntime:(void *)runtime;
++ (void)installWithRuntime:(nonnull EXJavaScriptRuntime *)runtime;
 
 @end
 

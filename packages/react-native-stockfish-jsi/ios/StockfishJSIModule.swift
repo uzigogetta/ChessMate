@@ -4,38 +4,35 @@ public class StockfishJSIModule: Module {
   private static var isInstalled = false
   
   public func definition() -> ModuleDefinition {
-    Name("StockfishJSIModule")
+    Name("StockfishJSI")
     
+    // Try to install as soon as the module is created
     OnCreate {
-      // Check if runtime is already available
-      if let runtime = appContext?.runtime {
-        installJSIBindings(runtime: runtime)
-      }
-      
-      // Subscribe to runtime availability (for bridgeless mode)
-      appContext?.runtimeManager?.onRuntimeAvailable { [weak self] runtime in
-        self?.installJSIBindings(runtime: runtime)
-      }
+      self.tryInstall()
     }
     
-    // Optional: manual trigger from JS (idempotent)
-    Function("install") {
-      if let runtime = appContext?.runtime {
-        installJSIBindings(runtime: runtime)
-      }
+    // Fallback that JS can call if needed
+    Function("ensureInstalled") { () -> Bool in
+      self.tryInstall()
+      return Self.isInstalled
     }
   }
   
-  private func installJSIBindings(runtime: JavaScriptRuntime) {
-    guard !Self.isInstalled else {
-      NSLog("🟢 [StockfishJSIModule] Already installed, skipping")
-      return
-    }
+  private func tryInstall() {
+    guard !Self.isInstalled else { return }
     
+    if let runtime = self.appContext?.runtime {
+      self.installJSI(runtime: runtime)
+    } else {
+      NSLog("⚠️ [StockfishJSIModule] JavaScript runtime not ready yet; will install on demand")
+    }
+  }
+  
+  private func installJSI(runtime: JavaScriptRuntime) {
     NSLog("🟢 [StockfishJSIModule] Installing JSI bindings via Expo Module...")
     
-    // Call ObjC++ shim to install C++ bindings
-    StockfishJSIShim.install(withRuntime: runtime.runtime)
+    // Pass the JavaScriptRuntime wrapper directly to the ObjC++ shim
+    StockfishJSIShim.install(withRuntime: runtime)
     
     Self.isInstalled = true
     NSLog("🟢 [StockfishJSIModule] ✅ JSI bindings installed successfully!")
