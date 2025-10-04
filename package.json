@@ -9,7 +9,13 @@
     "web": "expo start --web",
     "test": "jest",
     "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "ios:build:clean": "rm -rf ios && npx expo prebuild --clean && cd ios && pod install --repo-update && cd .. && npx expo run:ios --no-build-cache",
+    "ios:metro": "npx expo start -c --dev-client",
+    "ios:dev": "./scripts/ios-dev.sh",
+    "dev:ios-remote": "cross-env EXPO_USE_DEV_SERVER=1 EXPO_NO_TELEMETRY=1 cross-env NODE_OPTIONS=--max_old_space_size=4096 expo start --tunnel --clear",
+    "build:ios:sim": "eas build --platform ios --profile dev-sim --non-interactive",
+    "build:ios:list": "eas build:list --platform ios --status finished --limit 10"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -70,7 +76,8 @@
     "jest-expo": "^54.0.12",
     "msw": "^2.11.2",
     "prettier": "^3.6.2",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "cross-env": "^7.0.3"
   },
   "private": true,
   "pnpm": {

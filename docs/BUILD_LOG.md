@@ -510,3 +510,10 @@ Delta (2025-09-13T19:34:00Z)
 - Icons/splash references present; placeholders retained. ✅
 
 
+```md
+Delta (2025-10-04T00:00:00Z)
+- Added iOS helper scripts:
+  - `ios:build:clean` (clean prebuild + pods + dev client)
+  - `ios:metro` (Metro only, dev client)
+  - `scripts/ios-dev.sh` (rebuild-on-native-change or start Metro)
+- Updated README with MacinCloud workflow (Windows edit, Mac run).
