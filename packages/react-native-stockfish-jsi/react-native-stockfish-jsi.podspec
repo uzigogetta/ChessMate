@@ -16,8 +16,9 @@ Pod::Spec.new do |s|
     "ios/StockfishJSI.mm",
     "ios/StockfishJSIInstaller.h",
     "ios/StockfishJSIInstaller.mm",
-    "ios/StockfishModule.h",
-    "ios/StockfishModule.mm",
+    "ios/StockfishJSIShim.h",
+    "ios/StockfishJSIShim.mm",
+    "ios/StockfishJSIModule.swift",
     "cpp/StockfishJSI.cpp",
     "cpp/stockfish/src/*.cpp",
     "cpp/stockfish/src/*.h",
@@ -29,6 +30,8 @@ Pod::Spec.new do |s|
     "cpp/stockfish/src/syzygy/*.cpp",
     "cpp/stockfish/src/syzygy/*.h"
   ]
+  
+  s.swift_version = "5.0"
 
   s.exclude_files = [
     "cpp/stockfish/src/main.cpp"
