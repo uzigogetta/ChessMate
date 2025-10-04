@@ -1,5 +1,6 @@
 #import "StockfishJSIInstaller.h"
 #import <React/RCTLog.h>
+#import <ReactCommon/RuntimeExecutor.h>
 #import <jsi/jsi.h>
 
 using namespace facebook;
@@ -7,6 +8,14 @@ using namespace facebook::react;
 
 // Your C++ binder that sets global.StockfishJSI
 extern "C" void installStockfish(jsi::Runtime& rt);
+
+// Define the protocol in .mm file (C++ types OK here)
+@protocol RCTRuntimeExecutorModule <NSObject>
+@property (nonatomic, readonly) RuntimeExecutor runtimeExecutor;
+@end
+
+@interface StockfishJSIInstaller () <RCTRuntimeExecutorModule>
+@end
 
 @implementation StockfishJSIInstaller
 
