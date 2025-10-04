@@ -16,6 +16,8 @@ Pod::Spec.new do |s|
     "ios/StockfishJSI.mm",
     "ios/StockfishJSIInstaller.h",
     "ios/StockfishJSIInstaller.mm",
+    "ios/StockfishModule.h",
+    "ios/StockfishModule.mm",
     "cpp/StockfishJSI.cpp",
     "cpp/stockfish/src/*.cpp",
     "cpp/stockfish/src/*.h",
@@ -74,4 +76,5 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
   s.dependency "React-callinvoker"
   s.dependency "ReactCommon/turbomodule/core"
+  s.dependency "ExpoModulesCore"
 end
