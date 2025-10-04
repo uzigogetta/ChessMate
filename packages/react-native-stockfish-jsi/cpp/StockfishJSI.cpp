@@ -199,7 +199,7 @@ void dispose(jsi::Runtime& rt) {
 // Install function
 extern "C" {
 
-void installStockfish(jsi::Runtime& rt) {
+void installStockfishBindings(jsi::Runtime& rt) noexcept {
     auto installFn = jsi::Function::createFromHostFunction(
         rt,
         jsi::PropNameID::forAscii(rt, "install"),

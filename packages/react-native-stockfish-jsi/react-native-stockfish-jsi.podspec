@@ -12,33 +12,26 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "13.0" }
   s.source       = { :git => "https://github.com/uzigogetta/ChessMate.git", :tag => "#{s.version}" }
 
-  # Compile all sources (ObjC/Swift/C++)
   s.source_files = [
     "ios/**/*.{m,mm,h,swift}",
-    "cpp/**/*.{cpp,h,hpp}"
+    "cpp/**/*.{cpp,h,hpp}",
+    "cpp/stockfish/**/*.{cpp,h}"
   ]
-  
+
+  # public Obj-C headers only (umbrella compiles as Obj-C)
+  s.public_header_files = [ "ios/**/*.h" ]
+
+  # keep C++ headers out of umbrella to avoid <cassert> errors
+  s.private_header_files = [ "cpp/**/*.h", "cpp/**/*.hpp", "cpp/stockfish/**/*.h" ]
+
+  s.header_mappings_dir = "ios"
+
   s.swift_version = "5.0"
+  s.requires_arc = true
 
   s.exclude_files = [
     "cpp/stockfish/src/main.cpp"
   ]
-
-  # Only Obj-C headers should be public (what the umbrella imports)
-  s.public_header_files = [
-    "ios/**/*.h"
-  ]
-
-  # C++ headers stay private to avoid being in the umbrella
-  s.private_header_files = [
-    "cpp/**/*.h",
-    "cpp/**/*.hpp"
-  ]
-  
-  # Map headers from the iOS dir so umbrella includes "Stockfish…h" (no ../ios)
-  s.header_mappings_dir = "ios"
-  
-  s.requires_arc = true
   
   s.resources = ["ios/stockfish.nnue"]
   
@@ -75,8 +68,6 @@ Pod::Spec.new do |s|
     "ENABLE_BITCODE" => "NO"
   }
 
-  s.dependency "React-Core"
-  s.dependency "React-callinvoker"
-  s.dependency "ReactCommon/turbomodule/core"
   s.dependency "ExpoModulesCore"
+  s.dependency "React-Core"
 end

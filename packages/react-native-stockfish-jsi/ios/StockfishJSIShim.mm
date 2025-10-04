@@ -1,21 +1,18 @@
 #import "StockfishJSIShim.h"
-#import <ExpoModulesCore/EXJavaScriptRuntime.h>
 #import <jsi/jsi.h>
 
 using namespace facebook;
 
-// C++ function that installs JSI bindings
-extern "C" void installStockfish(jsi::Runtime& rt);
+// Your C++ binder (must set global.StockfishJSI and be noexcept)
+extern void installStockfishBindings(jsi::Runtime& rt) noexcept;
 
 @implementation StockfishJSIShim
-
 + (void)installWithRuntime:(EXJavaScriptRuntime *)runtime {
-    // EXJavaScriptRuntime exposes the underlying JSI runtime pointer
-    jsi::Runtime *rt = (jsi::Runtime *)runtime.jsiRuntimePointer;
-    if (rt) {
-        installStockfish(*rt);
-    }
+  // Grab the JSI pointer from Expo's runtime wrapper
+  jsi::Runtime *rt = (jsi::Runtime *)runtime.jsiRuntimePointer;
+  if (rt) {
+    installStockfishBindings(*rt);
+  }
 }
-
 @end
 
