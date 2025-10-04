@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "13.0" }
   s.source       = { :git => "https://github.com/uzigogetta/ChessMate.git", :tag => "#{s.version}" }
 
-  # Include all sources
+  # Compile all sources (ObjC/Swift/C++)
   s.source_files = [
     "ios/**/*.{m,mm,h,swift}",
     "cpp/**/*.{cpp,h,hpp}"
@@ -24,15 +24,19 @@ Pod::Spec.new do |s|
     "cpp/stockfish/src/main.cpp"
   ]
 
-  # Export headers properly for umbrella header
+  # Only Obj-C headers should be public (what the umbrella imports)
   s.public_header_files = [
-    "ios/**/*.h",
+    "ios/**/*.h"
+  ]
+
+  # C++ headers stay private to avoid being in the umbrella
+  s.private_header_files = [
     "cpp/**/*.h",
     "cpp/**/*.hpp"
   ]
   
-  # Make header paths relative to package root
-  s.header_mappings_dir = "."
+  # Map headers from the iOS dir so umbrella includes "Stockfish…h" (no ../ios)
+  s.header_mappings_dir = "ios"
   
   s.requires_arc = true
   
