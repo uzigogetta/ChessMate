@@ -12,23 +12,10 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "13.0" }
   s.source       = { :git => "https://github.com/uzigogetta/ChessMate.git", :tag => "#{s.version}" }
 
+  # Include all sources
   s.source_files = [
-    "ios/StockfishJSI.mm",
-    "ios/StockfishJSIInstaller.h",
-    "ios/StockfishJSIInstaller.mm",
-    "ios/StockfishJSIShim.h",
-    "ios/StockfishJSIShim.mm",
-    "ios/StockfishJSIModule.swift",
-    "cpp/StockfishJSI.cpp",
-    "cpp/stockfish/src/*.cpp",
-    "cpp/stockfish/src/*.h",
-    "cpp/stockfish/src/nnue/*.cpp",
-    "cpp/stockfish/src/nnue/*.h",
-    "cpp/stockfish/src/nnue/features/*.cpp",
-    "cpp/stockfish/src/nnue/features/*.h",
-    "cpp/stockfish/src/nnue/layers/*.h",
-    "cpp/stockfish/src/syzygy/*.cpp",
-    "cpp/stockfish/src/syzygy/*.h"
+    "ios/**/*.{m,mm,h,swift}",
+    "cpp/**/*.{cpp,h,hpp}"
   ]
   
   s.swift_version = "5.0"
@@ -37,9 +24,17 @@ Pod::Spec.new do |s|
     "cpp/stockfish/src/main.cpp"
   ]
 
-  s.public_header_files = []
+  # Export headers properly for umbrella header
+  s.public_header_files = [
+    "ios/**/*.h",
+    "cpp/**/*.h",
+    "cpp/**/*.hpp"
+  ]
   
-  s.header_mappings_dir = "cpp"
+  # Make header paths relative to package root
+  s.header_mappings_dir = "."
+  
+  s.requires_arc = true
   
   s.resources = ["ios/stockfish.nnue"]
   
