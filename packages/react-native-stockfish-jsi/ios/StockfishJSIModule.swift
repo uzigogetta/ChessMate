@@ -21,7 +21,8 @@ public class StockfishJSIModule: Module {
   private func tryInstall() {
     guard !Self.isInstalled else { return }
     
-    if let runtime = self.appContext?.runtime {
+    // appContext.runtime is a throwing getter in SDK 54 -> use try?
+    if let rtOpt = try? self.appContext?.runtime, let runtime = rtOpt {
       self.installJSI(runtime: runtime)
     } else {
       NSLog("⚠️ [StockfishJSIModule] JavaScript runtime not ready yet; will install on demand")
@@ -31,8 +32,8 @@ public class StockfishJSIModule: Module {
   private func installJSI(runtime: JavaScriptRuntime) {
     NSLog("🟢 [StockfishJSIModule] Installing JSI bindings via Expo Module...")
     
-    // Pass the JavaScriptRuntime wrapper directly to the ObjC++ shim
-    StockfishJSIShim.install(withRuntime: runtime)
+    // Thanks to NS_SWIFT_NAME, this is now install(runtime:)
+    StockfishJSIShim.install(runtime: runtime)
     
     Self.isInstalled = true
     NSLog("🟢 [StockfishJSIModule] ✅ JSI bindings installed successfully!")
